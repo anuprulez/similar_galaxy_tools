@@ -1,3 +1,7 @@
+"""
+Predict similarity among tools using BM25 score for each token
+"""
+
 import os
 import re
 import numpy as np
@@ -7,6 +11,8 @@ import operator
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import cosine_similarity
+
+import utils
 
 
 class PredictToolSimilarity:
@@ -32,19 +38,16 @@ class PredictToolSimilarity:
         tools_tokens = list()
         for item in file.iterrows():
             row = item[ 1 ]
-            # float type is empty
-            description = "" if type(row[ "description" ]) is float else str( row[ "description" ] )
-            inputs = "" if type(row[ "inputs" ]) is float else str( row[ "inputs" ] )
-            name = "" if type(row[ "name" ]) is float else str( row[ "name" ] )
-            help = "" if type(row[ "help" ]) is float else str( row[ "help" ] )
-            inputs = inputs.split( "," )
-            inputs = " ".join( inputs )
+            description = utils._get_text( row, "description" )
+            name = utils._get_text( row, "name" )
+            help = utils._get_text( row, "help" )
+
+            inputs = utils._restore_space( utils._get_text( row, "inputs" ) )
+            outputs = utils._restore_space( utils._get_text( row, "outputs" ) )
+
             # append all tokens
-            tokens = description + " " + inputs + " " + name + " " + help
-            #tokens = inputs + " " + name
-            # remove special characters from tokens
-            tokens = re.sub( '[^a-zA-Z0-9\n\.]', ' ', tokens )
-            tools_tokens.append( tokens )
+            tokens = description + " " + inputs + " " + outputs + " " + name + " " + help
+            tools_tokens.append( utils._remove_special_chars( tokens ) )
         return tools_tokens
 
     @classmethod
@@ -139,18 +142,20 @@ class PredictToolSimilarity:
         Get similar tools for each tool
         """
         count_items = dataframe.count()[ 0 ]
-        how_many_similar_tools = 5
+        how_many_similar_tools = 6
         similarity = list()
         for i, rowi in dataframe.iterrows():
             file_similarity = dict()
             scores = list()
             for j, rowj in dataframe.iterrows():
-                record = dict()
-                record[ "name_description" ] = rowj[ "name" ] + " " + ( "" if type( rowj[ "description" ] ) is float else str( rowj[ "description" ] ) )
-                record[ "id" ] = rowj[ "id" ]
-                record[ "input_types" ] = "" if type( rowj[ "inputs" ] ) is float else str( rowj[ "inputs" ] )
-                record[ "what_it_does" ] = "" if type( rowj[ "help" ] ) is float else str( rowj[ "help" ] )
-                record[ "score" ] = round( similarity_matrix[ i ][ j ], 2 )
+                record = {
+                    "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
+                    "id": rowj[ "id" ],
+                    "input_types": utils._get_text( rowj, "inputs" ),
+                    "output_types": utils._get_text( rowj, "outputs" ),
+                    "what_it_does": utils._get_text( rowj, "help" ),
+                    "score":round( similarity_matrix[ i ][ j ], 2 )
+                }
                 scores.append( record )
             file_similarity[ "scores" ] = scores
             file_similarity[ "id" ] = rowi[ "id" ]
@@ -162,11 +167,12 @@ class PredictToolSimilarity:
             sorted_tools = sorted( analyze_file[ "scores" ], key=operator.itemgetter( "score" ), reverse=True )
             for index, item in enumerate( sorted_tools[ :how_many_similar_tools ] ):
                 if index == 0:
-                    similar_tools_result += "Tool: '\n'"
-                    similar_tools_result += str( item ) + '\n\n'
-                    similar_tools_result += "Similar tools: '\n'"
+                    similar_tools_result += 'Tool:' + '\n'
+                    similar_tools_result += utils._format_dict_string( item ) + '\n'
+                    similar_tools_result += 'Similar tools:' + '\n'
                 else:
-                    similar_tools_result += str( item ) + '\n'
+                    if item[ "score" ] > 0.0:
+                        similar_tools_result += utils._format_dict_string( item ) + '\n'
             similar_tools_result += "----------------------------------------------------------------------------------------------- '\n\n'"
 
         with open( 'tool_results.txt','w' ) as file:
@@ -184,4 +190,4 @@ if __name__ == "__main__":
     print "Computing cosine distance..."
     tools_distance_matrix = tool_similarity.find_tools_cos_distance_matrix( document_tokens_matrix )
     tool_similarity.associate_similarity( tools_distance_matrix, dataframe )
-
+    print "Program finished"
