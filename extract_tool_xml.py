@@ -36,6 +36,7 @@ class ExtractToolXML:
         """
         Convert xml file of a tool to a record with its attributes
         """
+        help_header = 'What it does'
         record = dict()
         tree = et.parse( xml_file_path )
         root = tree.getroot()
@@ -43,7 +44,14 @@ class ExtractToolXML:
         record[ "name" ] = root.get( "name" )
         for child in root:
             if child.tag == 'description':
-                record[ child.tag ] = child.text if child.text else ""
+                record[ child.tag ] = str( child.text ) if child.text else ""
+            elif child.tag == 'help':
+                help_text = child.text
+                help_split = help_text.split('\n\n')
+                for index, item in enumerate( help_split ):
+                    if help_header in item:
+                        record[ child.tag ] = help_split[ index + 1 ]
+                        break
             elif child.tag == 'inputs':
                 input_formats = list()
                 for item in child:
