@@ -75,7 +75,6 @@ class ExtractToolXML:
            return None
 
 
-
 if __name__ == "__main__":
     extract_tool = ExtractToolXML()
     extract_tool.read_tool_directory()

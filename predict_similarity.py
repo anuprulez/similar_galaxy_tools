@@ -7,6 +7,7 @@ import re
 import numpy as np
 import pandas as pd
 import operator
+import json
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
@@ -44,9 +45,13 @@ class PredictToolSimilarity:
 
             inputs = utils._restore_space( utils._get_text( row, "inputs" ) )
             outputs = utils._restore_space( utils._get_text( row, "outputs" ) )
-
+            tokens = ''
             # append all tokens
-            tokens = description + " " + inputs + " " + outputs + " " + name + " " + help
+            tokens += inputs + " "
+            tokens += outputs + " "
+            tokens += name + " "
+            tokens += description + " "
+            #tokens +=help
             tools_tokens.append( utils._remove_special_chars( tokens ) )
         return tools_tokens
 
@@ -85,8 +90,8 @@ class PredictToolSimilarity:
         # parameters
         N = len(files)
         average_file_length = float( total_file_length ) / N
-        k = 1.75
-        b = 0.75
+        k = 2
+        b = 0.5
 
         # find BM25 score for each token of each tool. It helps to determine
         # how important each word is with respect to the tool and other tools
@@ -95,7 +100,8 @@ class PredictToolSimilarity:
                 file_length = len( item )
                 tf = item[ token ]
                 idf = np.log2( N / len( inverted_frequency[ token ] ) )
-                tf_star = tf * float( ( k + 1 ) ) / ( k * ( 1 - b + float( b * file_length ) / average_file_length ) + tf )
+                alpha = ( 1 - b ) + ( float( b * file_length ) / average_file_length )
+                tf_star = tf * float( ( k + 1 ) ) / ( k * alpha + tf )
                 tf_idf = tf_star * idf
                 item[ token ] = tf_idf
 
@@ -104,7 +110,7 @@ class PredictToolSimilarity:
             sorted_x = sorted( item.items(), key=operator.itemgetter(1), reverse=True )
             scores = [ score for (token, score) in sorted_x ]
             mean_score = np.mean( scores )
-            selected_tokens = [ token for (token, score) in sorted_x if score >= mean_score ]
+            selected_tokens = [ token for (token, score) in sorted_x ]
             selected_tokens = " ".join( selected_tokens )
             refined_tokens.append( selected_tokens )
         return refined_tokens
@@ -142,44 +148,32 @@ class PredictToolSimilarity:
         Get similar tools for each tool
         """
         count_items = dataframe.count()[ 0 ]
-        how_many_similar_tools = 6
+        similarity_threshold = 0.1
         similarity = list()
         for i, rowi in dataframe.iterrows():
             file_similarity = dict()
             scores = list()
             for j, rowj in dataframe.iterrows():
-                record = {
-                    "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
-                    "id": rowj[ "id" ],
-                    "input_types": utils._get_text( rowj, "inputs" ),
-                    "output_types": utils._get_text( rowj, "outputs" ),
-                    "what_it_does": utils._get_text( rowj, "help" ),
-                    "score":round( similarity_matrix[ i ][ j ], 2 )
-                }
-                scores.append( record )
+                score = round( similarity_matrix[ i ][ j ], 2 )
+                if score > similarity_threshold:
+                    record = {
+                        "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
+                        "id": rowj[ "id" ],
+                        "input_types": utils._get_text( rowj, "inputs" ),
+                        "output_types": utils._get_text( rowj, "outputs" ),
+                        "what_it_does": utils._get_text( rowj, "help" ),
+                        "score": score
+                    }
+                    scores.append( record )
             file_similarity[ "scores" ] = scores
             file_similarity[ "id" ] = rowi[ "id" ]
             similarity.append( file_similarity )
 
-        similar_tools_result = ''
-        for file_index in range( count_items ):
-            analyze_file = similarity[ file_index ]
-            sorted_tools = sorted( analyze_file[ "scores" ], key=operator.itemgetter( "score" ), reverse=True )
-            for index, item in enumerate( sorted_tools[ :how_many_similar_tools ] ):
-                if index == 0:
-                    similar_tools_result += 'Tool:' + '\n'
-                    similar_tools_result += utils._format_dict_string( item ) + '\n'
-                    similar_tools_result += 'Similar tools:' + '\n'
-                else:
-                    if item[ "score" ] > 0.0:
-                        similar_tools_result += utils._format_dict_string( item ) + '\n'
-            similar_tools_result += "----------------------------------------------------------------------------------------------- '\n\n'"
-
-        with open( 'tool_results.txt','w' ) as file:
-            file.write( similar_tools_result )
+        with open( 'similarity_matrix.json','w' ) as file:
+            file.write( json.dumps( similarity ) )
             file.close()
 
-   
+
 if __name__ == "__main__":
     tool_similarity = PredictToolSimilarity()
     dataframe = tool_similarity.read_file()
