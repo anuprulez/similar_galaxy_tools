@@ -5,9 +5,17 @@ $(document).ready(function(){
     var similarityData = null;
     $.getJSON( "data/similarity_matrix.json", function( data ) {
         var toolIdsTemplate = "";
-        similarityData = data;
-        for( var counter = 0, len = data.length; counter < len; counter++ ) {
-            var toolResults = data[ counter ];
+
+        // sort the tools in ascending order of their ids
+        similarityData = data.sort(function(a, b) {
+            var first_id = a.id.toLowerCase(),
+                second_id = b.id.toLowerCase();
+            if( first_id < second_id ) return -1;
+            if( first_id > second_id ) return 1;
+            return 0;
+        });
+        for( var counter = 0, len = similarityData.length; counter < len; counter++ ) {
+            var toolResults = similarityData[ counter ];
             toolIdsTemplate += "<option value=" + toolResults.id + ">" + toolResults.id + "</options>";
         } // end of for loop
         $( ".tool-ids" ).append( toolIdsTemplate );
