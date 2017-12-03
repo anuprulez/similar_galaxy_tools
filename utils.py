@@ -15,3 +15,13 @@ def _format_dict_string( dictionary ):
     for item in dictionary:
         string += '%s: %s' % ( item, dictionary[ item ] ) + '\n'
     return string
+
+def _check_number( item ):
+    try:
+        int( item )
+        return True
+    except Exception as exception:
+        return False
+
+def _check_quality_scores( mean, sigma, score ):
+    return ( score >= mean - 2 * sigma )

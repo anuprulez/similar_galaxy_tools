@@ -108,7 +108,8 @@ class PredictToolSimilarity:
             sorted_x = sorted( item.items(), key=operator.itemgetter(1), reverse=True )
             scores = [ score for (token, score) in sorted_x ]
             mean_score = np.mean( scores )
-            selected_tokens = [ token for (token, score) in sorted_x ]
+            sigma = np.sqrt( np.var( scores ) )
+            selected_tokens = [ token for (token, score) in sorted_x if not utils._check_number( token ) and utils._check_quality_scores( mean_score, sigma, score ) ]
             selected_tokens = " ".join( selected_tokens )
             refined_tokens.append( selected_tokens )
         return refined_tokens
