@@ -5,7 +5,6 @@ Extract attributes and their values from the xml files of all tools
 import os
 import pandas as pd
 import xml.etree.ElementTree as et
-import re
 import utils
 
 
@@ -33,7 +32,9 @@ class ExtractToolXML:
                     if dataframe is None:
                         continue
                     else:
-                        all_tools.append( dataframe )
+                        # remove any duplication of tool ids
+                        if not any( item.get( "id", None ) == dataframe[ "id" ] for item in all_tools ):
+                            all_tools.append( dataframe )
         tools_dataframe = pd.DataFrame( all_tools )
         dname = os.path.dirname( os.path.abspath(__file__) )
         os.chdir(dname + '/data')
@@ -50,7 +51,8 @@ class ExtractToolXML:
             tree = et.parse( xml_file_path )
             root = tree.getroot()
             record_id = root.get( "id", None )
-            if record_id is not None and record_id is not '':
+            # read those xml only if it is a tool
+            if root.tag == "tool" and record_id is not None and record_id is not '':
                 record[ "id" ] = record_id
                 record[ "name" ] = root.get( "name" )
                 for child in root:

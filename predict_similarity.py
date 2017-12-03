@@ -26,9 +26,7 @@ class PredictToolSimilarity:
         """
         Read the description of all tools
         """
-        abspath = os.path.abspath(__file__)
-        dname = os.path.dirname(abspath)
-        os.chdir(dname + '/data')
+        os.chdir( os.path.dirname( os.path.abspath( __file__ ) ) + '/data' )
         return pd.read_csv( 'all_tools.csv' )
 
     @classmethod
@@ -177,11 +175,17 @@ class PredictToolSimilarity:
 if __name__ == "__main__":
     tool_similarity = PredictToolSimilarity()
     dataframe = tool_similarity.read_file()
+    print "Read tool files"
     tokens = tool_similarity.extract_tokens( dataframe )
+    print "Extracted tokens"
     refined_tokens = tool_similarity.refine_tokens( tokens )
+    print "Refined tokens"
     document_tokens_matrix = tool_similarity.create_document_tokens_matrix( refined_tokens )
-    tools_distance_matrix = tool_similarity.find_tools_eu_distance_matrix( document_tokens_matrix )
+    print "Created document term matrix"
+    #tools_distance_matrix = tool_similarity.find_tools_eu_distance_matrix( document_tokens_matrix )
     print "Computing cosine distance..."
     tools_distance_matrix = tool_similarity.find_tools_cos_distance_matrix( document_tokens_matrix )
+    print "Computed cosine distance"
     tool_similarity.associate_similarity( tools_distance_matrix, dataframe )
+    print "Listed the similar tools in a JSON file"
     print "Program finished"

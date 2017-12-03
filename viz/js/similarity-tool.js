@@ -10,8 +10,8 @@ $(document).ready(function(){
         similarityData = data.sort(function(a, b) {
             var first_id = a.id.toLowerCase(),
                 second_id = b.id.toLowerCase();
-            if( first_id < second_id ) return -1;
-            if( first_id > second_id ) return 1;
+            if( first_id < second_id ) { return -1; }
+            if( first_id > second_id ) { return 1; }
             return 0;
         });
         for( var counter = 0, len = similarityData.length; counter < len; counter++ ) {
