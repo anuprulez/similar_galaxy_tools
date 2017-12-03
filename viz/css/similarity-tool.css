@@ -1,0 +1,11 @@
+table, th, td {
+    border: 1px solid black;
+}
+
+.tool-results {
+    margin: 1% 0 1% 0;
+}
+
+.no-similar-tool-msg {
+    color: red;
+}
