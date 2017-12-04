@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import operator
 import json
+import sys
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
@@ -109,21 +110,29 @@ class PredictToolSimilarity:
             scores = [ score for (token, score) in sorted_x ]
             mean_score = np.mean( scores )
             sigma = np.sqrt( np.var( scores ) )
-            selected_tokens = [ token for (token, score) in sorted_x if not utils._check_number( token ) and utils._check_quality_scores( mean_score, sigma, score ) ]
-            selected_tokens = " ".join( selected_tokens )
+            selected_tokens = [ ( token, score ) for ( token, score ) in sorted_x if not utils._check_number( token ) and score >= utils._check_quality_scores( mean_score, sigma, score ) ]
             refined_tokens.append( selected_tokens )
         return refined_tokens
 
-    @classmethod
-    def create_document_tokens_matrix( self, tokens ):
+    def create_document_tokens_matrix( self, documents_tokens ):
         """
         Create document tokens matrix
         """
-        token_vector = CountVectorizer( analyzer='word' )
-        all_tokens = token_vector.fit_transform( tokens )
-        document_token_matrix = pd.DataFrame( all_tokens.toarray(), columns=token_vector.get_feature_names() )
+        # create a unique list of all words
+        all_tokens = list()
+        for file_item in range( 0, len( documents_tokens ) ):
+            for word_score in documents_tokens[ file_item ]:
+                word = word_score[ 0 ]
+                if word not in all_tokens:
+                    all_tokens.append( word )
+
+        document_tokens_matrix = np.zeros( ( len( documents_tokens ), len( all_tokens ) ) )
+        for file_index, file_item in enumerate( documents_tokens ):
+            for word_score in file_item:
+                word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
+                document_tokens_matrix[ file_index ][ word_index ] = word_score[ 1 ]
         document_token_matrix.to_csv( 'dtmatrix.csv' )
-        return document_token_matrix
+        return document_tokens_matrix
 
     @classmethod
     def find_tools_eu_distance_matrix( self, document_token_matrix ):
@@ -139,6 +148,7 @@ class PredictToolSimilarity:
         Find similarity distance using Cosine distance among tools
         """
         similarity_matrix = cosine_similarity( document_token_matrix )
+        #utils._plot_heatmap( similarity_matrix )
         return similarity_matrix
 
     @classmethod
