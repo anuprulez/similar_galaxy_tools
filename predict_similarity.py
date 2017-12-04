@@ -3,14 +3,11 @@ Predict similarity among tools using BM25 score for each token
 """
 
 import os
-import re
 import numpy as np
 import pandas as pd
 import operator
 import json
-import sys
 
-from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -131,7 +128,6 @@ class PredictToolSimilarity:
             for word_score in file_item:
                 word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
                 document_tokens_matrix[ file_index ][ word_index ] = word_score[ 1 ]
-        document_token_matrix.to_csv( 'dtmatrix.csv' )
         return document_tokens_matrix
 
     @classmethod
