@@ -3,10 +3,11 @@ Extract attributes and their values from the xml files of all tools
 """
 
 import os
+import urllib2
 import pandas as pd
 import xml.etree.ElementTree as et
 import utils
-
+import json
 
 class ExtractToolXML:
 
@@ -45,7 +46,6 @@ class ExtractToolXML:
         """
         Convert xml file of a tool to a record with its attributes
         """
-        help_header = 'What it does'
         record = dict()
         try:
             tree = et.parse( xml_file_path )
@@ -69,9 +69,21 @@ class ExtractToolXML:
                         help_text = child.text
                         help_split = help_text.split('\n\n')
                         for index, item in enumerate( help_split ):
-                            if help_header in item:
+                            if 'What it does' in item or 'Syntax' in item:
                                 record[ child.tag ] =  utils._remove_special_chars( help_split[ index + 1 ] )
                                 break
+                    elif child.tag == "edam_topics":
+                        for item in child:
+                           if item.tag == "edam_topic":
+                              edam_annotations = ''
+                              edam_text = urllib2.urlopen( 'https://www.ebi.ac.uk/ols/api/ontologies/edam/terms?iri=http://edamontology.org/' + item.text )
+                              edam_json = json.loads( edam_text.read() )
+                              edam_terms = edam_json[ "_embedded" ][ "terms" ][ 0 ]
+                              edam_annotations += edam_terms[ "description" ][ 0 ] + ' '
+                              edam_annotations += edam_terms[ "label" ] + ' '
+                              for syn in edam_terms[ "synonyms" ]:
+                                  edam_annotations +=  syn + ' '
+                              record[ child.tag ] = utils._remove_special_chars( edam_annotations )
                 return record
         except Exception as exp:
            return None

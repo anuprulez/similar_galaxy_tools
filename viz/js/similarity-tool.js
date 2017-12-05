@@ -41,9 +41,10 @@ $(document).ready(function(){
                 template += "<th>Id</th>";
                 template += "<th> Similarity score </th>";
                 template += "<th> Name and Description </th>";
+                template += "<th> EDAM description </th>";
                 template += "<th> Input types </th>";
                 template += "<th> Output types </th>";
-                //template += "<th> What it does </th>";
+                template += "<th> What it does </th>";
                 template += "</thead><tbody>";
                 for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
                     var tool = toolScores[ counter_ts ];
@@ -51,9 +52,10 @@ $(document).ready(function(){
                     template += "<td>" + tool.id + "</td>";
                     template += "<td>" + tool.score + "</td>";
                     template += "<td>" + tool.name_description + "</td>";
+                    template += "<td>" + tool.edam_text + "</td>";
                     template += "<td>" + tool.input_types + "</td>";
                     template += "<td>" + tool.output_types + "</td>";
-                    //template += "<td>" + tool.what_it_does + "</td>";
+                    template += "<td>" + tool.what_it_does + "</td>";
                     template += "</tr>";
                 }
                 template += "</tbody></table>";
