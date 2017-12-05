@@ -143,7 +143,7 @@ class PredictToolSimilarity:
             for file_index, file_item in enumerate( doc_tokens ):
                 for word_score in file_item:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    document_tokens_matrix[ file_index ][ word_index ] = word_score[ 1 ]
+                    document_tokens_matrix[ file_index ][ word_index ] = 1 #word_score[ 1 ]
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources
 
@@ -155,14 +155,19 @@ class PredictToolSimilarity:
         similarity_matrix_sources = dict()
         mat_size = 0
         for source in document_token_matrix_sources:
-            similarity_matrix_sources[ source ] = cosine_similarity( document_token_matrix_sources[ source ] )
-            mat_size = len( similarity_matrix_sources[ source ] )
+            sim_mat = document_token_matrix_sources[ source ]
+            mat_size = len( document_token_matrix_sources[ source ] )
+            sim_scores = np.zeros( ( mat_size, mat_size ) )
+            for index_x, item_x in enumerate( sim_mat ):
+                for index_y, item_y in enumerate( sim_mat ):          
+                    sim_scores[ index_x ][ index_y ] = utils._angle( item_x, item_y )
+            similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources, mat_size
 
     @classmethod
     def assign_similarity_importance( self, similarity_matrix_sources, mat_size ):
         #importance_factor = [ input_output_factor, name_desc_factor, edam_help_factor ]
-        importance_factor = [ 0.6, 0.3, 0.1 ]
+        importance_factor = [ 1, 0, 0 ]
         counter = 0
         similarity_matrix = np.zeros( ( mat_size, mat_size ) )
         for scores_source in similarity_matrix_sources:
@@ -176,7 +181,7 @@ class PredictToolSimilarity:
         Get similar tools for each tool
         """
         count_items = dataframe.count()[ 0 ]
-        similarity_threshold = 0
+        similarity_threshold = 0.1
         similarity = list()
         for i, rowi in dataframe.iterrows():
             file_similarity = dict()
@@ -218,7 +223,7 @@ if __name__ == "__main__":
     print "Created document term matrix"
 
     print "Computing distance..."
-    #tools_distance_matrix = tool_similarity.find_tools_eu_distance_matrix( document_tokens_matrix )
+    #tools_distance_matrix, mat_size = tool_similarity.find_tools_euclidean_distance_matrix( document_tokens_matrix )
     
     tools_distance_matrix, mat_size = tool_similarity.find_tools_cos_distance_matrix( document_tokens_matrix )
     print "Computed distance"

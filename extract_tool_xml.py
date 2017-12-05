@@ -58,10 +58,19 @@ class ExtractToolXML:
                 for child in root:
                     if child.tag == 'description':
                         record[ child.tag ] = str( child.text ) if child.text else ""
-                    elif child.tag == 'inputs' or child.tag == 'outputs':
+                    elif child.tag == 'inputs':
                         file_formats = list()
-                        for item in child:
-                            file_format = item.get( "format", None )
+                        for children in child.findall( './/param' ):
+                            if children.get( 'type' ) == 'data':
+                                file_format = children.get( 'format', None )
+                                if file_format not in file_formats and file_format is not None:
+                                    file_formats.append( file_format )
+                        
+                        record[ child.tag ] = '' if file_formats is None else ",".join( file_formats )
+                    elif child.tag == 'outputs':
+                        file_formats = list()
+                        for children in child:
+                            file_format = children.get( 'format', None )
                             if file_format not in file_formats and file_format is not None:
                                 file_formats.append( file_format )
                         record[ child.tag ] = '' if file_formats is None else ",".join( file_formats )
