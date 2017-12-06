@@ -17,8 +17,11 @@ import utils
 
 class PredictToolSimilarity:
 
+    @classmethod
     def __init__( self ):
         self.file_path = '/data/all_tools.csv'
+        # the scores here should sum up to 1 as they extend some kind of probability to the sources of tokens
+        self.importance_factors = { "input_output": 0.7, 'name_desc': 0.2, 'edam_help': 0.1 }
 
     @classmethod
     def read_file( self ):
@@ -36,9 +39,8 @@ class PredictToolSimilarity:
         tools_tokens_source = dict()
         for source in tokens_source:
             tools_tokens = list()
-            for item in file.iterrows():
-                row = item[ 1 ]
-                tokens = self.get_tokens_from_source( row, source )
+            for row in file.iterrows():
+                tokens = self.get_tokens_from_source( row[ 1 ], source )
                 tools_tokens.append( tokens )
             tools_tokens_source[ source ] = tools_tokens
         return tools_tokens_source
@@ -62,8 +64,8 @@ class PredictToolSimilarity:
         """
         Refine the set of tokens by removing words like 'to', 'with'
         """
-        k = 2
-        b = 0
+        k = 1.75
+        b = 0.75
         refined_tokens_sources = dict()
         for source in tokens:
             refined_tokens = list()
@@ -143,7 +145,9 @@ class PredictToolSimilarity:
             for file_index, file_item in enumerate( doc_tokens ):
                 for word_score in file_item:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    document_tokens_matrix[ file_index ][ word_index ] = 1 #word_score[ 1 ]
+                    # we take of score 1 if we need exact word matching for input and output file types.
+                    # otherwise we take ranked scores for each token
+                    document_tokens_matrix[ file_index ][ word_index ] = 1 if source == 'input_output' else word_score[ 1 ]
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources
 
@@ -159,20 +163,19 @@ class PredictToolSimilarity:
             mat_size = len( document_token_matrix_sources[ source ] )
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
-                for index_y, item_y in enumerate( sim_mat ):          
+                for index_y, item_y in enumerate( sim_mat ):   
                     sim_scores[ index_x ][ index_y ] = utils._angle( item_x, item_y )
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources, mat_size
 
     @classmethod
     def assign_similarity_importance( self, similarity_matrix_sources, mat_size ):
-        #importance_factor = [ input_output_factor, name_desc_factor, edam_help_factor ]
-        importance_factor = [ 1, 0, 0 ]
-        counter = 0
+        """
+        Assign importance to the similarity scores coming for different sources
+        """
         similarity_matrix = np.zeros( ( mat_size, mat_size ) )
         for scores_source in similarity_matrix_sources:
-            similarity_matrix += importance_factor[ counter ] * similarity_matrix_sources[ scores_source ]
-            counter += 1
+            similarity_matrix += self.importance_factors[ scores_source ] * similarity_matrix_sources[ scores_source ]
         return similarity_matrix
 
     @classmethod

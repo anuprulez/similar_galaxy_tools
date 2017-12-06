@@ -31,35 +31,24 @@ $(document).ready(function(){
         $el_tools.empty();
         for( var counter = 0, len = data.length; counter < len; counter++ ) {
             var toolResults = data[ counter ];
-            if ( toolResults.id === selectedToolId ) { 
+            if ( toolResults.id === selectedToolId ) {
                 var toolScores = toolResults.scores,
                     template = "";
                 toolScores = toolScores.sort(function( a, b ) {
                     return parseFloat( b.score ) - parseFloat( a.score );
                 });
-                template = "<table><thead>";
-                template += "<th>Id</th>";
-                template += "<th> Similarity score </th>";
-                template += "<th> Name and Description </th>";
-                template += "<th> EDAM description </th>";
-                template += "<th> Input types </th>";
-                template += "<th> Output types </th>";
-                template += "<th> What it does </th>";
-                template += "</thead><tbody>";
-                for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
-                    var tool = toolScores[ counter_ts ];
-                    template += "<tr>";
-                    template += "<td>" + tool.id + "</td>";
-                    template += "<td>" + tool.score + "</td>";
-                    template += "<td>" + tool.name_description + "</td>";
-                    template += "<td>" + tool.edam_text + "</td>";
-                    template += "<td>" + tool.input_types + "</td>";
-                    template += "<td>" + tool.output_types + "</td>";
-                    template += "<td>" + tool.what_it_does + "</td>";
-                    template += "</tr>";
+ 
+                // make html for the selected tool
+                for( var ctr = 0, len = toolScores.length; ctr < len; ctr++ ) {
+                    if ( toolScores[ ctr ].id === selectedToolId ) {
+                          $el_tools.html( createHTML( [ toolScores[ ctr ] ], selectedToolId, "<h4>Selected tool: " +  selectedToolId + "</h4>" ) );
+                          toolScores.splice( ctr, 1 );
+                          break;
+                    }
                 }
-                template += "</tbody></table>";
-                $el_tools.html( template );
+
+                // make html for similar tools
+                $el_tools.append( createHTML( toolScores, selectedToolId, "<h4>Similar tools for the selected tool: " +  selectedToolId + "</h4>" ) );
                 availableSimilarTool = true;
                 break;
             }
@@ -68,5 +57,32 @@ $(document).ready(function(){
              $el_tools.empty().html( "<p class='no-similar-tool-msg'>No similar tool available. <p>" );
          }
     });
+
+    var createHTML = function( toolScores, originalToolId, headerText ) {
+        var template = headerText;
+        template += "<table><thead>";
+        template += "<th>Id</th>";
+        template += "<th> Similarity score </th>";
+        template += "<th> Name and Description </th>";
+        template += "<th> Input types </th>";
+        template += "<th> Output types </th>";
+        template += "<th> What it does </th>";
+        template += "<th> EDAM description </th>";
+        template += "</thead><tbody>";
+        for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
+            var tool = toolScores[ counter_ts ];
+            template += "<tr>";
+            template += "<td>" + tool.id + "</td>";
+            template += "<td>" + tool.score + "</td>";
+            template += "<td>" + tool.name_description + "</td>";
+            template += "<td>" + tool.input_types + "</td>";
+            template += "<td>" + tool.output_types + "</td>";
+            template += "<td>" + tool.what_it_does + "</td>";
+            template += "<td>" + tool.edam_text + "</td>";
+            template += "</tr>";
+        }
+        template += "</tbody></table>";
+        return template;
+    }
 });
 
