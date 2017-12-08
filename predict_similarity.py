@@ -10,7 +10,7 @@ import json
 from math import *
 
 import utils
-
+import gradientdescent
 
 class PredictToolSimilarity:
 
@@ -18,7 +18,8 @@ class PredictToolSimilarity:
     def __init__( self ):
         self.file_path = '/data/all_tools.csv'
         # the scores here should sum up to 1 as they extend some kind of probability to the sources of tokens
-        self.importance_factors = { "input_output": 0.8, 'name_desc': 0.1, 'edam_help': 0.1 }
+        self.importance_factors = { "input_output": 0.7, 'name_desc': 0.2, 'edam_help': 0.1 }
+        self.tools_show = 20
 
     @classmethod
     def read_file( self ):
@@ -98,7 +99,7 @@ class PredictToolSimilarity:
             # parameters
             N = len(files)
             average_file_length = float( total_file_length ) / N
-        
+
             # find BM25 score for each token of each tool. It helps to determine
             # how important each word is with respect to the tool and other tools
             for item in files:
@@ -177,14 +178,20 @@ class PredictToolSimilarity:
         return similarity_matrix_sources
 
     @classmethod
-    def assign_similarity_importance( self, similarity_matrix_sources, tools_list ):
+    def assign_similarity_importance( self, similarity_matrix_sources, tools_list, optimal_weights ):
         """
         Assign importance to the similarity scores coming for different sources
         """
-        mat_size = len( tools_list )
-        similarity_matrix = np.zeros( ( mat_size, mat_size ) )
-        for scores_source in similarity_matrix_sources:
-            similarity_matrix += self.importance_factors[ scores_source ] * similarity_matrix_sources[ scores_source ]
+        similarity_matrix = list()
+        all_tools = len( tools_list )
+        for tool_index, tool in enumerate( tools_list ):
+            sim_mat = np.zeros( all_tools )
+            source_weight_counter = 0
+            for source in similarity_matrix_sources:
+                sim_mat += optimal_weights[ tool_index ][ source_weight_counter ] * similarity_matrix_sources[ source ][ tool_index ]
+                source_weight_counter += 1
+            similarity_matrix.append( sim_mat )
+        print similarity_matrix[0][0]
         return similarity_matrix
 
     @classmethod
@@ -201,6 +208,7 @@ class PredictToolSimilarity:
         for index, item in enumerate( similarity_matrix ):
             tool_similarity = dict()
             scores = list()
+            root_tool = {}
             tool_id = tools_list[ index ]
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
@@ -215,9 +223,13 @@ class PredictToolSimilarity:
                        "edam_text": utils._get_text( rowj, "edam_topics" ),
                        "score": score
                     }
-                    scores.append( record )
-            tool_similarity[ "scores" ] = scores
-            tool_similarity[ "id" ] = tool_id
+                    if rowj[ "id" ] == tool_id:
+                        root_tool = record
+                    else:
+                        scores.append( record )
+            sorted_scores = sorted( scores[ :self.tools_show ], key=operator.itemgetter( "score" ), reverse=True )
+            tool_similarity[ "root_tool" ] = root_tool
+            tool_similarity[ "similar_tools" ] = sorted_scores
             similarity.append( tool_similarity )
             print "Finished tool %d" % index
 
@@ -227,7 +239,9 @@ class PredictToolSimilarity:
 
 
 if __name__ == "__main__":
+    np.seterr( all='ignore' )
     tool_similarity = PredictToolSimilarity()
+    gd = gradientdescent.GradientDescentOptimizer()
     dataframe = tool_similarity.read_file()
     print "Read tool files"
 
@@ -241,16 +255,17 @@ if __name__ == "__main__":
     print "Created document term matrix"
 
     print "Computing distance..."
-    #tools_distance_matrix = tool_similarity.find_tools_euclidean_distance_matrix( document_tokens_matrix )
-    
     tools_distance_matrix = tool_similarity.find_tools_cos_distance_matrix( document_tokens_matrix, files_list )
     print "Computed distance"
 
+    print "Learning optimal weights..."
+    optimal_weights = gd.gradient_descent( tools_distance_matrix, files_list )
+    print "Optimal weights found..."
+
     print "Assign importance to similarity matrix..."
-    similarity_matrix = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list )
+    similarity_matrix = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list, optimal_weights )
 
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( similarity_matrix, dataframe, files_list )
     print "Listed the similar tools in a JSON file"
-
     print "Program finished"

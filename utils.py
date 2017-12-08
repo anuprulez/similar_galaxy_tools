@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from numpy import *
 
+
 def _get_text( row, attr ):
     return "" if type( row[ attr ] ) is float else str( row[ attr ] )
 
@@ -29,8 +30,8 @@ def _plot_heatmap( similarity_matrix ):
     sns.heatmap(similarity_matrix, annot=True, fmt="g", cmap='viridis')
     plt.show()
 
-def _angle(u, v):
-  if linalg.norm(u) == 0 or linalg.norm(v) == 0:
-      return 2e-10
+def _angle( vector1, vector2 ):
+  if linalg.norm( vector1 ) == 0 or linalg.norm( vector2 ) == 0:
+      return 0
   else:  
-      return dot(u,v)/linalg.norm(u)/linalg.norm(v)
+      return dot( vector1, vector2 ) / ( linalg.norm( vector1 ) * linalg.norm( vector2 ) )

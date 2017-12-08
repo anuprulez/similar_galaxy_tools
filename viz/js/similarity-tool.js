@@ -5,18 +5,21 @@ $(document).ready(function(){
     var similarityData = null;
     $.getJSON( "data/similarity_matrix.json", function( data ) {
         var toolIdsTemplate = "";
-
         // sort the tools in ascending order of their ids
         similarityData = data.sort(function(a, b) {
-            var first_id = a.id.toLowerCase(),
-                second_id = b.id.toLowerCase();
-            if( first_id < second_id ) { return -1; }
-            if( first_id > second_id ) { return 1; }
-            return 0;
+            if( a.root_tool.id !== undefined && b.root_tool.id !== undefined ) {
+                var first_id = a.root_tool.id.toLowerCase(),
+                    second_id = b.root_tool.id.toLowerCase();
+                if( first_id < second_id ) { return -1; }
+                if( first_id > second_id ) { return 1; }
+                return 0;
+            }
         });
         for( var counter = 0, len = similarityData.length; counter < len; counter++ ) {
-            var toolResults = similarityData[ counter ];
-            toolIdsTemplate += "<option value=" + toolResults.id + ">" + toolResults.id + "</options>";
+            var toolResults = similarityData[ counter ]; 
+            if( toolResults.root_tool.id !== undefined ) {    
+                toolIdsTemplate += "<option value=" + toolResults.root_tool.id + ">" + toolResults.root_tool.id + "</options>";
+            }
         } // end of for loop
         $( ".tool-ids" ).append( toolIdsTemplate );
     });
@@ -31,22 +34,11 @@ $(document).ready(function(){
         $el_tools.empty();
         for( var counter = 0, len = data.length; counter < len; counter++ ) {
             var toolResults = data[ counter ];
-            if ( toolResults.id === selectedToolId ) {
-                var toolScores = toolResults.scores,
+            if ( toolResults.root_tool.id === selectedToolId ) {
+                var toolScores = toolResults.similar_tools,
                     template = "";
-                toolScores = toolScores.sort(function( a, b ) {
-                    return parseFloat( b.score ) - parseFloat( a.score );
-                });
- 
                 // make html for the selected tool
-                for( var ctr = 0, len = toolScores.length; ctr < len; ctr++ ) {
-                    if ( toolScores[ ctr ].id === selectedToolId ) {
-                          $el_tools.html( createHTML( [ toolScores[ ctr ] ], selectedToolId, "<h4>Selected tool: " +  selectedToolId + "</h4>" ) );
-                          toolScores.splice( ctr, 1 );
-                          break;
-                    }
-                }
-
+                $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "<h4>Selected tool: " +  selectedToolId + "</h4>" ) );
                 // make html for similar tools
                 $el_tools.append( createHTML( toolScores, selectedToolId, "<h4>Similar tools for the selected tool: " +  selectedToolId + "</h4>" ) );
                 availableSimilarTool = true;
