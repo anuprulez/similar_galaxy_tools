@@ -186,12 +186,9 @@ class PredictToolSimilarity:
         all_tools = len( tools_list )
         for tool_index, tool in enumerate( tools_list ):
             sim_mat = np.zeros( all_tools )
-            source_weight_counter = 0
             for source in similarity_matrix_sources:
-                sim_mat += optimal_weights[ tool_index ][ source_weight_counter ] * similarity_matrix_sources[ source ][ tool_index ]
-                source_weight_counter += 1
+                sim_mat += optimal_weights[ tools_list[ tool_index ] ][ source ] * similarity_matrix_sources[ source ][ tool_index ]
             similarity_matrix.append( sim_mat )
-        print similarity_matrix[0][0]
         return similarity_matrix
 
     @classmethod
@@ -203,7 +200,7 @@ class PredictToolSimilarity:
         for j, rowj in dataframe.iterrows():
             tools_info[ rowj[ "id" ] ] = rowj
 
-        similarity_threshold = 0.25
+        similarity_threshold = 0
         similarity = list()
         for index, item in enumerate( similarity_matrix ):
             tool_similarity = dict()
@@ -231,7 +228,7 @@ class PredictToolSimilarity:
             tool_similarity[ "root_tool" ] = root_tool
             tool_similarity[ "similar_tools" ] = sorted_scores
             similarity.append( tool_similarity )
-            print "Finished tool %d" % index
+            #print "Finished tool %d" % index
 
         with open( 'similarity_matrix.json','w' ) as file:
             file.write( json.dumps( similarity ) )
