@@ -17,9 +17,7 @@ class PredictToolSimilarity:
     @classmethod
     def __init__( self ):
         self.file_path = '/data/all_tools.csv'
-        # the scores here should sum up to 1 as they extend some kind of probability to the sources of tokens
-        self.importance_factors = { "input_output": 0.7, 'name_desc': 0.2, 'edam_help': 0.1 }
-        self.tools_show = 20
+        self.tools_show = 80
 
     @classmethod
     def read_file( self ):
@@ -224,7 +222,7 @@ class PredictToolSimilarity:
                         root_tool = record
                     else:
                         scores.append( record )
-            sorted_scores = sorted( scores[ :self.tools_show ], key=operator.itemgetter( "score" ), reverse=True )
+            sorted_scores = sorted( scores[ :80 ], key=operator.itemgetter( "score" ), reverse=True )
             tool_similarity[ "root_tool" ] = root_tool
             tool_similarity[ "similar_tools" ] = sorted_scores
             similarity.append( tool_similarity )
