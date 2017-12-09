@@ -254,7 +254,7 @@ if __name__ == "__main__":
     print "Computed distance"
 
     print "Learning optimal weights..."
-    optimal_weights = gd.gradient_descent( tools_distance_matrix, files_list )
+    optimal_weights, cost_tools = gd.gradient_descent( tools_distance_matrix, files_list )
     print "Optimal weights found..."
 
     print "Assign importance to similarity matrix..."
