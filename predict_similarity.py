@@ -254,7 +254,7 @@ if __name__ == "__main__":
     print "Computed distance"
 
     print "Learning optimal weights..."
-    optimal_weights, cost_tools = gd.gradient_descent( tools_distance_matrix, files_list )
+    optimal_weights, cost_tools, iterations = gd.gradient_descent( tools_distance_matrix, files_list )
     print "Optimal weights found..."
 
     print "Assign importance to similarity matrix..."
@@ -263,4 +263,9 @@ if __name__ == "__main__":
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( similarity_matrix, dataframe, files_list )
     print "Listed the similar tools in a JSON file"
+
+    print "Plotting the changes of costs during iterations..."
+    plots_count = 10
+    utils._plot_tools_cost( cost_tools, iterations, plots_count )
+
     print "Program finished"

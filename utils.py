@@ -26,12 +26,26 @@ def _check_number( item ):
     except Exception as exception:
         return False
 
-def _plot_heatmap( similarity_matrix ):
-    sns.heatmap(similarity_matrix, annot=True, fmt="g", cmap='viridis')
-    plt.show()
-
 def _angle( vector1, vector2 ):
   if linalg.norm( vector1 ) == 0 or linalg.norm( vector2 ) == 0:
       return 0
   else:  
       return dot( vector1, vector2 ) / ( linalg.norm( vector1 ) * linalg.norm( vector2 ) )
+
+def _plot_heatmap( similarity_matrix ):
+    sns.heatmap(similarity_matrix, annot=True, fmt="g", cmap='viridis')
+    plt.show()
+
+def _plot_tools_cost( cost_tools, iterations, plots_count ):
+    for index, item in enumerate( cost_tools ):
+        x_axis = [ x for x in range( iterations ) ]
+        y_axis = item
+        plt.plot( x_axis, y_axis )
+        plt.xlabel( 'Number of iterations' )
+        plt.ylabel( 'Cost' )
+        plt.show()
+        if index == plots_count:
+            break
+
+
+
