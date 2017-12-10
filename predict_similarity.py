@@ -180,13 +180,10 @@ class PredictToolSimilarity:
         """
         Assign importance to the similarity scores coming for different sources
         """
-        similarity_matrix = list()
         all_tools = len( tools_list )
-        for tool_index, tool in enumerate( tools_list ):
-            sim_mat = np.zeros( all_tools )
-            for source in similarity_matrix_sources:
-                sim_mat += optimal_weights[ tools_list[ tool_index ] ][ source ] * similarity_matrix_sources[ source ][ tool_index ]
-            similarity_matrix.append( sim_mat )
+        similarity_matrix = np.zeros( ( all_tools, all_tools ) )
+        for source in similarity_matrix_sources:
+            similarity_matrix += optimal_weights[ source ] * similarity_matrix_sources[ source ]
         return similarity_matrix
 
     @classmethod
@@ -254,7 +251,7 @@ if __name__ == "__main__":
     print "Computed distance"
 
     print "Learning optimal weights..."
-    optimal_weights, cost_tools = gd.gradient_descent( tools_distance_matrix, files_list )
+    optimal_weights, cost_tools, iterations = gd.gradient_descent( tools_distance_matrix, files_list )
     print "Optimal weights found..."
 
     print "Assign importance to similarity matrix..."
@@ -263,4 +260,8 @@ if __name__ == "__main__":
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( similarity_matrix, dataframe, files_list )
     print "Listed the similar tools in a JSON file"
+
+    print "Plotting the changes of costs during iterations..."
+    utils._plot_tools_cost( cost_tools, iterations )
+
     print "Program finished"
