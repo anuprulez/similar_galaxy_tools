@@ -183,6 +183,7 @@ class PredictToolSimilarity:
         all_tools = len( tools_list )
         similarity_matrix = np.zeros( ( all_tools, all_tools ) )
         for source in similarity_matrix_sources:
+            #similarity_matrix += np.dot( similarity_matrix_sources[ source ], optimal_weights[ source ].transpose() )
             similarity_matrix += optimal_weights[ source ] * similarity_matrix_sources[ source ]
         return similarity_matrix
 

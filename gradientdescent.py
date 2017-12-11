@@ -6,13 +6,14 @@ of tokens using Gradient Descent
 import os
 import numpy as np
 import operator
+import time
 
 
 class GradientDescentOptimizer:
 
     @classmethod
     def __init__( self ):
-        self.number_iterations = 500
+        self.number_iterations = 1500
         # parameters related for Gradient Descent
         self.learning_rate = 0.05
         self.momentum = 0.9 # adds a portion of previous update to the current update
@@ -21,7 +22,7 @@ class GradientDescentOptimizer:
     @classmethod
     def get_random_weights( self, num_all_tools ):
         """
-        Intialize the weight matrices with random numbers between 0 and 1
+        Initialize the weight matrices with random numbers between 0 and 1
         """
         weights = dict()
         for item in self.sources:
@@ -29,7 +30,7 @@ class GradientDescentOptimizer:
         return weights
 
     @classmethod
-    def update_weights( self, weights, gradient, previous_update ):
+    def update_weights_momentum( self, weights, gradient, previous_update ):
         """
         Define weight update rule for Gradient Descent with momentum
         """
@@ -39,6 +40,15 @@ class GradientDescentOptimizer:
             weight_update[ source ] = velocity + self.learning_rate * gradient[ source ]
             weights[ source ] = weights[ source ] - weight_update[ source ]
         return weights, weight_update
+
+    @classmethod
+    def update_weights( self, weights, gradient ):
+        """
+        Define weight update rule for Vanilla Gradient Descent
+        """
+        for source in weights:
+            weights[ source ] = weights[ source ] - self.learning_rate * gradient[ source ]
+        return weights
 
     @classmethod
     def normalize_weights( self, weights ):
@@ -58,7 +68,7 @@ class GradientDescentOptimizer:
         Gradient descent optimizer to learn importance weights of the 
         sources of annotations for the Galaxy tools
         """
-        num_all_tools = len( tools_list )	
+        num_all_tools = len( tools_list )
         tools_optimal_weights = dict()
         cost_tools = list()
         previous_update = dict()
@@ -67,31 +77,32 @@ class GradientDescentOptimizer:
         random_importance_weights = self.get_random_weights( num_all_tools )
         # ideal scores are indentity matrices
         ideal_score_source = np.ones( ( num_all_tools, num_all_tools ) )
+        start_time = time.time()
         for iteration in range( self.number_iterations ):
             cost_sources = list()
             gradient_sources = dict()
             # loop through each source
             for source in similarity_matrix:
                 tool_score_source = similarity_matrix[ source ]
-                # calculate the mean weight for a source
-                weight_scalar = np.mean( random_importance_weights[ source ] )
                 # proposed similarity matrix
-                hypothesis_score_source = weight_scalar * tool_score_source
+                hypothesis_score_source = np.dot( tool_score_source, random_importance_weights[ source ].transpose() )
+                # as the scores are summed up, it is important to take average
+                hypothesis_score_source = hypothesis_score_source / num_all_tools
                 # determine how far is our proposed similarity matrix with the ideal one
                 loss = hypothesis_score_source - ideal_score_source
                 # mean loss for a source
                 cost_sources.append( np.mean( loss ) )
                 # gradient for a source
-                gradient = np.dot( tool_score_source, loss.transpose() ) / num_all_tools
+                gradient = np.dot( tool_score_source.transpose(), loss ) / num_all_tools
                 gradient_sources[ source ] = gradient
             # apply gradient descent and update the weights
-            random_importance_weights, weight_update = self.update_weights( random_importance_weights, gradient_sources, previous_update )
-            previous_update = weight_update
+            random_importance_weights = self.update_weights( random_importance_weights, gradient_sources )
             # add cost for an iteration
             cost_iteration.append( np.mean( cost_sources ) )
             print "Iteration: %d" % iteration
+        end_time = time.time()
+        print "Iterations finished in %d" % int( end_time - start_time )
         optimal_weights = dict()
-        # find the normalized optimal weights
         for source in random_importance_weights:
             optimal_weights[ source ] = np.mean( random_importance_weights[ source ] )
         optimal_weights = self.normalize_weights( optimal_weights )
