@@ -13,7 +13,7 @@ class GradientDescentOptimizer:
 
     @classmethod
     def __init__( self ):
-        self.number_iterations = 1500
+        self.number_iterations = 10 
         # parameters related for Gradient Descent
         self.learning_rate = 0.05
         self.momentum = 0.9 # adds a portion of previous update to the current update
@@ -96,12 +96,13 @@ class GradientDescentOptimizer:
                 gradient = np.dot( tool_score_source.transpose(), loss ) / num_all_tools
                 gradient_sources[ source ] = gradient
             # apply gradient descent and update the weights
-            random_importance_weights = self.update_weights( random_importance_weights, gradient_sources )
+            random_importance_weights, weight_update = self.update_weights_momentum( random_importance_weights, gradient_sources, previous_update )
+            previous_update = weight_update
             # add cost for an iteration
             cost_iteration.append( np.mean( cost_sources ) )
             print "Iteration: %d" % iteration
         end_time = time.time()
-        print "Iterations finished in %d" % int( end_time - start_time )
+        print "Iterations finished in %d seconds" % int( end_time - start_time )
         optimal_weights = dict()
         for source in random_importance_weights:
             optimal_weights[ source ] = np.mean( random_importance_weights[ source ] )
