@@ -45,4 +45,10 @@ def _plot_tools_cost( cost_tools, iterations ):
     plt.ylabel( 'Cost' )
     plt.show()
 
+def _plot_learning_rate( learning_rates, iterations ):
+    plt.plot( [ x for x in range( iterations ) ], learning_rates )
+    plt.xlabel( 'Number of iterations' )
+    plt.ylabel( 'Learning rates' )
+    plt.show()
+
 
