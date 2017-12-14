@@ -17,7 +17,7 @@ class PredictToolSimilarity:
     @classmethod
     def __init__( self ):
         self.file_path = '/data/all_tools.csv'
-        self.tools_show = 80
+        self.tools_show = 50
 
     @classmethod
     def read_file( self ):
@@ -183,7 +183,6 @@ class PredictToolSimilarity:
         all_tools = len( tools_list )
         similarity_matrix = np.zeros( ( all_tools, all_tools ) )
         for source in similarity_matrix_sources:
-            #similarity_matrix += np.dot( similarity_matrix_sources[ source ], optimal_weights[ source ].transpose() )
             similarity_matrix += optimal_weights[ source ] * similarity_matrix_sources[ source ]
         return similarity_matrix
 
@@ -220,9 +219,9 @@ class PredictToolSimilarity:
                         root_tool = record
                     else:
                         scores.append( record )
-            sorted_scores = sorted( scores[ :80 ], key=operator.itemgetter( "score" ), reverse=True )
+            sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )
             tool_similarity[ "root_tool" ] = root_tool
-            tool_similarity[ "similar_tools" ] = sorted_scores
+            tool_similarity[ "similar_tools" ] = sorted_scores[ :self.tools_show ]
             similarity.append( tool_similarity )
             #print "Finished tool %d" % index
 

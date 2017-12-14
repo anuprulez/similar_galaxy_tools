@@ -13,7 +13,7 @@ class GradientDescentOptimizer:
 
     @classmethod
     def __init__( self ):
-        self.number_iterations = 200
+        self.number_iterations = 500
         # parameters related for Gradient Descent
         self.learning_rate = 0.2
         self.momentum = 0.9 # adds a portion of previous update to the current update
@@ -46,12 +46,12 @@ class GradientDescentOptimizer:
         """
         Define weight update rule for Gradient Descent with adaptive gradient
         """
-        fudge_factor = 1e-6
+        stability_factor = 1e-6
         step_size = 1e-1
         for source in weights:
-            diagonal_comp = np.diag( historical_gradient[ source ] )
-            adaptive_grad_comp = np.mean( np.sqrt( diagonal_comp ) )
-            adjusted_gradient = gradient[ source ] / ( fudge_factor + adaptive_grad_comp )
+            diagonal_gradient = np.diag( historical_gradient[ source ] )
+            adaptive_gradient_content = np.mean( np.sqrt( diagonal_gradient ) )
+            adjusted_gradient = gradient[ source ] / ( stability_factor + adaptive_gradient_content ) 
             weights[ source ] = weights[ source ] - step_size * adjusted_gradient
         return weights
 
@@ -98,7 +98,7 @@ class GradientDescentOptimizer:
         tools_optimal_weights = dict()
         cost_tools = list()
         previous_update = dict()
-        hist_gradient_init = np.zeros((num_all_tools, num_all_tools))
+        hist_gradient_init = np.zeros( ( num_all_tools, num_all_tools ) )
         historical_gradient = { 'input_output': hist_gradient_init, 'name_desc': hist_gradient_init, 'edam_help': hist_gradient_init }
         cost_iteration = list()
         # get random weights
