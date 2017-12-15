@@ -170,7 +170,7 @@ class PredictToolSimilarity:
             sim_mat = document_token_matrix_sources[ source ]
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
-                for index_y, item_y in enumerate( sim_mat ):   
+                for index_y, item_y in enumerate( sim_mat ):
                     sim_scores[ index_x ][ index_y ] = utils._angle( item_x, item_y )
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
@@ -222,9 +222,10 @@ class PredictToolSimilarity:
                         root_tool = record
                     else:
                         scores.append( record )
-            sorted_scores = sorted( scores[ :80 ], key=operator.itemgetter( "score" ), reverse=True )
+            
             tool_similarity[ "root_tool" ] = root_tool
-            tool_similarity[ "similar_tools" ] = sorted_scores
+            sorted_scores = sorted( scores, key=operator.itemgetter( "score" ), reverse=True )
+            tool_similarity[ "similar_tools" ] = sorted_scores[:50]
             similarity.append( tool_similarity )
             #print "Finished tool %d" % index
 
@@ -267,5 +268,8 @@ if __name__ == "__main__":
     print "Plotting the changes of costs during iterations..."
     plots_count = 10
     utils._plot_tools_cost( cost_tools, iterations, plots_count )
+    
+    print "Plotting learning rates..."
+    #utils._plot_learning_rate( learning_rates, iterations )
 
     print "Program finished"

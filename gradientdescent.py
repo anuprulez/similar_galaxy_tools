@@ -13,47 +13,41 @@ class GradientDescentOptimizer:
     @classmethod
     def __init__( self ):
         # Gradient descent parameters
-        self.number_iterations = 100
-        self.learning_rate = 0.05
+        self.number_iterations = 3000
+        self.learning_rate = 0.5
         self.momentum = 0.9
         self.sources = [ 'input_output', 'name_desc', 'edam_help' ]
-        
+
     @classmethod
-    def get_random_weights( self, num_all_tools ):
+    def get_random_weights( self ):
         """
         Initialize the random weight matrices
         """
         weights = dict()
         for item in self.sources:
-            weights[ item ] = np.random.random_sample( ( num_all_tools, num_all_tools ) )
-        #return weights
+            weights[ item ] = np.random.random_sample( 1 )
         return self.normalize_weights( weights )
 
     @classmethod
-    def update_weights( self, weights, gradient, previous_update ):
+    def update_weights( self, weights, gradient, learning_rate ):
         """
         Update the weights for each source using gradient descent with momentum
         """
-        weight_update = dict()
         for source in weights:
-            velocity = previous_update[ source ] * self.momentum if source in previous_update else 0
-            # compute weight update using a fraction of update from previous iteration update
-            weight_update[ source ] = velocity + self.learning_rate * gradient[ source ]
-            weights[ source ] = weights[ source ] - weight_update[ source ]
-        return weights, weight_update
+            weights[ source ] = weights[ source ] - learning_rate * gradient[ source ]
+        return weights
 
     @classmethod
     def update_weights_adagrad( self, weights, gradient, historical_gradient ):
         """
         Define weight update rule for Gradient Descent with adaptive gradient
         """
-        fudge_factor = 1e-6
+        stability_factor = 1e-8 # to give numerical stability in case the gradient history is zero
         step_size = 1e-1
         for source in weights:
-            diagonal_comp = np.diag( historical_gradient[ source ] )
-            adaptive_grad_comp = np.mean( np.sqrt( diagonal_comp ) )
-            adjusted_gradient = gradient[ source ] / ( fudge_factor + np.sqrt( historical_gradient[ source ] ) )
-            weights[ source ] = weights[ source ] - step_size * adjusted_gradient
+            #adjusted_gradient = gradient[ source ] / ( stability_factor + np.mean( np.sqrt( np.diag( historical_gradient[ source ] ) ) ) )
+            adjusted_gradient = gradient[ source ] / ( stability_factor + np.sqrt( historical_gradient[ source ] ) )
+            weights[ source ] = weights[ source ] - self.learning_rate * adjusted_gradient
         return weights
 
     @classmethod
@@ -67,6 +61,13 @@ class GradientDescentOptimizer:
         for source in weights:
             weights[ source ] = weights[ source ] / sum_weights
         return weights
+        
+    @classmethod
+    def step_decay_learning_rate( self, epoch ):
+        drop = 0.95
+        epochs_drop = 20.0
+        lr_multiplier = np.power( drop, np.floor( ( 1. + epoch ) / epochs_drop ) )
+        return self.learning_rate * lr_multiplier
 
     @classmethod
     def gradient_descent( self, similarity_matrix, tools_list ):
@@ -76,39 +77,34 @@ class GradientDescentOptimizer:
         num_all_tools = len( tools_list )
         tools_optimal_weights = dict()
         cost_tools = list()
-        hist_gradient_init = np.zeros((num_all_tools, num_all_tools))
         for tool_index in range( num_all_tools ):
+            print "Tool index: %d and tool name: %s" % ( tool_index, tools_list[ tool_index ] )
             # random weights to start with
-            random_importance_weights = self.get_random_weights( num_all_tools )
-            print tools_list[ tool_index ]
-            previous_update = dict()
+            random_importance_weights = self.get_random_weights()
+            print random_importance_weights
             cost_iteration = list()
-            historical_gradient = { 'input_output': hist_gradient_init, 'name_desc': hist_gradient_init, 'edam_help': hist_gradient_init }
-            # ideal_tool_score = np.ones( num_all_tools )
+            ideal_tool_score = np.ones( num_all_tools )
             for iteration in range( self.number_iterations ):
                 sources_gradient = dict()
                 cost_sources = list()
+                learning_rate = self.step_decay_learning_rate( iteration )
                 for source in similarity_matrix:
                     tools_score_source = similarity_matrix[ source ][ tool_index ]
-                    ideal_tool_score = np.repeat( tools_score_source[ tool_index ], num_all_tools )
-                    # generate a hypothesis similarity matrix using a random weight
-                    hypothesis_score_source = np.mean( random_importance_weights[ source ] ) * tools_score_source
+                    hypothesis_score_source = random_importance_weights[ source ] * tools_score_source
                     # compute loss between the ideal score and hypothesised similarity score
                     loss = hypothesis_score_source - ideal_tool_score
+                    # add cost for a tool's source
                     cost_sources.append( np.mean( loss ) )
-                    # compute average gradient
-                    gradient = np.dot( tools_score_source.transpose(), loss )
+                    # compute gradient
+                    gradient = np.dot( tools_score_source, loss.transpose() ) / num_all_tools
+                    # add gradient for a source
                     sources_gradient[ source ] = gradient
-                    historical_gradient[ source ] += gradient ** 2
                 cost_iteration.append( np.mean( cost_sources ) )
-                # update weights using gradient and previous update
-                random_importance_weights = self.update_weights_adagrad( random_importance_weights, sources_gradient, historical_gradient )
+                random_importance_weights = self.update_weights( random_importance_weights, sources_gradient, learning_rate )
+            # add cost for a tool for all iterations
             cost_tools.append( cost_iteration )
-            optimal_weights = dict()
-            for source in random_importance_weights:
-                optimal_weights[ source ] = np.mean( random_importance_weights[ source ] )
-            optimal_weights = self.normalize_weights( optimal_weights )
-            print optimal_weights
-            print "---------------------------"
-            tools_optimal_weights[ tools_list[ tool_index ] ] = optimal_weights
+            random_importance_weights = self.normalize_weights( random_importance_weights )
+            print random_importance_weights
+            print "---------------------------------------------------------------------"
+            tools_optimal_weights[ tools_list[ tool_index ] ] = random_importance_weights
         return tools_optimal_weights, cost_tools, self.number_iterations
