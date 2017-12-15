@@ -1,7 +1,7 @@
 import re
 import matplotlib.pyplot as plt
 import seaborn as sns
-from numpy import *
+import numpy as np
 
 
 def _get_text( row, attr ):
@@ -27,25 +27,57 @@ def _check_number( item ):
         return False
 
 def _angle( vector1, vector2 ):
-  if linalg.norm( vector1 ) == 0 or linalg.norm( vector2 ) == 0:
+  """
+  Get value of the cosine angle between two vectors
+  """
+
+  # if either of the vectors is zero, then cosine of the angle is also 0 
+  # which means vectors are dissimilar
+  if np.linalg.norm( vector1 ) == 0 or np.linalg.norm( vector2 ) == 0:
       return 0
   else:  
-      return dot( vector1, vector2 ) / ( linalg.norm( vector1 ) * linalg.norm( vector2 ) )
+      return np.dot( vector1, vector2 ) / ( np.linalg.norm( vector1 ) * np.linalg.norm( vector2 ) )
 
 def _plot_heatmap( similarity_matrix ):
     sns.heatmap(similarity_matrix, annot=True, fmt="g", cmap='viridis')
     plt.show()
 
-def _plot_tools_cost( cost_tools, iterations, plots_count ):
-    for index, item in enumerate( cost_tools ):
-        x_axis = [ x for x in range( iterations ) ]
-        y_axis = item
-        plt.plot( x_axis, y_axis )
-        plt.xlabel( 'Number of iterations' )
-        plt.ylabel( 'Cost' )
-        plt.show()
-        if index == plots_count:
-            break
+def _plot_tools_cost( cost_tools, iterations ):
+    """
+    Generate plot for varying cost in iterations
+    """
+    mean_tool_cost = np.mean( cost_tools, 0 )
+    x_axis = [ x for x in range( iterations ) ]
+    plt.plot( x_axis, mean_tool_cost )
+    plt.xlabel( 'Number of iterations' )
+    plt.ylabel( 'Learned cost' )
+    plt.show()
 
+def _plots_original_learned_matrix( matrix_original, matrix_learned, files_list ):
+    """
+    Generate plots for original, learned and difference of costs
+    """
+    original_cost = list()
+    learned_cost = list()
+    diff_cost = list()
+    all_tools = len( files_list )
+    x_axis = [ x for x in range( all_tools ) ]
 
+    # compute mean similarity score for each tool
+    for index, item in enumerate( matrix_original ):
+        mean_learned = np.mean( matrix_learned[ index ] )
+        mean_original = np.mean( item )
+        diff_cost.append( mean_learned - mean_original )
+        learned_cost.append( mean_learned )
+        original_cost.append( mean_original )
 
+    # generate plots with their respective legends
+    l_cost, = plt.plot( x_axis, learned_cost, 'b.', label = 'Learned cost' )
+    o_cost, = plt.plot( x_axis, original_cost, 'r.', label = 'Original cost' )
+    d_cost, = plt.plot( x_axis, diff_cost, 'g.', label = 'Learned - Original' )
+    h_line, = plt.plot( x_axis, [ 0 for x in range( all_tools ) ], 'k.', label = 'Cost = 0' )
+
+    plt.legend( handles = [ l_cost, o_cost, d_cost, h_line ] )
+    plt.xlabel( 'Tools' )
+    plt.ylabel( 'Cost' )
+    plt.show()

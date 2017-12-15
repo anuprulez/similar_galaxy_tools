@@ -55,11 +55,11 @@ $(document).ready(function(){
         template += "<table><thead>";
         template += "<th>Id</th>";
         template += "<th> Similarity score </th>";
-        template += "<th> Name and Description </th>";
-        template += "<th> Input types </th>";
-        template += "<th> Output types </th>";
-        template += "<th> What it does </th>";
-        template += "<th> EDAM description </th>";
+        template += "<th> Name and description </th>";
+        template += "<th> Input files </th>";
+        template += "<th> Output files </th>";
+        template += "<th> Help text (what it does) </th>";
+        template += "<th> EDAM </th>";
         template += "</thead><tbody>";
         for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
             var tool = toolScores[ counter_ts ];

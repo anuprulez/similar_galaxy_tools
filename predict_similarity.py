@@ -17,7 +17,8 @@ class PredictToolSimilarity:
     @classmethod
     def __init__( self ):
         self.file_path = '/data/all_tools.csv'
-        self.tools_show = 80
+        self.tools_show = 50
+        self.uniform_prior = 1 / 3.
 
     @classmethod
     def read_file( self ):
@@ -147,6 +148,7 @@ class PredictToolSimilarity:
                     if word not in all_tokens:
                         all_tokens.append( word )
 
+            # create tools x tokens matrix containing respective frequency or relevance score for each term
             document_tokens_matrix= np.zeros( ( len( tools_list ), len( all_tokens ) ) )
             counter = 0
             for tool_item in doc_tokens:
@@ -171,6 +173,7 @@ class PredictToolSimilarity:
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
+                    # assign similarity score for a pair of tool using cosine angle bectween their vectors
                     sim_scores[ index_x ][ index_y ] = utils._angle( item_x, item_y )
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
@@ -180,14 +183,22 @@ class PredictToolSimilarity:
         """
         Assign importance to the similarity scores coming for different sources
         """
-        similarity_matrix = list()
+        similarity_matrix_original = list()
+        similarity_matrix_learned = list()
         all_tools = len( tools_list )
+        
         for tool_index, tool in enumerate( tools_list ):
-            sim_mat = np.zeros( all_tools )
+            sim_mat_original = np.zeros( all_tools )
+            sim_mat_tool_learned = np.zeros( all_tools )
             for source in similarity_matrix_sources:
-                sim_mat += optimal_weights[ tools_list[ tool_index ] ][ source ] * similarity_matrix_sources[ source ][ tool_index ]
-            similarity_matrix.append( sim_mat )
-        return similarity_matrix
+                # add up the similarity scores from each source weighted by a uniform prior
+                sim_mat_original += self.uniform_prior * similarity_matrix_sources[ source ][ tool_index ]
+                # add up the similarity scores from each source weighted by importance factors learned by machine leanring algorithm
+                sim_mat_tool_learned += optimal_weights[ tools_list[ tool_index ] ][ source ] * similarity_matrix_sources[ source ][ tool_index ]
+            similarity_matrix_original.append( sim_mat_original )
+            similarity_matrix_learned.append( sim_mat_tool_learned )
+            
+        return similarity_matrix_original, similarity_matrix_learned
 
     @classmethod
     def associate_similarity( self, similarity_matrix, dataframe, tools_list ):
@@ -222,12 +233,12 @@ class PredictToolSimilarity:
                         root_tool = record
                     else:
                         scores.append( record )
-            
+
             tool_similarity[ "root_tool" ] = root_tool
             sorted_scores = sorted( scores, key=operator.itemgetter( "score" ), reverse=True )
-            tool_similarity[ "similar_tools" ] = sorted_scores[:50]
+            # don't take all the tools predicted, just TOP something
+            tool_similarity[ "similar_tools" ] = sorted_scores[ :self.tools_show ]
             similarity.append( tool_similarity )
-            #print "Finished tool %d" % index
 
         with open( 'similarity_matrix.json','w' ) as file:
             file.write( json.dumps( similarity ) )
@@ -235,7 +246,7 @@ class PredictToolSimilarity:
 
 
 if __name__ == "__main__":
-    np.seterr( all='ignore' )
+    np.seterr( all = 'ignore' )
     tool_similarity = PredictToolSimilarity()
     gd = gradientdescent.GradientDescentOptimizer()
     dataframe = tool_similarity.read_file()
@@ -259,17 +270,17 @@ if __name__ == "__main__":
     print "Optimal weights found..."
 
     print "Assign importance to similarity matrix..."
-    similarity_matrix = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list, optimal_weights )
+    similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list, optimal_weights )
+    print "Plotting the changes of costs during iterations..."
+    utils._plot_tools_cost( cost_tools, iterations )
+
+    print "Plots for learning..."
+    utils._plots_original_learned_matrix( similarity_matrix_original, similarity_matrix_learned, files_list )
 
     print "Writing results to a JSON file..."
-    tool_similarity.associate_similarity( similarity_matrix, dataframe, files_list )
-    print "Listed the similar tools in a JSON file"
+    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list )
 
-    print "Plotting the changes of costs during iterations..."
-    plots_count = 10
-    utils._plot_tools_cost( cost_tools, iterations, plots_count )
-    
-    print "Plotting learning rates..."
+    #print "Plotting learning rates..."
     #utils._plot_learning_rate( learning_rates, iterations )
 
     print "Program finished"
