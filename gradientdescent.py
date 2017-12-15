@@ -12,7 +12,7 @@ class GradientDescentOptimizer:
     @classmethod
     def __init__( self ):
         # Gradient descent parameters
-        self.number_iterations = 200
+        self.number_iterations = 100
         self.learning_rate = 0.08
         self.sources = [ 'input_output', 'name_desc', 'edam_help' ]
 

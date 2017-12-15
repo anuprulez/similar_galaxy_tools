@@ -49,6 +49,7 @@ def _plot_tools_cost( cost_tools, iterations ):
     mean_tool_cost = np.mean( cost_tools, 0 )
     x_axis = [ x for x in range( iterations ) ]
     plt.plot( x_axis, mean_tool_cost )
+    plt.grid(color='k', linestyle='-', linewidth=0.25)
     plt.xlabel( 'Number of iterations' )
     plt.ylabel( 'Learned cost' )
     plt.show()
@@ -78,6 +79,7 @@ def _plots_original_learned_matrix( matrix_original, matrix_learned, files_list 
     h_line, = plt.plot( x_axis, [ 0 for x in range( all_tools ) ], 'k.', label = 'Cost = 0' )
 
     plt.legend( handles = [ l_cost, o_cost, d_cost, h_line ] )
+    plt.grid(color='k', linestyle='-', linewidth=0.15)
     plt.xlabel( 'Tools' )
     plt.ylabel( 'Cost' )
     plt.show()

@@ -8,9 +8,11 @@ import pandas as pd
 import operator
 import json
 from math import *
+from nltk.stem import *
 
 import utils
 import gradientdescent
+
 
 class PredictToolSimilarity:
 
@@ -67,6 +69,7 @@ class PredictToolSimilarity:
         """
         k = 1.75
         b = 0.75
+        port_stemmer = PorterStemmer()
         refined_tokens_sources = dict()
         for source in tokens:
             refined_tokens = dict()
@@ -116,12 +119,9 @@ class PredictToolSimilarity:
             for item in files:
                 file_item = files[ item ]
                 sorted_x = sorted( file_item.items(), key=operator.itemgetter( 1 ), reverse=True )
-                scores = [ score for (token, score) in sorted_x ]
-                mean_score = np.mean( scores )
-                sigma = np.sqrt( np.var( scores ) )
-                selected_tokens = [ ( token, score ) for ( token, score ) in sorted_x if not utils._check_number( token ) ]
+                scores = [ score for ( token, score ) in sorted_x ]
+                selected_tokens = [ ( port_stemmer.stem( token ), score ) for ( token, score ) in sorted_x if not utils._check_number( token ) and len( token ) > 2 ]
                 selected_tokens_sorted = sorted( selected_tokens, key=operator.itemgetter( 1 ), reverse=True )
-
                 refined_tokens[ item ] = selected_tokens_sorted
             tokens_file_name = 'tokens_' + source + '.txt'
             with open( tokens_file_name, 'w' ) as file:
@@ -279,8 +279,5 @@ if __name__ == "__main__":
 
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list )
-
-    #print "Plotting learning rates..."
-    #utils._plot_learning_rate( learning_rates, iterations )
 
     print "Program finished"
