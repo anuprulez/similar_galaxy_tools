@@ -12,8 +12,8 @@ class GradientDescentOptimizer:
     @classmethod
     def __init__( self ):
         # Gradient descent parameters
-        self.number_iterations = 100
-        self.learning_rate = 0.5
+        self.number_iterations = 200
+        self.learning_rate = 0.7
         self.sources = [ 'input_output', 'name_desc', 'edam_help' ]
 
     @classmethod
@@ -76,12 +76,12 @@ class GradientDescentOptimizer:
                 cost_sources = list()
                 learning_rate = self.step_decay_learning_rate( iteration )
                 for source in similarity_matrix:
+                    # tool's similarity score for a source
                     tools_score_source = similarity_matrix[ source ][ tool_index ]
                     ideal_tool_score = np.repeat( tools_score_source[ tool_index ], num_all_tools )
-                    mean_weights = np.mean( random_importance_weights[ source ] )
-                    hypothesis_score_source = mean_weights * tools_score_source
+                    # proposed similarity score for a source
+                    hypothesis_score_source = random_importance_weights[ source ] * tools_score_source
                     # compute loss between the ideal score and hypothesised similarity score
-                    tools_score_source = tools_score_source.transpose()
                     loss = hypothesis_score_source - ideal_tool_score
                     # add cost for a tool's source
                     cost_sources.append( np.mean( loss ) )

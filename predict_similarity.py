@@ -8,6 +8,7 @@ import pandas as pd
 import operator
 import json
 from math import *
+from nltk.stem import *
 
 import utils
 import gradientdescent
@@ -67,6 +68,7 @@ class PredictToolSimilarity:
         """
         k = 1.75
         b = 0.75
+        port_stemmer = PorterStemmer()
         refined_tokens_sources = dict()
         for source in tokens:
             refined_tokens = dict()
@@ -117,9 +119,7 @@ class PredictToolSimilarity:
                 file_item = files[ item ]
                 sorted_x = sorted( file_item.items(), key=operator.itemgetter( 1 ), reverse=True )
                 scores = [ score for (token, score) in sorted_x ]
-                mean_score = np.mean( scores )
-                sigma = np.sqrt( np.var( scores ) )
-                selected_tokens = [ ( token, score ) for ( token, score ) in sorted_x if not utils._check_number( token ) ]
+                selected_tokens = [ ( port_stemmer.stem( token ), score ) for ( token, score ) in sorted_x if not utils._check_number( token ) and len( token ) > 2 ]
                 selected_tokens_sorted = sorted( selected_tokens, key=operator.itemgetter( 1 ), reverse=True )
 
                 refined_tokens[ item ] = selected_tokens_sorted

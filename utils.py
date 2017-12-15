@@ -51,12 +51,14 @@ def _plot_tools_cost( cost_tools, iterations ):
     plt.plot( x_axis, mean_tool_cost )
     plt.xlabel( 'Number of iterations' )
     plt.ylabel( 'Learned cost' )
+    plt.grid(color='k', linestyle='-', linewidth=0.25)
     plt.show()
 
 def _plot_learning_rate( learning_rates, iterations ):
     plt.plot( [ x for x in range( iterations ) ], learning_rates )
     plt.xlabel( 'Number of iterations' )
     plt.ylabel( 'Learning rates' )
+    plt.grid(color='k', linestyle='-', linewidth=0.25)
     plt.show()
 
 def _plots_original_learned_matrix( matrix_original, matrix_learned, files_list ):
@@ -86,4 +88,5 @@ def _plots_original_learned_matrix( matrix_original, matrix_learned, files_list 
     plt.legend( handles = [ l_cost, o_cost, d_cost, h_line ] )
     plt.xlabel( 'Tools' )
     plt.ylabel( 'Cost' )
+    plt.grid(color='k', linestyle='-', linewidth=0.15)
     plt.show()
