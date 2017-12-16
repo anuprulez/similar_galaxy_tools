@@ -19,7 +19,7 @@ class ExtractToolXML:
     def __init__( self ):
         """ Init method. """
         self.file_extension = 'xml'
-        self.auth = ('anuprulez', 'esrainregnet123!')
+        self.auth = ('anuprulez', '*******************')
         
     @classmethod
     def read_tool_xml( self, data_source_config ):
