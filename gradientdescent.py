@@ -10,9 +10,9 @@ import operator
 class GradientDescentOptimizer:
 
     @classmethod
-    def __init__( self ):
+    def __init__( self, number_iterations ):
         # Gradient descent parameters
-        self.number_iterations = 100
+        self.number_iterations = number_iterations
         self.learning_rate = 0.08
         self.sources = [ 'input_output', 'name_desc', 'edam_help' ]
 
