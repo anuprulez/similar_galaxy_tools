@@ -203,7 +203,7 @@ class PredictToolSimilarity:
         return similarity_matrix_original, similarity_matrix_learned
 
     @classmethod
-    def associate_similarity( self, similarity_matrix, dataframe, tools_list ):
+    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, tools_initial_weights ):
         """
         Get similar tools for each tool
         """
@@ -239,7 +239,10 @@ class PredictToolSimilarity:
             tool_similarity[ "root_tool" ] = root_tool
             sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )
             # don't take all the tools predicted, just TOP something
-            tool_similarity[ "similar_tools" ] = sorted_scores[ :self.tools_show ]
+            tool_similarity[ "similar_tools" ] = sorted_scores[ : self.tools_show ]
+            tool_similarity[ "optimal_weights" ] = optimal_weights[ tool_id ]
+            tool_similarity[ "initial_weights" ] = tools_initial_weights[ tool_id ]
+            tool_similarity[ "cost_iterations" ] = cost_tools[ index ]
             similarity.append( tool_similarity )
 
         similarity_json = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + 'similarity_matrix.json' )
@@ -275,7 +278,7 @@ if __name__ == "__main__":
 
     print "Learning optimal weights..."
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
-    optimal_weights, cost_tools, iterations = gd.gradient_descent( tools_distance_matrix, files_list )
+    optimal_weights, cost_tools, iterations, tools_initial_weights = gd.gradient_descent( tools_distance_matrix, files_list )
     print "Optimal weights found"
 
     print "Assign importance to tools similarity matrix..."
@@ -288,7 +291,7 @@ if __name__ == "__main__":
     utils._plots_original_learned_matrix( similarity_matrix_original, similarity_matrix_learned, files_list )
 
     print "Writing results to a JSON file..."
-    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list )
+    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, tools_initial_weights )
     
     end_time = time.time()
     print "Program finished in %d seconds" % int( end_time - start_time )

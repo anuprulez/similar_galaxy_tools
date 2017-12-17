@@ -9,3 +9,8 @@ table, th, td {
 .no-similar-tool-msg {
     color: red;
 }
+
+#tool-cost-iterations {
+    margin-top: 2%;
+    width: 80%;
+}

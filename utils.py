@@ -37,6 +37,12 @@ def _angle( vector1, vector2 ):
       return 0
   else:  
       return np.dot( vector1, vector2 ) / ( np.linalg.norm( vector1 ) * np.linalg.norm( vector2 ) )
+      
+def _get_weights( weights ):
+    wt = dict()
+    for item in weights:
+        wt[ item ] = weights[ item ][ 0 ]
+    return wt
 
 def _plot_heatmap( similarity_matrix ):
     sns.heatmap(similarity_matrix, annot=True, fmt="g", cmap='viridis')

@@ -5,6 +5,7 @@ of tokens using Gradient Descent
 
 import numpy as np
 import operator
+import utils
 
 
 class GradientDescentOptimizer:
@@ -54,11 +55,13 @@ class GradientDescentOptimizer:
         """
         num_all_tools = len( tools_list )
         tools_optimal_weights = dict()
+        tools_initial_weights = dict()
         cost_tools = list()
         for tool_index in range( num_all_tools ):
             print "Tool index: %d and tool name: %s" % ( tool_index, tools_list[ tool_index ] )
             # random weights to start with
             random_importance_weights = self.get_random_weights()
+            tools_initial_weights[ tools_list[ tool_index ] ] = utils._get_weights( random_importance_weights )
             print random_importance_weights
             cost_iteration = list()
             for iteration in range( self.number_iterations ):
@@ -90,4 +93,4 @@ class GradientDescentOptimizer:
             print optimal_weights
             print "---------------------------------------------------------------------"
             tools_optimal_weights[ tools_list[ tool_index ] ] = optimal_weights
-        return tools_optimal_weights, cost_tools, self.number_iterations
+        return tools_optimal_weights, cost_tools, self.number_iterations, tools_initial_weights

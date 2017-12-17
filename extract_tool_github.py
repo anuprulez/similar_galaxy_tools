@@ -1,5 +1,6 @@
 """
-Extract attributes and their values from the xml files of all tools
+Extract attributes and their values from the xml files of all tools.
+It pulls tools' files from GitHub
 """
 import sys
 import os
@@ -11,6 +12,7 @@ import base64
 import requests
 import time
 import urllib2
+import csv
 
 
 class ExtractToolXML:
@@ -73,8 +75,8 @@ class ExtractToolXML:
         file_dir = dname + self.directory
         if not os.path.exists( file_dir ):
             os.makedirs( file_dir )
-        os.chdir( file_dir )        
-        tools_dataframe.to_csv( self.tool_data_filename )
+        os.chdir( file_dir )      
+        tools_dataframe.to_csv( self.tool_data_filename, encoding='utf-8' )
         end_time = time.time()
         print "%d tools read in %d seconds" % ( len( processed_tools ), int( end_time - start_time ) )
 

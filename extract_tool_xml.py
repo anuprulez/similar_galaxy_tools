@@ -1,5 +1,6 @@
 """
-Extract attributes and their values from the xml files of all tools
+Extract attributes and their values from the xml files of all tools.
+It works on the local repository of all tools
 """
 
 import os

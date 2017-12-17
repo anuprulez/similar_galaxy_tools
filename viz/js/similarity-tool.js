@@ -24,7 +24,7 @@ $(document).ready(function(){
         $( ".tool-ids" ).append( toolIdsTemplate );
     });
 
-
+    // Fire on change of a tool to show similar tools and plot cost vs iteration
     $( ".tool-ids" ).on( 'change', function( e ) {
         e.preventDefault();
         var selectedToolId = e.target.value,
@@ -39,9 +39,18 @@ $(document).ready(function(){
                     template = "";
                 // make html for the selected tool
                 $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "<h4>Selected tool: " +  selectedToolId + "</h4>" ) );
+                
+                // show initial and optimal weights 
+                $el_tools.append( showWeights( toolResults.initial_weights, "Random initial weights for the sources" ) );
+                $el_tools.append( showWeights( toolResults.optimal_weights, "Optimal weights learned" ) );
+                
                 // make html for similar tools
-                $el_tools.append( createHTML( toolScores, selectedToolId, "<h4>Similar tools for the selected tool: " +  selectedToolId + "</h4>" ) );
+                $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " </h4>" ) );
                 availableSimilarTool = true;
+
+                // plot loss drop vs iterations
+                $el_tools.append( "<div id='tool-cost-iterations'></div>" );
+                plotCostVsIterations( toolResults, "tool-cost-iterations" );
                 break;
             }
          } // end of for loop
@@ -49,6 +58,28 @@ $(document).ready(function(){
              $el_tools.empty().html( "<p class='no-similar-tool-msg'>No similar tool available. <p>" );
          }
     });
+    
+    var showWeights = function( weights, headerText ) {
+        var template = "";
+        template = "<div><h4> " + headerText + " </h4>"
+        for( var item in weights ) {
+            if( item === "name_desc" ) {
+                template += "<div>" + "Name and description: <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+            }
+            else if( item === "input_output" ) {
+                template += "<div>" + "Input and output file types: <b>" + toPrecisionNumber( weights[ item ] ) + "</b></div>";
+            }
+            else if( item === "edam_help" ) {
+                template += "<div>" + "Help text and EDAM: <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+            }
+        }
+        template += "</div>";
+        return template;
+    };
+    
+    var toPrecisionNumber = function( number ) {
+        return Math.round( parseFloat( number ) * 100) / 100;
+    };
 
     var createHTML = function( toolScores, originalToolId, headerText ) {
         var template = headerText;
@@ -75,6 +106,29 @@ $(document).ready(function(){
         }
         template += "</tbody></table>";
         return template;
+    };
+    
+    var plotCostVsIterations = function( toolScores, $elPlot ) {
+        var costIterations = toolScores.cost_iterations,
+            iterations = costIterations.length,
+            x_axis = [];
+        for( var i = 0; i < iterations; i++ ) {
+            x_axis.push( i + 1 );
+        }
+        
+        var trace1 = {
+	  x: x_axis,
+	  y: costIterations,
+	  type: 'scatter'
+	};
+
+	var data = [ trace1 ];
+	
+	var layout = {
+            title:'Cost vs Iterations'
+        };
+
+	Plotly.newPlot( $elPlot, data, layout );
     }
 });
 
