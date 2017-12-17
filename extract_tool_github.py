@@ -1,7 +1,7 @@
 """
 Extract attributes and their values from the xml files of all tools
 """
-
+import sys
 import os
 import pandas as pd
 import xml.etree.ElementTree as et
@@ -16,7 +16,7 @@ import urllib2
 class ExtractToolXML:
 
     @classmethod
-    def __init__( self ):
+    def __init__( self, auth ):
         """ Init method. """
         self.file_extension = '.xml'
         self.base_url = 'https://api.github.com/repos/'
@@ -24,7 +24,7 @@ class ExtractToolXML:
         self.tool_data_filename = 'processed_tools.csv'
         # please supply your GitHub's username and password to authenticate yourself
         # in order to be able to read files
-        self.auth = ('anuprulez', '****')
+        self.auth = auth
 
     @classmethod
     def read_tool_xml( self, data_source_config ):
@@ -119,7 +119,8 @@ class ExtractToolXML:
         Make GET requests to GitHub to fetch content of files
         """
         try:
-            request = requests.get( path, auth=self.auth )
+            auth = self.auth.split( ":" )
+            request = requests.get( path, auth=( auth[ 0 ], auth[ 1 ] ) )
             if request.status_code == requests.codes.ok:
                 return request.json()
         except Exception as exception:
@@ -185,6 +186,10 @@ class ExtractToolXML:
             return None
 
 if __name__ == "__main__":
-    extract_tool = ExtractToolXML()
+
+    if len(sys.argv) != 2:
+        print( "Usage: python extract_tool_github.py 'username:password'" )
+        exit( 1 )
+    extract_tool = ExtractToolXML( sys.argv[ 1 ] )
     extract_tool.read_tool_xml( "data_source.config" )
 
