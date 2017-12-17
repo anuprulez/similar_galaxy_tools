@@ -1,12 +1,14 @@
 """
 Predict similarity among tools by analyzing the attributes and 
-finding proximity using Best Match (BM25) algorithms
+finding proximity using Best Match (BM25) and Gradient Descent algorithms
 """
+import sys
 import os
 import numpy as np
 import pandas as pd
 import operator
 import json
+import time
 from math import *
 from nltk.stem import *
 
@@ -18,17 +20,15 @@ class PredictToolSimilarity:
 
     @classmethod
     def __init__( self ):
-        self.file_path = '/data/all_tools.csv'
         self.tools_show = 50
         self.uniform_prior = 1 / 3.
 
     @classmethod
-    def read_file( self ):
+    def read_file( self, file_path ):
         """
         Read the description of all tools
         """
-        os.chdir( os.path.dirname( os.path.abspath( __file__ ) ) + '/data' )
-        return pd.read_csv( 'all_tools.csv' )
+        return pd.read_csv( file_path )
 
     @classmethod
     def extract_tokens( self, file, tokens_source ):
@@ -235,7 +235,7 @@ class PredictToolSimilarity:
                         scores.append( record )
 
             tool_similarity[ "root_tool" ] = root_tool
-            sorted_scores = sorted( scores, key=operator.itemgetter( "score" ), reverse=True )
+            sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )
             # don't take all the tools predicted, just TOP something
             tool_similarity[ "similar_tools" ] = sorted_scores[ :self.tools_show ]
             similarity.append( tool_similarity )
@@ -246,10 +246,15 @@ class PredictToolSimilarity:
 
 
 if __name__ == "__main__":
+
+    if len(sys.argv) != 3:
+        print( "Usage: python predict_similarity.py <file_path> <number_of_iterations>" )
+        exit( 1 )
+
+    start_time = time.time()
     np.seterr( all = 'ignore' )
     tool_similarity = PredictToolSimilarity()
-    gd = gradientdescent.GradientDescentOptimizer()
-    dataframe = tool_similarity.read_file()
+    dataframe = tool_similarity.read_file( sys.argv[ 1 ] )
     print "Read tool files"
 
     tokens = tool_similarity.extract_tokens( dataframe, [ 'input_output', 'name_desc', 'edam_help' ] )
@@ -259,18 +264,20 @@ if __name__ == "__main__":
     print "Refined tokens"
 
     document_tokens_matrix, files_list = tool_similarity.create_document_tokens_matrix( refined_tokens )
-    print "Created document term matrix"
+    print "Created tools tokens matrix"
 
     print "Computing distance..."
     tools_distance_matrix = tool_similarity.find_tools_cos_distance_matrix( document_tokens_matrix, files_list )
     print "Computed distance"
 
     print "Learning optimal weights..."
+    gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
     optimal_weights, cost_tools, iterations = gd.gradient_descent( tools_distance_matrix, files_list )
-    print "Optimal weights found..."
+    print "Optimal weights found"
 
-    print "Assign importance to similarity matrix..."
+    print "Assign importance to tools similarity matrix..."
     similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list, optimal_weights )
+    
     print "Plotting the changes of costs during iterations..."
     utils._plot_tools_cost( cost_tools, iterations )
 
@@ -279,5 +286,6 @@ if __name__ == "__main__":
 
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list )
-
-    print "Program finished"
+    
+    end_time = time.time()
+    print "Program finished in %d seconds" % int( end_time - start_time )
