@@ -19,16 +19,17 @@ import gradientdescent
 class PredictToolSimilarity:
 
     @classmethod
-    def __init__( self ):
+    def __init__( self, tools_data_path ):
+        self.tools_data_path = tools_data_path
         self.tools_show = 50
         self.uniform_prior = 1 / 3.
 
     @classmethod
-    def read_file( self, file_path ):
+    def read_file( self ):
         """
         Read the description of all tools
         """
-        return pd.read_csv( file_path )
+        return pd.read_csv( self.tools_data_path )
 
     @classmethod
     def extract_tokens( self, file, tokens_source ):
@@ -124,7 +125,8 @@ class PredictToolSimilarity:
                 selected_tokens_sorted = sorted( selected_tokens, key=operator.itemgetter( 1 ), reverse=True )
                 refined_tokens[ item ] = selected_tokens_sorted
             tokens_file_name = 'tokens_' + source + '.txt'
-            with open( tokens_file_name, 'w' ) as file:
+            token_file_path = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + tokens_file_name )
+            with open( token_file_path, 'w' ) as file:
                 file.write( json.dumps( refined_tokens ) )
                 file.close()
             refined_tokens_sources[ source ] = refined_tokens
@@ -240,7 +242,8 @@ class PredictToolSimilarity:
             tool_similarity[ "similar_tools" ] = sorted_scores[ :self.tools_show ]
             similarity.append( tool_similarity )
 
-        with open( 'similarity_matrix.json','w' ) as file:
+        similarity_json = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + 'similarity_matrix.json' )
+        with open( similarity_json,'w' ) as file:
             file.write( json.dumps( similarity ) )
             file.close()
 
@@ -253,8 +256,8 @@ if __name__ == "__main__":
 
     start_time = time.time()
     np.seterr( all = 'ignore' )
-    tool_similarity = PredictToolSimilarity()
-    dataframe = tool_similarity.read_file( sys.argv[ 1 ] )
+    tool_similarity = PredictToolSimilarity( sys.argv[ 1 ] )
+    dataframe = tool_similarity.read_file()
     print "Read tool files"
 
     tokens = tool_similarity.extract_tokens( dataframe, [ 'input_output', 'name_desc', 'edam_help' ] )

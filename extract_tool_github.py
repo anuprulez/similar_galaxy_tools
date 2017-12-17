@@ -20,9 +20,11 @@ class ExtractToolXML:
         """ Init method. """
         self.file_extension = '.xml'
         self.base_url = 'https://api.github.com/repos/'
+        self.directory = '/data'
+        self.tool_data_filename = 'processed_tools.csv'
         # please supply your GitHub's username and password to authenticate yourself
         # in order to be able to read files
-        self.auth = ('anuprulez', 'esrainregnet123!')
+        self.auth = ('anuprulez', '****')
 
     @classmethod
     def read_tool_xml( self, data_source_config ):
@@ -68,8 +70,11 @@ class ExtractToolXML:
 
         tools_dataframe = pd.DataFrame( processed_tools )
         dname = os.path.dirname( os.path.abspath(__file__) )
-        os.chdir(dname + '/data')
-        tools_dataframe.to_csv( 'processed_tools.csv' )
+        file_dir = dname + self.directory
+        if not os.path.exists( file_dir ):
+            os.makedirs( file_dir )
+        os.chdir( file_dir )        
+        tools_dataframe.to_csv( self.tool_data_filename )
         end_time = time.time()
         print "%d tools read in %d seconds" % ( len( processed_tools ), int( end_time - start_time ) )
 
