@@ -24,6 +24,9 @@ In the repository, there is an script `extract_tool_github.py` to read all the '
 Execute this script as `python extract_tool_github.py "username:password"`
 
 When this script finishes successfully, a file named `processed_tools.csv` is created at `/data` folder. 
+
+## Find similar tools
+
 Further, run `predict_similarity` script to find similar tools for each tool. Run this script using following command:
 
 `python predict_similarity.py <path to csv file> <number_of_iterations>`. 
