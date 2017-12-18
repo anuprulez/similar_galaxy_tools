@@ -60,6 +60,13 @@ def _plot_tools_cost( cost_tools, iterations ):
     plt.ylabel( 'Learned cost' )
     plt.show()
 
+def _plot_learning_rate( learning_rates, iterations ):
+    plt.plot( [ x for x in range( iterations ) ], learning_rates )
+    plt.xlabel( 'Number of iterations' )
+    plt.ylabel( 'Learning rates' )
+    plt.grid( color='k', linestyle='-', linewidth=0.25 )
+    plt.show()
+
 def _plots_original_learned_matrix( matrix_original, matrix_learned, files_list ):
     """
     Generate plots for original, learned and difference of costs

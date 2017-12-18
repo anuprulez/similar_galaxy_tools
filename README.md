@@ -17,4 +17,15 @@ To better the results, we need to optimize the mixing of these matrices. To achi
 
 # How to use
 
-Please visit `/viz` folder and open the html file "similarity_viz.html" in your browser. When the page opens, it lists all the tools in a select box. Please select any one and see the similar tools for the selected one. If there are no similar tool(s), an error message will appear.
+## Extract data
+
+In the repository, there is an script `extract_tool_github.py` to read all the 'xml' files of tools (sources of all these tools are defined in `data_source.config` file) and condense them as tabular data. In order to run this script, the GitHub authentication is needed.
+
+Execute this script as `python extract_tool_github.py "username:password"`
+
+When this script finishes successfully, a file named `processed_tools.csv` is created at `/data` folder. 
+Further, run `predict_similarity` script to find similar tools for each tool. Run this script using following command:
+
+`python predict_similarity.py <path to csv file> <number_of_iterations>`. 
+
+The number of iterations should be a positive number (say 50). The number of iterations and learning rate (0.7) should be carefully selected so that good results are obtained in reasonable amount of time. The learning rate decays with time (number of iterations). When this script finishes, a couple of plots are generated to show the difference between random and learned weights, drop in the cost with iterations and decay of learning rate. It creates a JSON file with all the data. From the `/data` folder, copy the file `similarity_matrix.json` and paste here '/viz/data'. Please visit `/viz` folder and open the html file "similarity_viz.html" in your browser. When the page opens, it lists all the tools in a select box. Please select any one and see the similar tools for the selected one. If there are no similar tool(s), an error message will appear. Along with the similar tools, it also shows the initial weights and learned weights for the sources and a plot of drop in cost with iterations for this selected tool.

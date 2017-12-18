@@ -278,7 +278,7 @@ if __name__ == "__main__":
 
     print "Learning optimal weights..."
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
-    optimal_weights, cost_tools, iterations, tools_initial_weights = gd.gradient_descent( tools_distance_matrix, files_list )
+    optimal_weights, cost_tools, iterations, tools_initial_weights, learning_rates = gd.gradient_descent( tools_distance_matrix, files_list )
     print "Optimal weights found"
 
     print "Assign importance to tools similarity matrix..."
@@ -286,6 +286,9 @@ if __name__ == "__main__":
     
     print "Plotting the changes of costs during iterations..."
     utils._plot_tools_cost( cost_tools, iterations )
+
+    print "Plotting learning rates..."
+    utils._plot_learning_rate( learning_rates, iterations )
 
     print "Plots for learning..."
     utils._plots_original_learned_matrix( similarity_matrix_original, similarity_matrix_learned, files_list )

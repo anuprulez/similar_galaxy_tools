@@ -50,7 +50,7 @@ $(document).ready(function(){
 
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
-                plotCostVsIterations( toolResults, "tool-cost-iterations" );
+                plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
                 break;
             }
          } // end of for loop
@@ -108,24 +108,27 @@ $(document).ready(function(){
         return template;
     };
     
-    var plotCostVsIterations = function( toolScores, $elPlot ) {
+    var plotCostVsIterations = function( toolScores, $elPlot, selectedToolId ) {
         var costIterations = toolScores.cost_iterations,
             iterations = costIterations.length,
             x_axis = [];
         for( var i = 0; i < iterations; i++ ) {
             x_axis.push( i + 1 );
         }
-        
-        var trace1 = {
-	  x: x_axis,
-	  y: costIterations,
-	  type: 'scatter'
-	};
-
-	var data = [ trace1 ];
+	var data = [{
+	    x: x_axis,
+	    y: costIterations,
+	    type: 'scatter'
+	}];
 	
 	var layout = {
-            title:'Cost vs Iterations'
+            title:'Cost vs Iterations for the tool: ' + selectedToolId,
+            xaxis: {
+                title: 'Iterations'
+            },
+            yaxis: {
+                title: 'Cost'
+            }
         };
 
 	Plotly.newPlot( $elPlot, data, layout );

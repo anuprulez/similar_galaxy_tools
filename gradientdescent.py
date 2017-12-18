@@ -14,7 +14,7 @@ class GradientDescentOptimizer:
     def __init__( self, number_iterations ):
         # Gradient descent parameters
         self.number_iterations = number_iterations
-        self.learning_rate = 0.08
+        self.learning_rate = 0.7
         self.sources = [ 'input_output', 'name_desc', 'edam_help' ]
 
     @classmethod
@@ -28,12 +28,22 @@ class GradientDescentOptimizer:
         return self.normalize_weights( weights )
 
     @classmethod
-    def update_weights( self, weights, gradient ):
+    def step_decay_lr( self, epoch ):
+        """
+        Decay the learning rate in steps
+        """
+        drop = 0.95
+        epochs_drop = 5.0
+        lr_multiplier = np.power( drop, np.floor( ( 1. + epoch ) / epochs_drop ) )
+        return self.learning_rate * lr_multiplier
+
+    @classmethod
+    def update_weights( self, weights, gradient, learning_rate ):
         """
         Update the weights for each source using vanilla gradient descent
         """
         for source in weights:
-            weights[ source ] = weights[ source ] - self.learning_rate * gradient[ source ]
+            weights[ source ] = weights[ source ] - learning_rate * gradient[ source ]
         return weights
 
     @classmethod
@@ -67,6 +77,7 @@ class GradientDescentOptimizer:
             for iteration in range( self.number_iterations ):
                 sources_gradient = dict()
                 cost_sources = list()
+                learning_rate = self.step_decay_lr( iteration )
                 for source in similarity_matrix:
                     tools_score_source = similarity_matrix[ source ][ tool_index ]
                     ideal_tool_score = np.repeat( tools_score_source[ tool_index ], num_all_tools )
@@ -83,7 +94,7 @@ class GradientDescentOptimizer:
                     # add gradient for a source
                     sources_gradient[ source ] = mean_gradient
                 cost_iteration.append( np.mean( cost_sources ) )
-                random_importance_weights = self.update_weights( random_importance_weights, sources_gradient )
+                random_importance_weights = self.update_weights( random_importance_weights, sources_gradient, learning_rate )
             # add cost for a tool for all iterations
             cost_tools.append( cost_iteration )
             optimal_weights = dict()
@@ -93,4 +104,5 @@ class GradientDescentOptimizer:
             print optimal_weights
             print "---------------------------------------------------------------------"
             tools_optimal_weights[ tools_list[ tool_index ] ] = optimal_weights
-        return tools_optimal_weights, cost_tools, self.number_iterations, tools_initial_weights
+        learning_rates = [ self.step_decay_lr( iteration ) for iteration in range( self.number_iterations ) ]
+        return tools_optimal_weights, cost_tools, self.number_iterations, tools_initial_weights, learning_rates
