@@ -18,14 +18,15 @@ class GradientDescentOptimizer:
         self.sources = [ 'input_output', 'name_desc', 'edam_help' ]
 
     @classmethod
-    def get_random_weights( self ):
+    def get_uniform_weights( self ):
         """
         Initialize the random weight matrices
         """
         weights = dict()
+        len_sources = len( self.sources )
         for item in self.sources:
-            weights[ item ] = 0.33 #np.random.random_sample( 1 )
-        return self.normalize_weights( weights )
+            weights[ item ] = 1. / len_sources
+        return weights
 
     @classmethod
     def step_decay_lr( self, epoch ):
@@ -40,22 +41,33 @@ class GradientDescentOptimizer:
     @classmethod
     def update_weights( self, weights, gradient, learning_rate ):
         """
-        Update the weights for each source using vanilla gradient descent
+        Update the weights for each source using vanilla gradient descent + decay in learning rate
         """
         for source in weights:
             weights[ source ] = weights[ source ] - learning_rate * gradient[ source ]
         return weights
-
+        
     @classmethod
     def normalize_weights( self, weights ):
         """
         Normalize the weights so that their sum is 1
         """
-        sum_weights = 0
+        sum_weights = np.sum( [ weights[ item ] for item in weights ] )            
         for source in weights:
-            sum_weights += weights[ source ]
+            weights[ source ] = float( weights[ source ] ) / sum_weights
+        return weights
+
+    @classmethod
+    def adjust_normalized_weights( self, weights ):
+        """
+        Adjust normalized weights in a way that if weights < 0.1, make them zero
+        """
+        threshold_weight = 0.1
+        # if the weight of any source is less than a threshold, discard that component
+        sum_weights = np.sum( [ weights[ item ] for item in weights if weights[ item ] > threshold_weight ] )            
         for source in weights:
-            weights[ source ] = weights[ source ] / sum_weights
+            weight = weights[ source ]
+            weights[ source ] = float( weight ) / sum_weights if weight > threshold_weight else 0.0
         return weights
 
     @classmethod
@@ -69,9 +81,9 @@ class GradientDescentOptimizer:
         cost_tools = list()
         for tool_index in range( num_all_tools ):
             print "Tool index: %d and tool name: %s" % ( tool_index, tools_list[ tool_index ] )
-            # random weights to start with
-            random_importance_weights = self.get_random_weights()
-            tools_initial_weights[ tools_list[ tool_index ] ] = utils._get_weights( random_importance_weights )
+            # uniform weights to start with
+            random_importance_weights = self.get_uniform_weights()
+            tools_initial_weights[ tools_list[ tool_index ] ] = random_importance_weights
             print random_importance_weights
             cost_iteration = list()
             for iteration in range( self.number_iterations ):
@@ -102,7 +114,9 @@ class GradientDescentOptimizer:
                 optimal_weights[ source ] = np.mean( random_importance_weights[ source ] )
             optimal_weights = self.normalize_weights( optimal_weights )
             print optimal_weights
+            adjusted_optimal_weights = self.adjust_normalized_weights( optimal_weights )
+            print adjusted_optimal_weights
             print "---------------------------------------------------------------------"
-            tools_optimal_weights[ tools_list[ tool_index ] ] = optimal_weights
+            tools_optimal_weights[ tools_list[ tool_index ] ] = adjusted_optimal_weights
         learning_rates = [ self.step_decay_lr( iteration ) for iteration in range( self.number_iterations ) ]
         return tools_optimal_weights, cost_tools, self.number_iterations, tools_initial_weights, learning_rates

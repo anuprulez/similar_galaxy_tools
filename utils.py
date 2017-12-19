@@ -53,12 +53,6 @@ def _jaccard_score( vector1, vector2 ):
     else:
         return float( len( intersection ) ) / union_len
 
-def _get_weights( weights ):
-    wt = dict()
-    for item in weights:
-        wt[ item ] = weights[ item ]
-    return wt
-
 def _plot_heatmap( similarity_matrix ):
     sns.heatmap(similarity_matrix, annot=True, fmt="g", cmap='viridis')
     plt.show()

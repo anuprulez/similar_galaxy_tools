@@ -19,7 +19,7 @@ $(document).ready(function(){
         for( var counter = 0, len = similarityData.length; counter < len; counter++ ) {
             var toolResults = similarityData[ counter ]; 
             if( toolResults.root_tool.id !== undefined ) {    
-                toolIdsTemplate += "<option value=" + toolResults.root_tool.id + ">" + toolResults.root_tool.id + "</options>";
+                toolIdsTemplate += "<option value='" + toolResults.root_tool.id + "'>" + toolResults.root_tool.id + "</options>";
             }
         } // end of for loop
         $( ".tool-ids" ).append( toolIdsTemplate );
@@ -28,6 +28,7 @@ $(document).ready(function(){
     // Fire on change of a tool to show similar tools and plot cost vs iteration
     $( ".tool-ids" ).on( 'change', function( e ) {
         e.preventDefault();
+        console.log(e);
         var selectedToolId = e.target.value,
             data = similarityData,
             availableSimilarTool = false,
@@ -35,6 +36,7 @@ $(document).ready(function(){
         $el_tools.empty();
         for( var counter = 0, len = data.length; counter < len; counter++ ) {
             var toolResults = data[ counter ];
+            
             if ( toolResults.root_tool.id === selectedToolId ) {
                 var toolScores = toolResults.similar_tools,
                     template = "";
@@ -47,11 +49,12 @@ $(document).ready(function(){
                 
                 // make html for similar tools
                 $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " </h4>" ) );
-                availableSimilarTool = true;
+                
 
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
+                availableSimilarTool = true;
                 break;
             }
          } // end of for loop

@@ -177,10 +177,22 @@ class PredictToolSimilarity:
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
                     # assign similarity score for a pair of tool their vectors
-                    #sim_scores[ index_x ][ index_y ] = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._angle( item_x, item_y )                   
                     sim_scores[ index_x ][ index_y ] = utils._angle( item_x, item_y )
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
+        
+    @classmethod
+    def adjust_uniform_weights( self, optimal_weights ):
+        """
+        Adjust the uniform weights if one or more of the learned weight are zero
+        """
+        uniform_weights = dict()
+        len_sources = len( [ item for item in optimal_weights ] )
+        zero_sources = [ item for item in optimal_weights if optimal_weights[ item ] == 0 ]
+        weight = 1. / ( len_sources - len( zero_sources ) )
+        for source in optimal_weights:
+            uniform_weights[ source ] = 0 if source in zero_sources else weight
+        return uniform_weights
 
     @classmethod
     def assign_similarity_importance( self, similarity_matrix_sources, tools_list, optimal_weights ):
@@ -194,14 +206,15 @@ class PredictToolSimilarity:
         for tool_index, tool in enumerate( tools_list ):
             sim_mat_original = np.zeros( all_tools )
             sim_mat_tool_learned = np.zeros( all_tools )
+            #uniform_weights = self.adjust_uniform_weights( optimal_weights[ tools_list[ tool_index ] ] )
             for source in similarity_matrix_sources:
+                optimal_weight_source = optimal_weights[ tools_list[ tool_index ] ][ source ]
                 # add up the similarity scores from each source weighted by a uniform prior
                 sim_mat_original += self.uniform_prior * similarity_matrix_sources[ source ][ tool_index ]
                 # add up the similarity scores from each source weighted by importance factors learned by machine leanring algorithm
-                sim_mat_tool_learned += optimal_weights[ tools_list[ tool_index ] ][ source ] * similarity_matrix_sources[ source ][ tool_index ]
+                sim_mat_tool_learned += optimal_weight_source * similarity_matrix_sources[ source ][ tool_index ]
             similarity_matrix_original.append( sim_mat_original )
             similarity_matrix_learned.append( sim_mat_tool_learned )
-            
         return similarity_matrix_original, similarity_matrix_learned
 
     @classmethod
@@ -239,7 +252,6 @@ class PredictToolSimilarity:
                         root_tool = record
                     else:
                         scores.append( record )
-
             tool_similarity[ "root_tool" ] = root_tool
             sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )
             # don't take all the tools predicted, just TOP something
