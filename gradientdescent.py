@@ -14,7 +14,7 @@ class GradientDescentOptimizer:
     def __init__( self, number_iterations ):
         # Gradient descent parameters
         self.number_iterations = number_iterations
-        self.learning_rate = 0.7
+        self.learning_rate = 0.9
         self.sources = [ 'input_output', 'name_desc', 'edam_help' ]
 
     @classmethod
@@ -24,7 +24,7 @@ class GradientDescentOptimizer:
         """
         weights = dict()
         for item in self.sources:
-            weights[ item ] = np.random.random_sample( 1 )
+            weights[ item ] = 0.33 #np.random.random_sample( 1 )
         return self.normalize_weights( weights )
 
     @classmethod

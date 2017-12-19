@@ -12,7 +12,6 @@ import base64
 import requests
 import time
 import urllib2
-import csv
 
 
 class ExtractToolXML:

@@ -27,21 +27,36 @@ def _check_number( item ):
         return False
 
 def _angle( vector1, vector2 ):
-  """
-  Get value of the cosine angle between two vectors
-  """
+    """
+    Get value of the cosine angle between two vectors
+    """
+    # if either of the vectors is zero, then cosine of the angle is also 0 
+    # which means vectors are dissimilar 
+    vec1_length = np.sqrt( np.dot( vector1, vector1 ) )
+    vec2_length = np.sqrt( np.dot( vector2, vector2 ) )
 
-  # if either of the vectors is zero, then cosine of the angle is also 0 
-  # which means vectors are dissimilar
-  if np.linalg.norm( vector1 ) == 0 or np.linalg.norm( vector2 ) == 0:
-      return 0
-  else:  
-      return np.dot( vector1, vector2 ) / ( np.linalg.norm( vector1 ) * np.linalg.norm( vector2 ) )
-      
+    if vec1_length == 0 or vec2_length == 0:
+        return 0
+    else:  
+        return np.dot( vector1, vector2 ) / ( vec1_length * vec2_length )
+
+def _jaccard_score( vector1, vector2 ):
+    """
+    Get jaccard score for two vectors
+    """
+    intersection = [ 1 for a, b in zip( vector1, vector2 ) if a > 0 and b > 0 ]
+    union = [ 1 for a, b in zip( vector1, vector2 ) if a > 0 or b > 0]
+    union_len = len( union )
+
+    if union_len == 0:
+        return 0
+    else:
+        return float( len( intersection ) ) / union_len
+
 def _get_weights( weights ):
     wt = dict()
     for item in weights:
-        wt[ item ] = weights[ item ][ 0 ]
+        wt[ item ] = weights[ item ]
     return wt
 
 def _plot_heatmap( similarity_matrix ):

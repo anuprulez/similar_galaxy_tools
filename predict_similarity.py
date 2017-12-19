@@ -100,16 +100,17 @@ class PredictToolSimilarity:
                             term_frequency[ token ] += 1
                 files[ item ] = term_frequency
             # parameters
-            N = len(files)
+            N = len( files )
             average_file_length = float( total_file_length ) / N
 
             # find BM25 score for each token of each tool. It helps to determine
             # how important each word is with respect to the tool and other tools
             for item in files:
-                for token in files[ item ]:
-                    file_item = files[ item ]
-                    file_length = len( file_item )
+                file_item = files[ item ]
+                file_length = len( file_item )
+                for token in file_item:
                     tf = file_item[ token ]
+                    tf = float( tf ) / file_length # normalize the term freq of token for each document
                     idf = np.log2( N / len( inverted_frequency[ token ] ) )
                     alpha = ( 1 - b ) + ( float( b * file_length ) / average_file_length )
                     tf_star = tf * float( ( k + 1 ) ) / ( k * alpha + tf )
@@ -121,7 +122,7 @@ class PredictToolSimilarity:
                 file_item = files[ item ]
                 sorted_x = sorted( file_item.items(), key=operator.itemgetter( 1 ), reverse=True )
                 scores = [ score for ( token, score ) in sorted_x ]
-                selected_tokens = [ ( port_stemmer.stem( token ), score ) for ( token, score ) in sorted_x if not utils._check_number( token ) and len( token ) > 2 ]
+                selected_tokens = [ ( port_stemmer.stem( token ), score ) for ( token, score ) in sorted_x if not utils._check_number( token ) and len( token ) > 1 ]
                 selected_tokens_sorted = sorted( selected_tokens, key=operator.itemgetter( 1 ), reverse=True )
                 refined_tokens[ item ] = selected_tokens_sorted
             tokens_file_name = 'tokens_' + source + '.txt'
@@ -158,7 +159,7 @@ class PredictToolSimilarity:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
                     # we take of score 1 if we need exact word matching for input and output file types.
                     # otherwise we take ranked scores for each token
-                    document_tokens_matrix[ counter ][ word_index ] = 1 if source == 'input_output' else word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ] #1 if source == 'input_output' else word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -166,7 +167,7 @@ class PredictToolSimilarity:
     @classmethod
     def find_tools_cos_distance_matrix( self, document_token_matrix_sources, tools_list ):
         """
-        Find similarity distance using Cosine distance among tools
+        Find similarity distance using cosine distance among tools
         """
         mat_size = len( tools_list )
         similarity_matrix_sources = dict()
@@ -175,7 +176,8 @@ class PredictToolSimilarity:
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
-                    # assign similarity score for a pair of tool using cosine angle bectween their vectors
+                    # assign similarity score for a pair of tool their vectors
+                    #sim_scores[ index_x ][ index_y ] = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._angle( item_x, item_y )                   
                     sim_scores[ index_x ][ index_y ] = utils._angle( item_x, item_y )
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
@@ -203,7 +205,7 @@ class PredictToolSimilarity:
         return similarity_matrix_original, similarity_matrix_learned
 
     @classmethod
-    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, tools_initial_weights ):
+    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, tools_initial_weights, sim_mat_avg ):
         """
         Get similar tools for each tool
         """
@@ -221,6 +223,7 @@ class PredictToolSimilarity:
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
                 score = round( item[ tool_index ], 2 )
+                original_score = round( sim_mat_avg[ index ][ tool_index ], 2 )
                 if score > similarity_threshold:
                     record = {
                        "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
@@ -229,7 +232,8 @@ class PredictToolSimilarity:
                        "output_types": utils._get_text( rowj, "outputs" ),
                        "what_it_does": utils._get_text( rowj, "help" ),
                        "edam_text": utils._get_text( rowj, "edam_topics" ),
-                       "score": score
+                       "score": score,
+                       "original_score": original_score
                     }
                     if rowj[ "id" ] == tool_id:
                         root_tool = record
@@ -294,7 +298,7 @@ if __name__ == "__main__":
     utils._plots_original_learned_matrix( similarity_matrix_original, similarity_matrix_learned, files_list )
 
     print "Writing results to a JSON file..."
-    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, tools_initial_weights )
+    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, tools_initial_weights, similarity_matrix_original )
     
     end_time = time.time()
     print "Program finished in %d seconds" % int( end_time - start_time )
