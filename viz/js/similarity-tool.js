@@ -87,6 +87,7 @@ $(document).ready(function(){
         template += "<table><thead>";
         template += "<th>Id</th>";
         template += "<th> Similarity score </th>";
+        template += "<th> Orig. score </th>";
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
@@ -98,6 +99,7 @@ $(document).ready(function(){
             template += "<tr>";
             template += "<td>" + tool.id + "</td>";
             template += "<td>" + tool.score + "</td>";
+            template += "<td>" + tool.original_score + "</td>";
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
