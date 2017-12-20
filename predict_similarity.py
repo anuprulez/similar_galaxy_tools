@@ -9,7 +9,6 @@ import pandas as pd
 import operator
 import json
 import time
-import nltk
 from math import *
 
 import utils
@@ -41,7 +40,6 @@ class PredictToolSimilarity:
             tools_tokens = dict()
             for row in file.iterrows():
                 tokens = self.get_tokens_from_source( row[ 1 ], source )
-                tagged_tokens = nltk.pos_tag( tokens )
                 tools_tokens[ row[ 1 ][ "id" ] ] = tokens
             tools_tokens_source[ source ] = tools_tokens
         return tools_tokens_source

@@ -89,10 +89,11 @@ $(document).ready(function(){
         var template = headerText;
         template += "<table><thead>";
         template += "<th>Id</th>";
-        template += "<th> Similarity score </th>";
         template += "<th> Input output score </th>";
         template += "<th> Name desc. score </th>";
         template += "<th> Edam help score </th>";
+        template += "<th> Average score </th>";
+        template += "<th> Weighted average similarity score </th>";
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
@@ -100,13 +101,16 @@ $(document).ready(function(){
         template += "<th> EDAM </th>";
         template += "</thead><tbody>";
         for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
-            var tool = toolScores[ counter_ts ];
+            var tool = toolScores[ counter_ts ],
+                averageScore = ( tool.input_output_score + tool.edam_help_score + tool.name_desc_score ) / 3;
+            averageScore = averageScore.toFixed( 2 );
             template += "<tr>";
             template += "<td>" + tool.id + "</td>";
-            template += "<td>" + tool.score + "</td>";
             template += "<td>" + tool.input_output_score + "</td>";
             template += "<td>" + tool.name_desc_score + "</td>";
             template += "<td>" + tool.edam_help_score + "</td>";
+            template += "<td>" + averageScore + "</td>";
+            template += "<td>" + tool.score + "</td>";
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";

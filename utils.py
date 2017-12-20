@@ -5,6 +5,7 @@ import numpy as np
 import nltk
 from nltk.stem import *
 
+nltk.download('averaged_perceptron_tagger')
 port_stemmer = PorterStemmer()
 token_category_list = [ 'NNS', 'NN', 'NNP', 'NNPS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP' ]
 
