@@ -2,13 +2,26 @@ import re
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import nltk
+from nltk.stem import *
 
+port_stemmer = PorterStemmer()
+token_category_list = [ 'NNS', 'NN', 'NNP', 'NNPS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP' ]
 
 def _get_text( row, attr ):
     return "" if type( row[ attr ] ) is float else str( row[ attr ] )
 
 def _remove_special_chars( text ):
     return re.sub( '[^a-zA-Z0-9]', ' ', text )
+
+def _clean_tokens( text_list ):
+    # discard numbers and one letter words
+    tokens = [ item.lower() for item in text_list if len( item ) > 1 and not _check_number( item ) ]
+    # differentiate words based on their types as nouns, verbs etc
+    tokens = nltk.pos_tag( tokens )
+    # accept words that fall in the category mentioned (verbs, nouns)
+    tokens = [ port_stemmer.stem( item ) for ( item, tag ) in tokens if tag in token_category_list ]
+    return tokens
 
 def _restore_space( text ):
     return " ".join( text.split( "," ) )
@@ -80,28 +93,30 @@ def _plots_original_learned_matrix( matrix_original, matrix_learned, files_list 
     """
     Generate plots for original, learned and difference of costs
     """
-    original_cost = list()
-    learned_cost = list()
-    diff_cost = list()
+    
     all_tools = len( files_list )
     x_axis = [ x for x in range( all_tools ) ]
 
-    # compute mean similarity score for each tool
-    for index, item in enumerate( matrix_original ):
-        mean_learned = np.mean( matrix_learned[ index ] )
-        mean_original = np.mean( item )
-        diff_cost.append( mean_learned - mean_original )
-        learned_cost.append( mean_learned )
-        original_cost.append( mean_original )
+    for source in matrix_original:
+        original_cost = list()
+        learned_cost = list()
+        diff_cost = list()
+        # compute mean similarity score for each tool
+        for index, item in enumerate( matrix_learned ):
+            mean_learned = np.mean( item )
+            mean_original = np.mean( matrix_original[ source ][ index ] )
+            diff_cost.append( mean_learned - mean_original )
+            learned_cost.append( mean_learned )
+            original_cost.append( mean_original )
 
-    # generate plots with their respective legends
-    l_cost, = plt.plot( x_axis, learned_cost, 'b.', label = 'Learned cost' )
-    o_cost, = plt.plot( x_axis, original_cost, 'r.', label = 'Original cost' )
-    d_cost, = plt.plot( x_axis, diff_cost, 'g.', label = 'Learned - Original' )
-    h_line, = plt.plot( x_axis, [ 0 for x in range( all_tools ) ], 'k.', label = 'Cost = 0' )
+        # generate plots with their respective legends
+        l_cost, = plt.plot( x_axis, learned_cost, 'b.', label = 'Learned cost' )
+        o_cost, = plt.plot( x_axis, original_cost, 'r.', label = 'Original cost with ' + source )
+        d_cost, = plt.plot( x_axis, diff_cost, 'g.', label = 'Learned - Original' )
+        h_line, = plt.plot( x_axis, [ 0 for x in range( all_tools ) ], 'k.', label = 'Cost = 0' )
 
-    plt.legend( handles = [ l_cost, o_cost, d_cost, h_line ] )
-    plt.grid(color='k', linestyle='-', linewidth=0.15)
-    plt.xlabel( 'Tools' )
-    plt.ylabel( 'Cost' )
-    plt.show()
+        plt.legend( handles = [ l_cost, o_cost, d_cost, h_line ] )
+        plt.grid(color='k', linestyle='-', linewidth=0.15)
+        plt.xlabel( 'Tools' )
+        plt.ylabel( 'Cost with source ' + source )
+        plt.show()

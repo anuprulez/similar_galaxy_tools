@@ -77,13 +77,11 @@ class GradientDescentOptimizer:
         """
         num_all_tools = len( tools_list )
         tools_optimal_weights = dict()
-        tools_initial_weights = dict()
         cost_tools = list()
         for tool_index in range( num_all_tools ):
             print "Tool index: %d and tool name: %s" % ( tool_index, tools_list[ tool_index ] )
             # uniform weights to start with
             random_importance_weights = self.get_uniform_weights()
-            tools_initial_weights[ tools_list[ tool_index ] ] = random_importance_weights
             print random_importance_weights
             cost_iteration = list()
             for iteration in range( self.number_iterations ):
@@ -119,4 +117,4 @@ class GradientDescentOptimizer:
             print "---------------------------------------------------------------------"
             tools_optimal_weights[ tools_list[ tool_index ] ] = adjusted_optimal_weights
         learning_rates = [ self.step_decay_lr( iteration ) for iteration in range( self.number_iterations ) ]
-        return tools_optimal_weights, cost_tools, self.number_iterations, tools_initial_weights, learning_rates
+        return tools_optimal_weights, cost_tools, self.number_iterations, learning_rates

@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json";
-    $.getJSON( path, function( data ) {
+    $.getJSON( "data/similarity_matrix.json", function( data ) {
         var toolIdsTemplate = "";
         // sort the tools in ascending order of their ids
         similarityData = data.sort(function(a, b) {
@@ -90,7 +90,9 @@ $(document).ready(function(){
         template += "<table><thead>";
         template += "<th>Id</th>";
         template += "<th> Similarity score </th>";
-        template += "<th> Orig. score </th>";
+        template += "<th> Input output score </th>";
+        template += "<th> Name desc. score </th>";
+        template += "<th> Edam help score </th>";
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
@@ -102,7 +104,9 @@ $(document).ready(function(){
             template += "<tr>";
             template += "<td>" + tool.id + "</td>";
             template += "<td>" + tool.score + "</td>";
-            template += "<td>" + tool.original_score + "</td>";
+            template += "<td>" + tool.input_output_score + "</td>";
+            template += "<td>" + tool.name_desc_score + "</td>";
+            template += "<td>" + tool.edam_help_score + "</td>";
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
