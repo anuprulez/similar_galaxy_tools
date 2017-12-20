@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json";
-    $.getJSON( "data/similarity_matrix.json", function( data ) {
+    $.getJSON( path, function( data ) {
         var toolIdsTemplate = "";
         // sort the tools in ascending order of their ids
         similarityData = data.sort(function(a, b) {
