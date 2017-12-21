@@ -15,6 +15,14 @@ def _get_text( row, attr ):
 def _remove_special_chars( text ):
     return re.sub( '[^a-zA-Z0-9]', ' ', text )
 
+def _remove_duplicate_file_types( tokens ):
+    tokens_list = tokens.split( " " )
+    unique_tokens = ''
+    for item in tokens_list:
+        if item not in unique_tokens and item is not "":
+            unique_tokens = item if unique_tokens == "" else unique_tokens + " " + item
+    return unique_tokens
+
 def _clean_tokens( text_list ):
     # discard numbers and one letter words
     tokens = [ item.lower() for item in text_list if len( item ) > 1 and not _check_number( item ) ]
@@ -40,20 +48,6 @@ def _check_number( item ):
     except Exception as exception:
         return False
 
-def _angle( vector1, vector2 ):
-    """
-    Get value of the cosine angle between two vectors
-    """
-    # if either of the vectors is zero, then cosine of the angle is also 0 
-    # which means vectors are dissimilar 
-    vec1_length = np.sqrt( np.dot( vector1, vector1 ) )
-    vec2_length = np.sqrt( np.dot( vector2, vector2 ) )
-
-    if vec1_length == 0 or vec2_length == 0:
-        return 0
-    else:  
-        return np.dot( vector1, vector2 ) / ( vec1_length * vec2_length )
-
 def _jaccard_score( vector1, vector2 ):
     """
     Get jaccard score for two vectors
@@ -66,6 +60,31 @@ def _jaccard_score( vector1, vector2 ):
         return 0
     else:
         return float( len( intersection ) ) / union_len
+
+def _cosine_angle_score( vector1, vector2 ):
+    """
+    Get value of the cosine angle between two vectors
+    """
+    # if either of the vectors is zero, then similarity is also 0 
+    # which means the vectors cannot be compared
+    vec1_length = np.sqrt( np.dot( vector1, vector1 ) )
+    vec2_length = np.sqrt( np.dot( vector2, vector2 ) )
+
+    if vec1_length == 0 or vec2_length == 0:
+        return 0
+    else:  
+        return np.dot( vector1, vector2 ) / ( vec1_length * vec2_length )
+
+def _jaccard_score( vector1, vector2 ):
+    """
+    Get jaccard score for two vectors
+    """
+    dot_product = np.dot( vector1, vector2 )
+    jaccard_denominator = np.dot( vector1, vector1 ) + np.dot( vector2, vector2 ) - dot_product
+    if jaccard_denominator == 0:
+        return 0
+    else:
+        return dot_product / float( jaccard_denominator )
 
 def _plot_heatmap( similarity_matrix ):
     sns.heatmap(similarity_matrix, annot=True, fmt="g", cmap='viridis')

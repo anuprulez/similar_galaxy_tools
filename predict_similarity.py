@@ -21,7 +21,6 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.tools_data_path = tools_data_path
         self.tools_show = 50
-        self.uniform_prior = 1 / 3.
 
     @classmethod
     def read_file( self ):
@@ -52,8 +51,17 @@ class PredictToolSimilarity:
         """
         tokens = ''
         if source == 'input_output':
-            tokens = utils._restore_space( utils._get_text( row, "inputs" ) ) + ' '
-            tokens += utils._restore_space( utils._get_text( row, "outputs" ) )
+            # remove duplicate file type individually from input and output file types and merge
+            input_tokens = utils._restore_space( utils._get_text( row, "inputs" ) )
+            input_tokens = utils._remove_duplicate_file_types( input_tokens )
+            output_tokens = utils._restore_space( utils._get_text( row, "outputs" ) )
+            output_tokens = utils._remove_duplicate_file_types( output_tokens )
+            if input_tokens == "":
+                tokens = output_tokens
+            elif output_tokens == "":
+                tokens = input_tokens
+            else:
+                tokens = input_tokens + ' ' + output_tokens
         elif source == 'name_desc':
             tokens = utils._restore_space( utils._get_text( row, "name" ) ) + ' '
             tokens += utils._restore_space( utils._get_text( row, "description" ) )
@@ -79,7 +87,8 @@ class PredictToolSimilarity:
             for item in tokens[ source ]:
                 file_id += 1
                 file_tokens = tokens[ source ][ item ].split(" ")
-                file_tokens = utils._clean_tokens( file_tokens )
+                if source not in "input_output":
+                    file_tokens = utils._clean_tokens( file_tokens )
                 total_file_length += len( file_tokens )
                 term_frequency = dict()
                 for token in file_tokens:
@@ -158,7 +167,7 @@ class PredictToolSimilarity:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
                     # we take of score 1 if we need exact word matching for input and output file types.
                     # otherwise we take ranked scores for each token
-                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ] #1 if source == 'input_output' else word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -171,12 +180,14 @@ class PredictToolSimilarity:
         mat_size = len( tools_list )
         similarity_matrix_sources = dict()
         for source in document_token_matrix_sources:
+            print "Computing similarity scores for source %s..." % source
             sim_mat = document_token_matrix_sources[ source ]
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
                     # assign similarity score for a pair of tool their vectors
-                    sim_scores[ index_x ][ index_y ] = utils._angle( item_x, item_y )
+                    pair_score = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._cosine_angle_score( item_x, item_y )
+                    sim_scores[ index_x ][ index_y ] = pair_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
         
@@ -208,11 +219,8 @@ class PredictToolSimilarity:
             #uniform_weights = self.adjust_uniform_weights( optimal_weights[ tools_list[ tool_index ] ] )
             for source in similarity_matrix_sources:
                 optimal_weight_source = optimal_weights[ tools_list[ tool_index ] ][ source ]
-                # add up the similarity scores from each source weighted by a uniform prior
-                #sim_mat_original += self.uniform_prior * similarity_matrix_sources[ source ][ tool_index ]
                 # add up the similarity scores from each source weighted by importance factors learned by machine leanring algorithm
                 sim_mat_tool_learned += optimal_weight_source * similarity_matrix_sources[ source ][ tool_index ]
-            #similarity_matrix_original.append( sim_mat_original )
             similarity_matrix_learned.append( sim_mat_tool_learned )
         return similarity_matrix_sources, similarity_matrix_learned
 
@@ -297,14 +305,16 @@ if __name__ == "__main__":
     document_tokens_matrix, files_list = tool_similarity.create_document_tokens_matrix( refined_tokens )
     print "Created tools tokens matrix"
 
-    print "Computing distance..."
+    print "Computing similarity..."
+    start_time_similarity_comp = time.time()
     tools_distance_matrix = tool_similarity.find_tools_cos_distance_matrix( document_tokens_matrix, files_list )
-    print "Computed distance"
+    end_time_similarity_comp = time.time()
+    print "Computed similarity in %d seconds" % int( end_time_similarity_comp - start_time_similarity_comp )
 
     print "Learning optimal weights..."
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
     optimal_weights, cost_tools, iterations, learning_rates = gd.gradient_descent( tools_distance_matrix, files_list )
-    print "Optimal weights found"
+    print "Optimal weights learned in %d iterations" % int( sys.argv[ 2 ] )
 
     print "Assign importance to tools similarity matrix..."
     similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list, optimal_weights )
