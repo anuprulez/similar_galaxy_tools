@@ -167,7 +167,7 @@ class PredictToolSimilarity:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
                     # we take of score 1 if we need exact word matching for input and output file types.
                     # otherwise we take ranked scores for each token
-                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = 1 if source == "input_output" else word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list

@@ -33,7 +33,7 @@ class GradientDescentOptimizer:
         """
         Decay the learning rate in steps
         """
-        drop = 0.95
+        drop = 0.99
         epochs_drop = 5.0
         lr_multiplier = np.power( drop, np.floor( ( 1. + epoch ) / epochs_drop ) )
         return self.learning_rate * lr_multiplier

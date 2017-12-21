@@ -48,22 +48,12 @@ def _check_number( item ):
     except Exception as exception:
         return False
 
-def _kullback_leibler_similarity( vector1, vector2 ):
-    """
-    Get kullback leibler divergence for two vectors
-    """
-    vec1_sum = np.sum( vector1 )
-    vec2_sum = np.sum( vector2 )
-    vec1_norm = [ item / vec1_sum for item in vector1 ]
-    vec2_norm = [ item / vec2_sum for item in vector2 ]
-    return np.sum( np.where( vec1_norm != 0, vec1_norm * np.log( vec1_norm / vec2_norm ), 0 ) )
-
 def _jaccard_score( vector1, vector2 ):
     """
     Get jaccard score for two vectors
     """
-    intersection = [ 1 for a, b in zip( vector1, vector2 ) if a > 0 and b > 0 ]
-    union = [ 1 for a, b in zip( vector1, vector2 ) if a > 0 or b > 0]
+    intersection = [ 1 for a, b in zip( vector1, vector2 ) if a == 1 and b == 1 ]
+    union = [ 1 for a, b in zip( vector1, vector2 ) if a == 1 or b == 1 ]
     union_len = len( union )
 
     if union_len == 0:
