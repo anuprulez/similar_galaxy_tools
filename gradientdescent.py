@@ -15,7 +15,7 @@ class GradientDescentOptimizer:
         # Gradient descent parameters
         self.number_iterations = number_iterations
         self.learning_rate = 0.9
-        self.sources = [ 'input_output', 'name_desc', 'edam_help' ]
+        self.sources = [ 'input_output', 'name_desc_edam_help' ]
 
     @classmethod
     def get_uniform_weights( self ):
@@ -34,7 +34,7 @@ class GradientDescentOptimizer:
         Decay the learning rate in steps
         """
         drop = 0.95
-        epochs_drop = 10.0
+        epochs_drop = 5.0
         lr_multiplier = np.power( drop, np.floor( ( 1. + epoch ) / epochs_drop ) )
         return self.learning_rate * lr_multiplier
 

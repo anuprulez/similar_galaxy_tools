@@ -19,6 +19,7 @@ class PredictToolSimilarity:
 
     @classmethod
     def __init__( self, tools_data_path ):
+        self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
         self.tools_show = 50
 
@@ -62,11 +63,10 @@ class PredictToolSimilarity:
                 tokens = input_tokens
             else:
                 tokens = input_tokens + ' ' + output_tokens
-        elif source == 'name_desc':
+        elif source == 'name_desc_edam_help':
             tokens = utils._restore_space( utils._get_text( row, "name" ) ) + ' '
-            tokens += utils._restore_space( utils._get_text( row, "description" ) )
-        elif source == 'edam_help':
-            tokens = utils._get_text( row, "help" ) + ' '
+            tokens += utils._restore_space( utils._get_text( row, "description" ) ) + ' '
+            tokens += utils._get_text( row, "help" ) + ' '
             tokens += utils._get_text( row, "edam_topics" )
         return utils._remove_special_chars( tokens )
 
@@ -250,8 +250,7 @@ class PredictToolSimilarity:
                 rowj = tools_info[ tool_item ]
                 score = round( item[ tool_index ], 2 )
                 input_output_score = round( original_matrix[ "input_output" ][ index ][ tool_index ], 2 )
-                name_desc_score = round( original_matrix[ "name_desc" ][ index ][ tool_index ], 2 )
-                edam_help_score = round( original_matrix[ "edam_help" ][ index ][ tool_index ], 2 )
+                name_desc_edam_help_score = round( original_matrix[ "name_desc_edam_help" ][ index ][ tool_index ], 2 )
                 if score > similarity_threshold:
                     record = {
                        "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
@@ -262,8 +261,7 @@ class PredictToolSimilarity:
                        "edam_text": utils._get_text( rowj, "edam_topics" ),
                        "score": score,
                        "input_output_score": input_output_score,
-                       "name_desc_score": name_desc_score,
-                       "edam_help_score": edam_help_score,
+                       "name_desc_edam_help_score": name_desc_edam_help_score
                     }
                     if rowj[ "id" ] == tool_id:
                         root_tool = record
@@ -296,7 +294,7 @@ if __name__ == "__main__":
     dataframe = tool_similarity.read_file()
     print "Read tool files"
 
-    tokens = tool_similarity.extract_tokens( dataframe, [ 'input_output', 'name_desc', 'edam_help' ] )
+    tokens = tool_similarity.extract_tokens( dataframe, tool_similarity.data_source )
     print "Extracted tokens"
 
     refined_tokens = tool_similarity.refine_tokens( tokens )

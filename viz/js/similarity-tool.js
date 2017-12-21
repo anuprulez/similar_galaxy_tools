@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json";
-    $.getJSON( "data/similarity_matrix.json", function( data ) {
+    $.getJSON( "data/similarity_matrix_2src.json", function( data ) {
         var toolIdsTemplate = "";
         // sort the tools in ascending order of their ids
         similarityData = data.sort(function(a, b) {
@@ -67,14 +67,11 @@ $(document).ready(function(){
         var template = "";
         template = "<div><h4> " + headerText + " </h4>"
         for( var item in weights ) {
-            if( item === "name_desc" ) {
-                template += "<div>" + "Name and description: <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
-            }
-            else if( item === "input_output" ) {
+            if( item === "input_output" ) {
                 template += "<div>" + "Input and output file types: <b>" + toPrecisionNumber( weights[ item ] ) + "</b></div>";
             }
-            else if( item === "edam_help" ) {
-                template += "<div>" + "Help text and EDAM: <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+            else if( item === "name_desc_edam_help" ) {
+                template += "<div>" + "Name, description, help and EDAM: <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
         }
         template += "</div>";
@@ -90,8 +87,7 @@ $(document).ready(function(){
         template += "<table><thead>";
         template += "<th>Id</th>";
         template += "<th> Input output score </th>";
-        template += "<th> Name desc. score </th>";
-        template += "<th> Edam help score </th>";
+        template += "<th> Name desc. Edam help score </th>";
         template += "<th> Average score </th>";
         template += "<th> Weighted average similarity score </th>";
         template += "<th> Name and description </th>";
@@ -102,13 +98,12 @@ $(document).ready(function(){
         template += "</thead><tbody>";
         for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
             var tool = toolScores[ counter_ts ],
-                averageScore = ( tool.input_output_score + tool.edam_help_score + tool.name_desc_score ) / 3;
+                averageScore = ( tool.input_output_score + tool.name_desc_edam_help_score ) / 2;
             averageScore = averageScore.toFixed( 2 );
             template += "<tr>";
             template += "<td>" + tool.id + "</td>";
             template += "<td>" + tool.input_output_score + "</td>";
-            template += "<td>" + tool.name_desc_score + "</td>";
-            template += "<td>" + tool.edam_help_score + "</td>";
+            template += "<td>" + tool.name_desc_edam_help_score + "</td>";
             template += "<td>" + averageScore + "</td>";
             template += "<td>" + tool.score + "</td>";
             template += "<td>" + tool.name_description + "</td>";
