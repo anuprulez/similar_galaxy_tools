@@ -285,7 +285,7 @@ class PredictToolSimilarity:
 if __name__ == "__main__":
 
     if len(sys.argv) != 3:
-        print( "Usage: python predict_similarity.py <file_path> <number_of_iterations>" )
+        print( "Usage: python predict_similarity.py <file_path> <max_number_of_iterations>" )
         exit( 1 )
 
     start_time = time.time()
@@ -317,14 +317,14 @@ if __name__ == "__main__":
     print "Assign importance to tools similarity matrix..."
     similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list, optimal_weights )
     
-    print "Plotting the changes of costs during iterations..."
-    utils._plot_tools_cost( cost_tools, iterations )
+    #print "Plotting the changes of costs during iterations..."
+    #utils._plot_tools_cost( cost_tools )
 
-    print "Plotting learning rates..."
-    utils._plot_learning_rate( learning_rates, iterations )
+    #print "Plotting learning rates..."
+    #utils._plot_learning_rate( learning_rates, iterations )
 
-    print "Plots for learning..."
-    utils._plots_original_learned_matrix( similarity_matrix_original, similarity_matrix_learned, files_list )
+    #print "Plots for learning..."
+    #utils._plots_original_learned_matrix( similarity_matrix_original, similarity_matrix_learned, files_list )
 
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, similarity_matrix_original )

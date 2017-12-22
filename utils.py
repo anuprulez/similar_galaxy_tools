@@ -90,7 +90,7 @@ def _plot_heatmap( similarity_matrix ):
     sns.heatmap(similarity_matrix, annot=True, fmt="g", cmap='viridis')
     plt.show()
 
-def _plot_tools_cost( cost_tools, iterations ):
+def _plot_tools_cost( cost_tools ):
     """
     Generate plot for varying cost in iterations
     """
@@ -106,6 +106,13 @@ def _plot_learning_rate( learning_rates, iterations ):
     plt.plot( [ x for x in range( iterations ) ], learning_rates )
     plt.xlabel( 'Number of iterations' )
     plt.ylabel( 'Learning rates' )
+    plt.grid( color='k', linestyle='-', linewidth=0.25 )
+    plt.show()
+
+def _plot_cost_vs_iterations( cost, iterations ):
+    plt.plot( [ x for x in range( iterations ) ], cost )
+    plt.xlabel( 'Number of iterations' )
+    plt.ylabel( 'Cost' )
     plt.grid( color='k', linestyle='-', linewidth=0.25 )
     plt.show()
 
