@@ -14,7 +14,7 @@ class GradientDescentOptimizer:
     def __init__( self, number_iterations ):
         # Gradient descent parameters
         self.number_iterations = number_iterations
-        self.learning_rate = 0.5
+        self.learning_rate = 0.7
         self.sources = [ 'input_output', 'name_desc_edam_help' ]
 
     @classmethod
@@ -33,7 +33,7 @@ class GradientDescentOptimizer:
         """
         Decay the learning rate in steps
         """
-        drop = 0.95
+        drop = 0.99
         epochs_drop = 10.0
         lr_multiplier = np.power( drop, np.floor( ( 1. + epoch ) / epochs_drop ) )
         return self.learning_rate * lr_multiplier
@@ -75,7 +75,7 @@ class GradientDescentOptimizer:
         """
         Apply gradient descent optimizer to find the weights for the sources of annotations of tools
         """
-        convergence_cost_difference = 1e-5
+        convergence_cost_difference = 1e-6
         num_all_tools = len( tools_list )
         tools_optimal_weights = dict()
         cost_tools = list()
