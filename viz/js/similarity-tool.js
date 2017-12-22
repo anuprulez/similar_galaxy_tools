@@ -28,7 +28,6 @@ $(document).ready(function(){
     // Fire on change of a tool to show similar tools and plot cost vs iteration
     $( ".tool-ids" ).on( 'change', function( e ) {
         e.preventDefault();
-        console.log(e);
         var selectedToolId = e.target.value,
             data = similarityData,
             availableSimilarTool = false,
@@ -50,7 +49,6 @@ $(document).ready(function(){
                 // make html for similar tools
                 $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " </h4>" ) );
                 
-
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
