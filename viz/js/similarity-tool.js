@@ -3,7 +3,7 @@
 $(document).ready(function(){
 
     var similarityData = null,
-        // download this https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json to your
+        // download this https://github.com/anuprulez/similar_galaxy_tools/blob/master/viz/data/similarity_matrix.json to your
         // local machine and set the path variable
         path = "";
     $.getJSON( path, function( data ) {
