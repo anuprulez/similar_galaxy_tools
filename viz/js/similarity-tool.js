@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json";
-    $.getJSON( path, function( data ) {
+    $.getJSON( "data/similarity_matrix.json", function( data ) {
         var toolIdsTemplate = "";
         // sort the tools in ascending order of their ids
         similarityData = data.sort(function(a, b) {
@@ -18,7 +18,7 @@ $(document).ready(function(){
         });
         for( var counter = 0, len = similarityData.length; counter < len; counter++ ) {
             var toolResults = similarityData[ counter ]; 
-            if( toolResults.root_tool.id !== undefined ) {    
+            if( toolResults.root_tool.id !== undefined ) {
                 toolIdsTemplate += "<option value='" + toolResults.root_tool.id + "'>" + toolResults.root_tool.id + "</options>";
             }
         } // end of for loop
@@ -35,19 +35,20 @@ $(document).ready(function(){
         $el_tools.empty();
         for( var counter = 0, len = data.length; counter < len; counter++ ) {
             var toolResults = data[ counter ];
-            
             if ( toolResults.root_tool.id === selectedToolId ) {
                 var toolScores = toolResults.similar_tools,
+                    aveToolScores = toolResults.average_similar_tools,
                     template = "";
                 // make html for the selected tool
-                $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "<h4>Selected tool: " +  selectedToolId + "</h4>" ) );
+                $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "<h4>Selected tool: " +  selectedToolId + "</h4>", "Score(optimal weights)" ) );
+                // show optimal weights
+                $el_tools.append( showWeights( toolResults.optimal_weights, "Optimal importance weights learned" ) );
                 
-                // show initial and optimal weights 
-                $el_tools.append( showWeights( toolResults.initial_weights, "Random initial weights for the sources" ) );
-                $el_tools.append( showWeights( toolResults.optimal_weights, "Optimal weights learned" ) );
+                // make html for similar tools found by optimizing BM25 scores using Gradient Descent
+                $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using optimal weights</h4>", "Score(optimal weights)" ) );
                 
-                // make html for similar tools
-                $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " </h4>" ) );
+                // make html for similar tools found using average scores of BM25
+                $el_tools.append( createHTML( aveToolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using average BM25 similarity scores</h4>", "Score(average weights)" ) );
                 
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
@@ -80,14 +81,13 @@ $(document).ready(function(){
         return Math.round( parseFloat( number ) * 100) / 100;
     };
 
-    var createHTML = function( toolScores, originalToolId, headerText ) {
+    var createHTML = function( toolScores, originalToolId, headerText, scoreHeaderText ) {
         var template = headerText;
         template += "<table><thead>";
         template += "<th>Id</th>";
         template += "<th> Input output score </th>";
         template += "<th> Name desc. Edam help score </th>";
-        template += "<th> Average score </th>";
-        template += "<th> Weighted average similarity score </th>";
+        template += "<th> " + scoreHeaderText + "</th>";
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
@@ -102,8 +102,7 @@ $(document).ready(function(){
             template += "<td>" + tool.id + "</td>";
             template += "<td>" + tool.input_output_score + "</td>";
             template += "<td>" + tool.name_desc_edam_help_score + "</td>";
-            template += "<td>" + averageScore + "</td>";
-            template += "<td>" + tool.score + "</td>";
+            template += "<td>" + tool.score.toFixed( 2 ) + "</td>";
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
