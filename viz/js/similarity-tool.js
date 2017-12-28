@@ -3,11 +3,15 @@
 $(document).ready(function(){
 
     var similarityData = null,
+        list_tool_names = null,
         path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/line_search/viz/data/similarity_matrix.json";
+        
     $.getJSON( path, function( data ) {
         var toolIdsTemplate = "";
+            list_tool_names = data[ data.length - 1 ]
+            slicedData = data.slice( 1, data.length - 1 );
         // sort the tools in ascending order of their ids
-        similarityData = data.sort(function(a, b) {
+        similarityData = slicedData.sort(function(a, b) {
             if( a.root_tool.id !== undefined && b.root_tool.id !== undefined ) {
                 var first_id = a.root_tool.id.toLowerCase(),
                     second_id = b.root_tool.id.toLowerCase();
@@ -39,6 +43,7 @@ $(document).ready(function(){
                 var toolScores = toolResults.similar_tools,
                     aveToolScores = toolResults.average_similar_tools,
                     template = "";
+                    
                 // make html for the selected tool
                 $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "<h4>Selected tool: " +  selectedToolId + "</h4>", "Score(optimal weights)" ) );
                 // show optimal weights
@@ -53,6 +58,12 @@ $(document).ready(function(){
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
+                
+                // plot optimal vs average scores
+                $el_tools.append( "<div id='scatter-optimal-average'></div>" );
+                plotScatterOptimalAverageScores( toolResults, "scatter-optimal-average", selectedToolId );
+                
+                // plot learning rate vs iterations
                 $el_tools.append( "<div id='learning-rate-iterations'></div>" );
                 plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId )
                 availableSimilarTool = true;
@@ -63,6 +74,10 @@ $(document).ready(function(){
              $el_tools.empty().html( "<p class='no-similar-tool-msg'>No similar tool available. <p>" );
          }
     });
+    
+    sumArray = function( a, b ) {
+       return a + b;
+    };
     
     var showWeights = function( weights, headerText ) {
         var template = "";
@@ -96,15 +111,16 @@ $(document).ready(function(){
         template += "<th> Help text (what it does) </th>";
         template += "<th> EDAM </th>";
         template += "</thead><tbody>";
+        sum = 0;
         for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
             var tool = toolScores[ counter_ts ],
-                averageScore = ( tool.input_output_score + tool.name_desc_edam_help_score ) / 2;
-            averageScore = averageScore.toFixed( 2 );
+                tool_score = tool.score.toFixed( 2 );
+            sum += parseFloat( tool_score );
             template += "<tr>";
             template += "<td>" + tool.id + "</td>";
             template += "<td>" + tool.input_output_score + "</td>";
             template += "<td>" + tool.name_desc_edam_help_score + "</td>";
-            template += "<td>" + tool.score.toFixed( 2 ) + "</td>";
+            template += "<td>" + tool_score + "</td>";
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
@@ -118,16 +134,42 @@ $(document).ready(function(){
     
     var plotCostVsIterations = function( toolScores, $elPlot, selectedToolId ) {
         var costIterations = toolScores.cost_iterations,
+            costAverage = toolScores.mean_average_similar_cost,
+            costOptimal = toolScores.mean_optimal_similar_cost,
             iterations = costIterations.length,
-            x_axis = [];
+            x_axis = [],
+            costOptimalList = [],
+            costAverageList = [];
         for( var i = 0; i < iterations; i++ ) {
             x_axis.push( i + 1 );
+            costAverageList.push( costAverage );
+            costOptimalList.push( costOptimal );
         }
-	var data = [{
+        
+	var trace1 = {
 	    x: x_axis,
 	    y: costIterations,
-	    type: 'scatter'
-	}];
+	    type: 'scatter',
+	    mode: 'lines',
+	    name: 'Loss vs iterations'
+	};
+	
+	var trace2 = {
+	    x: x_axis,
+	    y: costAverageList,
+	    type: 'scatter',
+	    mode: 'lines',
+	    name: 'Mean loss'
+	};
+	
+	var trace3 = {
+	    x: x_axis,
+	    y: costOptimalList,
+	    type: 'scatter',
+	    mode: 'lines'
+	};
+	
+	var data = [ trace1, trace2 ];
 	
 	var layout = {
             title:'Cost vs Iterations for the tool: ' + selectedToolId,
@@ -135,10 +177,50 @@ $(document).ready(function(){
                 title: 'Iterations'
             },
             yaxis: {
-                title: 'Cost'
+                title: 'Cost (Learned and average)'
             }
         };
 
+	Plotly.newPlot( $elPlot, data, layout );
+    };
+    
+    var plotScatterOptimalAverageScores = function( scores, $elPlot, selectedToolId ) {
+        var optimal_scores = scores.optimal_similar_scores,
+            average_scores = scores.average_similar_scores,
+            x_axis = [];
+        for( var i = 0, len = optimal_scores.length; i < len; i++ ) {
+            x_axis.push( i + 1 );
+        }
+        
+        var trace1 = {
+	    x: x_axis,
+	    y: optimal_scores,
+	    mode: 'markers',
+	    type: 'scatter',
+	    name: 'Optimal scores',
+	    text: list_tool_names.list_tools
+	};
+
+	var trace2 = {
+	    x: x_axis,
+	    y: average_scores,
+	    mode: 'markers',
+	    type: 'scatter',
+	    name: 'Average scores',
+	    text: list_tool_names.list_tools
+	};
+
+	var data = [ trace1, trace2 ];
+
+	var layout = {
+	    xaxis: {
+	        range: [ -5, optimal_scores.length + 10 ]
+	    },
+	    yaxis: {
+	        range: [ -1.5, 0.5 ]
+	    },
+	    title:'Scatter plot of optimal and average scores for tool: ' + selectedToolId
+	};
 	Plotly.newPlot( $elPlot, data, layout );
     };
     

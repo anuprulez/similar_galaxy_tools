@@ -228,15 +228,23 @@ class PredictToolSimilarity:
         tools_info = dict()
         similarity_threshold = 0
         similarity = list()
+        ideal_scores = [ 1 for x in range( len( tools_list ) ) ]
         for j, rowj in dataframe.iterrows():
             tools_info[ rowj[ "id" ] ] = rowj
-        
+            
         for index, item in enumerate( similarity_matrix ):
             tool_similarity = dict()
             scores = list()
             average_scores = list()
             root_tool = {}
             tool_id = tools_list[ index ]
+            all_average_scores = [ 0.5 * ( x + y ) for x, y in zip( original_matrix[ "input_output" ][ index ], original_matrix[ "name_desc_edam_help" ][ index ] ) ]
+            item_list = item.tolist()
+            loss_average_scores = [ y - x for x, y in zip( ideal_scores, all_average_scores ) ]
+            loss_optimal_scores = [ y - x for x, y in zip( ideal_scores, item_list ) ]
+            mean_loss_average_cost = np.mean( loss_average_scores )
+            mean_loss_optimal_cost = np.mean( loss_optimal_scores )
+            
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
                 score = round( item[ tool_index ], 2 )
@@ -285,8 +293,14 @@ class PredictToolSimilarity:
             tool_similarity[ "optimal_weights" ] = optimal_weights[ tool_id ]
             tool_similarity[ "cost_iterations" ] = cost_tools[ index ]
             tool_similarity[ "learning_rates_iterations" ] = learning_rates[ tool_id ]
+            tool_similarity[ "optimal_similar_scores" ] = loss_optimal_scores
+            tool_similarity[ "average_similar_scores" ] = loss_average_scores
+            tool_similarity[ "mean_average_similar_cost" ] = mean_loss_average_cost
+            tool_similarity[ "mean_optimal_similar_cost" ] = mean_loss_optimal_cost
             similarity.append( tool_similarity )
-
+        all_tools = dict()
+        all_tools[ "list_tools" ] = tools_list
+        similarity.append( all_tools )
         similarity_json = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + 'similarity_matrix.json' )
         with open( similarity_json,'w' ) as file:
             file.write( json.dumps( similarity ) )
