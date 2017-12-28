@@ -42,8 +42,8 @@ class GradientDescentOptimizer:
         Find the optimal step size/ learning rate for gradient descent
         """
         eta = 1
-        beta = 0.6
-        alpha = 0.15
+        beta = 0.75
+        alpha = 0.1
         ideal_score = np.repeat( 1, num_all_tools )
         while True:
             eta = beta * eta
