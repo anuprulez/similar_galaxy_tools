@@ -6,7 +6,7 @@ $(document).ready(function(){
         // download this https://github.com/anuprulez/similar_galaxy_tools/blob/master/viz/data/similarity_matrix.json to your
         // local machine and set the path variable
         path = "";
-    $.getJSON( path, function( data ) {
+    $.getJSON( "data/similarity_matrix.json", function( data ) {
         var toolIdsTemplate = "";
         // sort the tools in ascending order of their ids
         similarityData = data.sort(function(a, b) {
@@ -55,6 +55,8 @@ $(document).ready(function(){
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
+                $el_tools.append( "<div id='learning-rate-iterations'></div>" );
+                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId )
                 availableSimilarTool = true;
                 break;
             }
@@ -140,6 +142,32 @@ $(document).ready(function(){
         };
 
 	Plotly.newPlot( $elPlot, data, layout );
-    }
+    };
+    
+    var plotLearningRatesVsIterations = function( toolScores, $elPlot, selectedToolId ) {
+        var lrIterations = toolScores.learning_rates_iterations,
+            iterations = lrIterations.length,
+            x_axis = [];
+        for( var i = 0; i < iterations; i++ ) {
+            x_axis.push( i + 1 );
+        }
+	var data = [{
+	    x: x_axis,
+	    y: lrIterations,
+	    type: 'scatter'
+	}];
+	
+	var layout = {
+            title:'Learning rates vs Iterations for the tool: ' + selectedToolId,
+            xaxis: {
+                title: 'Iterations'
+            },
+            yaxis: {
+                title: 'Learning rate / Step size'
+            }
+        };
+	Plotly.newPlot( $elPlot, data, layout );
+    };
+    
 });
 
