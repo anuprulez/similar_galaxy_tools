@@ -221,7 +221,7 @@ class PredictToolSimilarity:
         return similarity_matrix_sources, similarity_matrix_learned
 
     @classmethod
-    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, original_matrix ):
+    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, original_matrix, learning_rates ):
         """
         Get similar tools for each tool
         """
@@ -284,6 +284,7 @@ class PredictToolSimilarity:
             tool_similarity[ "average_similar_tools" ] = sorted_average_scores[ : self.tools_show ]
             tool_similarity[ "optimal_weights" ] = optimal_weights[ tool_id ]
             tool_similarity[ "cost_iterations" ] = cost_tools[ index ]
+            tool_similarity[ "learning_rates_iterations" ] = learning_rates[ tool_id ]
             similarity.append( tool_similarity )
 
         similarity_json = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + 'similarity_matrix.json' )
@@ -327,7 +328,7 @@ if __name__ == "__main__":
     similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list, optimal_weights )
 
     print "Writing results to a JSON file..."
-    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, similarity_matrix_original )
+    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, similarity_matrix_original, learning_rates )
     
     end_time = time.time()
     print "Program finished in %d seconds" % int( end_time - start_time )
