@@ -5,7 +5,6 @@ of tokens using Gradient Descent
 
 import numpy as np
 import operator
-import random as random
 import utils
 
 
@@ -15,15 +14,17 @@ class GradientDescentOptimizer:
     def __init__( self, number_iterations ):
         self.number_iterations = number_iterations
         self.sources = [ 'input_output', 'name_desc_edam_help' ]
+        self.uniform_weight = 1. / len( self.sources )
+        self.best_similarity_score = 1.0
 
     @classmethod
-    def get_random_weights( self ):
+    def get_uniform_weights( self ):
         """
         Initialize the random weight matrices
         """
         weights = dict()
         for item in self.sources:
-            weights[ item ] = random.random()
+            weights[ item ] = self.uniform_weight
         return self.normalize_weights( weights )
         
     @classmethod
@@ -44,7 +45,7 @@ class GradientDescentOptimizer:
         eta = 1
         beta = 0.75
         alpha = 0.1
-        ideal_score = np.repeat( 1, num_all_tools )
+        ideal_score = np.repeat( self.best_similarity_score, num_all_tools )
         while True:
             eta = beta * eta
             update = dict()
@@ -72,7 +73,7 @@ class GradientDescentOptimizer:
         """
         for source in weights:
             weights[ source ] = weights[ source ] - learning_rate * gradient[ source ]
-        return weights
+        return self.normalize_weights( weights )
         
     @classmethod
     def normalize_weights( self, weights ):
@@ -97,42 +98,56 @@ class GradientDescentOptimizer:
                 optimal = False
                 break
         return optimal
+        
+    @classmethod
+    def compute_loss( self, weight, tool_scores, num_all_tools ):
+        # an array of ones - the ideal similarity score for a tool with other tools
+        ideal_tool_score = np.repeat( self.best_similarity_score, num_all_tools )
+        # compute loss between the ideal score and hypothesised similarity score
+        loss = weight * tool_scores - ideal_tool_score
+        uniform_loss = self.uniform_weight * tool_scores - ideal_tool_score
+        return loss, uniform_loss
 
     @classmethod
     def gradient_descent( self, similarity_matrix, tools_list ):
         """
         Apply gradient descent optimizer to find the weights for the sources of annotations of tools
         """
-        epsilon = 1e-7 # convergence_cost_difference
+        epsilon = 1e-8 # convergence_cost_difference
         num_all_tools = len( tools_list )
+        similarity_matrix_learned = list()
         tools_optimal_weights = dict()
         cost_tools = list()
+        uniform_cost_tools = list()
         learning_rates = dict()
+        similarity_matrix_sources = similarity_matrix
         for tool_index in range( num_all_tools ):
             print "Tool index: %d and tool name: %s" % ( tool_index, tools_list[ tool_index ] )
             # random weights to start with
-            random_importance_weights = self.get_random_weights()
+            random_importance_weights = self.get_uniform_weights()
             learned_cost = self.get_initial_learned_cost()
             print random_importance_weights
             cost_iteration = list()
+            uniform_cost_iteration = list()
             lr_iteration = list()
             for iteration in range( self.number_iterations ):
                 sources_gradient = dict()
                 cost_sources = list()
+                uniform_cost_sources = list()
                 cost_source = dict()
                 tool_similarity_scores = dict()        
                 for source in similarity_matrix:
                     weight = random_importance_weights[ source ]
-                    tools_score_source = similarity_matrix[ source ][ tool_index ]
+                    tools_score_source = similarity_matrix_sources[ source ][ tool_index ]
                     tool_similarity_scores[ source ] = tools_score_source
-                    # an array of ones - the ideal similarity score for a tool with other tools
-                    ideal_tool_score = np.repeat( tools_score_source[ tool_index ], num_all_tools )
-                    # compute loss between the ideal score and hypothesised similarity score
-                    hypothesis = weight * tools_score_source
-                    loss = ( hypothesis - ideal_tool_score )
+                    loss, uniform_loss = self.compute_loss( weight, tools_score_source, num_all_tools )
                     mean_loss = np.mean( loss )
+                    mean_uniform_loss = np.mean( uniform_loss )
+                    
                     # add cost for a tool's source
                     cost_sources.append( mean_loss )
+                    uniform_cost_sources.append( mean_uniform_loss )
+                    
                     cost_source[ source ] = mean_loss
                     # compute average gradient
                     gradient = np.dot( tools_score_source, loss ) / num_all_tools
@@ -141,20 +156,20 @@ class GradientDescentOptimizer:
                 mean_cost = np.mean( cost_sources )
                 learning_rate = self.backtracking_line_search( random_importance_weights, sources_gradient, tool_similarity_scores, num_all_tools )
                 lr_iteration.append( learning_rate )
+                cost_iteration.append( mean_cost )
+                uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
+                random_importance_weights = self.update_weights( random_importance_weights, sources_gradient, learning_rate )
                 # define a point when to stop learning
                 is_optimal = self.check_optimality( cost_source, learned_cost, epsilon )
                 if is_optimal == True:
                     print "optimal weights learned in %d iterations" % iteration
                     break
                 learned_cost = cost_source
-                cost_iteration.append( mean_cost )
-                random_importance_weights = self.update_weights( random_importance_weights, sources_gradient, learning_rate )
             cost_tools.append( cost_iteration )
+            uniform_cost_tools.append( uniform_cost_iteration )
             optimal_weights = self.normalize_weights( random_importance_weights )
             print optimal_weights
-            print "---------------------------------------------------------------------"
+            print "=================================================="
             tools_optimal_weights[ tools_list[ tool_index ] ] = optimal_weights
-            del random_importance_weights
-            del learned_cost
             learning_rates[ tools_list[ tool_index ] ] = lr_iteration
-        return tools_optimal_weights, cost_tools, self.number_iterations, learning_rates
+        return tools_optimal_weights, cost_tools, self.number_iterations, learning_rates, uniform_cost_tools
