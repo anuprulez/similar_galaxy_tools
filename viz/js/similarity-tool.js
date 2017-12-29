@@ -9,7 +9,7 @@ $(document).ready(function(){
     $.getJSON( path, function( data ) {
         var toolIdsTemplate = "";
             list_tool_names = data[ data.length - 1 ]
-            slicedData = data.slice( 1, data.length - 1 );
+            slicedData = data.slice( 0, data.length - 1 );
         // sort the tools in ascending order of their ids
         similarityData = slicedData.sort(function(a, b) {
             if( a.root_tool.id !== undefined && b.root_tool.id !== undefined ) {
@@ -134,16 +134,11 @@ $(document).ready(function(){
     
     var plotCostVsIterations = function( toolScores, $elPlot, selectedToolId ) {
         var costIterations = toolScores.cost_iterations,
-            costAverage = toolScores.mean_average_similar_cost,
-            costOptimal = toolScores.mean_optimal_similar_cost,
+            costUniformTools = toolScores.uniform_cost_tools,
             iterations = costIterations.length,
-            x_axis = [],
-            costOptimalList = [],
-            costAverageList = [];
+            x_axis = [];
         for( var i = 0; i < iterations; i++ ) {
             x_axis.push( i + 1 );
-            costAverageList.push( costAverage );
-            costOptimalList.push( costOptimal );
         }
         
 	var trace1 = {
@@ -156,17 +151,10 @@ $(document).ready(function(){
 	
 	var trace2 = {
 	    x: x_axis,
-	    y: costAverageList,
+	    y: costUniformTools,
 	    type: 'scatter',
 	    mode: 'lines',
 	    name: 'Mean loss'
-	};
-	
-	var trace3 = {
-	    x: x_axis,
-	    y: costOptimalList,
-	    type: 'scatter',
-	    mode: 'lines'
 	};
 	
 	var data = [ trace1, trace2 ];

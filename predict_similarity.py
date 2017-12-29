@@ -21,7 +21,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 10
+        self.tools_show = 20
 
     @classmethod
     def read_file( self ):
@@ -167,7 +167,7 @@ class PredictToolSimilarity:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
                     # we take of score 1 if we need exact word matching for input and output file types.
                     # otherwise we take ranked scores for each token
-                    document_tokens_matrix[ counter ][ word_index ] = 1 if source == "input_output" else word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ] #1 if source == "input_output" else word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -186,23 +186,10 @@ class PredictToolSimilarity:
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
                     # assign similarity score for a pair of tool their vectors
-                    pair_score = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._cosine_angle_score( item_x, item_y )
-                    sim_scores[ index_x ][ index_y ] = pair_score
+                    #pair_score = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._cosine_angle_score( item_x, item_y )
+                    sim_scores[ index_x ][ index_y ] = utils._cosine_angle_score( item_x, item_y )
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
-        
-    @classmethod
-    def adjust_uniform_weights( self, optimal_weights ):
-        """
-        Adjust the uniform weights if one or more of the learned weight are zero
-        """
-        uniform_weights = dict()
-        len_sources = len( [ item for item in optimal_weights ] )
-        zero_sources = [ item for item in optimal_weights if optimal_weights[ item ] == 0 ]
-        weight = 1. / ( len_sources - len( zero_sources ) )
-        for source in optimal_weights:
-            uniform_weights[ source ] = 0 if source in zero_sources else weight
-        return uniform_weights
 
     @classmethod
     def assign_similarity_importance( self, similarity_matrix_sources, tools_list, optimal_weights ):
@@ -221,7 +208,7 @@ class PredictToolSimilarity:
         return similarity_matrix_sources, similarity_matrix_learned
 
     @classmethod
-    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, original_matrix, learning_rates ):
+    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, original_matrix, learning_rates, uniform_cost_tools ):
         """
         Get similar tools for each tool
         """
@@ -242,9 +229,6 @@ class PredictToolSimilarity:
             item_list = item.tolist()
             loss_average_scores = [ y - x for x, y in zip( ideal_scores, all_average_scores ) ]
             loss_optimal_scores = [ y - x for x, y in zip( ideal_scores, item_list ) ]
-            mean_loss_average_cost = np.mean( loss_average_scores )
-            mean_loss_optimal_cost = np.mean( loss_optimal_scores )
-            
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
                 score = round( item[ tool_index ], 2 )
@@ -295,9 +279,9 @@ class PredictToolSimilarity:
             tool_similarity[ "learning_rates_iterations" ] = learning_rates[ tool_id ]
             tool_similarity[ "optimal_similar_scores" ] = loss_optimal_scores
             tool_similarity[ "average_similar_scores" ] = loss_average_scores
-            tool_similarity[ "mean_average_similar_cost" ] = mean_loss_average_cost
-            tool_similarity[ "mean_optimal_similar_cost" ] = mean_loss_optimal_cost
+            tool_similarity[ "uniform_cost_tools" ] = uniform_cost_tools[ index ]
             similarity.append( tool_similarity )
+            
         all_tools = dict()
         all_tools[ "list_tools" ] = tools_list
         similarity.append( all_tools )
@@ -336,13 +320,13 @@ if __name__ == "__main__":
 
     print "Learning optimal weights..."
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
-    optimal_weights, cost_tools, iterations, learning_rates = gd.gradient_descent( tools_distance_matrix, files_list )
+    optimal_weights, cost_tools, iterations, learning_rates, uniform_cost_tools = gd.gradient_descent( tools_distance_matrix, files_list )
 
     print "Assign importance to tools similarity matrix..."
     similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list, optimal_weights )
 
     print "Writing results to a JSON file..."
-    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, similarity_matrix_original, learning_rates )
+    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, similarity_matrix_original, learning_rates, uniform_cost_tools )
     
     end_time = time.time()
     print "Program finished in %d seconds" % int( end_time - start_time )
