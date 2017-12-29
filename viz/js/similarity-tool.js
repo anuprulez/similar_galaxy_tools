@@ -6,7 +6,8 @@ $(document).ready(function(){
         list_tool_names = null,
         path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/line_search/viz/data/similarity_matrix.json";
         
-    $.getJSON( path, function( data ) {
+    $.getJSON( "data/similarity_matrix.json", function( data ) {
+        console.log(data);
         var toolIdsTemplate = "";
             list_tool_names = data[ data.length - 1 ]
             slicedData = data.slice( 0, data.length - 1 );
@@ -50,10 +51,10 @@ $(document).ready(function(){
                 $el_tools.append( showWeights( toolResults.optimal_weights, "Optimal importance weights learned" ) );
                 
                 // make html for similar tools found by optimizing BM25 scores using Gradient Descent
-                $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using optimal weights</h4>", "Score(optimal weights)" ) );
+                $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using optimal weights for the sources</h4>", "Score" ) );
                 
                 // make html for similar tools found using average scores of BM25
-                $el_tools.append( createHTML( aveToolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using average BM25 similarity scores</h4>", "Score(average weights)" ) );
+                $el_tools.append( createHTML( aveToolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using aggregate BM25 similarity scores</h4>", "Score" ) );
                 
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
@@ -61,11 +62,11 @@ $(document).ready(function(){
                 
                 // plot optimal vs average scores
                 $el_tools.append( "<div id='scatter-optimal-average'></div>" );
-                plotScatterOptimalAverageScores( toolResults, "scatter-optimal-average", selectedToolId );
+                plotScatterOptimalAggreagateScores( toolResults, "scatter-optimal-average", selectedToolId );
                 
                 // plot learning rate vs iterations
                 $el_tools.append( "<div id='learning-rate-iterations'></div>" );
-                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId )
+                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
                 availableSimilarTool = true;
                 break;
             }
@@ -84,12 +85,13 @@ $(document).ready(function(){
         template = "<div><h4> " + headerText + " </h4>"
         for( var item in weights ) {
             if( item === "input_output" ) {
-                template += "<div>" + "Input and output file types: <b>" + toPrecisionNumber( weights[ item ] ) + "</b></div>";
+                template += "<div>" + "Input and output file types ( weight_1 ): <b>" + toPrecisionNumber( weights[ item ] ) + "</b></div>";
             }
             else if( item === "name_desc_edam_help" ) {
-                template += "<div>" + "Name, description, help and EDAM: <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+                template += "<div>" + "Name, description, help and EDAM ( weight_2 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
         }
+        template += "<p>Score = weight_1 * source_1 + weight_2 * source_2</p>";
         template += "</div>";
         return template;
     };
@@ -102,9 +104,10 @@ $(document).ready(function(){
         var template = headerText;
         template += "<table><thead>";
         template += "<th>Id</th>";
-        template += "<th> Input output score </th>";
-        template += "<th> Name desc. Edam help score </th>";
+        template += "<th> Input output score - Source_1 </th>";
+        template += "<th> Name desc. Edam help score - Source_2 </th>";
         template += "<th> " + scoreHeaderText + "</th>";
+        template += "<th> Rank </th>";
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
@@ -121,6 +124,7 @@ $(document).ready(function(){
             template += "<td>" + tool.input_output_score + "</td>";
             template += "<td>" + tool.name_desc_edam_help_score + "</td>";
             template += "<td>" + tool_score + "</td>";
+            template += "<td>" + parseInt( counter_ts + 1 ) + "</td>";
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
@@ -146,7 +150,7 @@ $(document).ready(function(){
 	    y: costIterations,
 	    type: 'scatter',
 	    mode: 'lines',
-	    name: 'Loss vs iterations'
+	    name: 'Optimal loss vs iterations'
 	};
 	
 	var trace2 = {
@@ -154,7 +158,7 @@ $(document).ready(function(){
 	    y: costUniformTools,
 	    type: 'scatter',
 	    mode: 'lines',
-	    name: 'Mean loss'
+	    name: 'Aggregate loss'
 	};
 	
 	var data = [ trace1, trace2 ];
@@ -165,14 +169,14 @@ $(document).ready(function(){
                 title: 'Iterations'
             },
             yaxis: {
-                title: 'Cost (Learned and average)'
+                title: 'Cost (Learned and aggregate)'
             }
         };
 
 	Plotly.newPlot( $elPlot, data, layout );
     };
     
-    var plotScatterOptimalAverageScores = function( scores, $elPlot, selectedToolId ) {
+    var plotScatterOptimalAggreagateScores = function( scores, $elPlot, selectedToolId ) {
         var optimal_scores = scores.optimal_similar_scores,
             average_scores = scores.average_similar_scores,
             x_axis = [];
@@ -194,7 +198,7 @@ $(document).ready(function(){
 	    y: average_scores,
 	    mode: 'markers',
 	    type: 'scatter',
-	    name: 'Average scores',
+	    name: 'Aggregate scores',
 	    text: list_tool_names.list_tools
 	};
 
@@ -205,9 +209,9 @@ $(document).ready(function(){
 	        range: [ -5, optimal_scores.length + 10 ]
 	    },
 	    yaxis: {
-	        range: [ -1.5, 0.5 ]
+	        range: [ -2.5, 10 ]
 	    },
-	    title:'Scatter plot of optimal and average scores for tool: ' + selectedToolId
+	    title:'Scatter plot of optimal and aggregate scores for tool: ' + selectedToolId
 	};
 	Plotly.newPlot( $elPlot, data, layout );
     };

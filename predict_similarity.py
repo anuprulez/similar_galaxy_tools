@@ -21,7 +21,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 20
+        self.tools_show = 10
 
     @classmethod
     def read_file( self ):
@@ -186,8 +186,8 @@ class PredictToolSimilarity:
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
                     # assign similarity score for a pair of tool their vectors
-                    #pair_score = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._cosine_angle_score( item_x, item_y )
-                    sim_scores[ index_x ][ index_y ] = utils._cosine_angle_score( item_x, item_y )
+                    pair_score = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._cosine_angle_score( item_x, item_y )
+                    sim_scores[ index_x ][ index_y ] = pair_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 
@@ -225,16 +225,17 @@ class PredictToolSimilarity:
             average_scores = list()
             root_tool = {}
             tool_id = tools_list[ index ]
-            all_average_scores = [ 0.5 * ( x + y ) for x, y in zip( original_matrix[ "input_output" ][ index ], original_matrix[ "name_desc_edam_help" ][ index ] ) ]
+            all_average_scores = [ ( x + y ) for x, y in zip( original_matrix[ "input_output" ][ index ], original_matrix[ "name_desc_edam_help" ][ index ] ) ]
             item_list = item.tolist()
-            loss_average_scores = [ y - x for x, y in zip( ideal_scores, all_average_scores ) ]
-            loss_optimal_scores = [ y - x for x, y in zip( ideal_scores, item_list ) ]
+            # 2 is multiplied because similarity scores are added up
+            loss_average_scores = [ y - 2 * x for x, y in zip( ideal_scores, all_average_scores ) ]
+            loss_optimal_scores = [ y - 2 * x for x, y in zip( ideal_scores, item_list ) ]
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
                 score = round( item[ tool_index ], 2 )
                 input_output_score = round( original_matrix[ "input_output" ][ index ][ tool_index ], 2 )
                 name_desc_edam_help_score = round( original_matrix[ "name_desc_edam_help" ][ index ][ tool_index ], 2 )
-                average_score = 0.5 * ( input_output_score + name_desc_edam_help_score )
+                average_score = ( input_output_score + name_desc_edam_help_score )
                 # take similar tools found using Gradient Descent + BM25
                 if score > similarity_threshold:
                     record = {
