@@ -5,7 +5,6 @@ $(document).ready(function(){
     var similarityData = null,
         list_tool_names = null,
         path = ""; // download the similarity json file from https://github.com/anuprulez/large_files_repository
-        
     if ( path === "" ) {
         console.error( "Download json file from 'https://github.com/anuprulez/large_files_repository' to your local computer and set this variable" );
         return;

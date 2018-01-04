@@ -94,7 +94,7 @@ class GradientDescentOptimizer:
         """
         Check if the learning in the weights has become stable
         """
-        epsilon = 1e-6
+        epsilon = 1e-8
         optimal = False
         for source in gradient:
             if abs( gradient[ source ] ) <  epsilon:
@@ -124,7 +124,6 @@ class GradientDescentOptimizer:
         """
         Apply gradient descent optimizer to find the weights for the sources of annotations of tools
         """
-        epsilon = 1e-7 # cost difference to check for convergence
         num_all_tools = len( tools_list )
         similarity_matrix_learned = list()
         tools_optimal_weights = dict()
@@ -170,7 +169,6 @@ class GradientDescentOptimizer:
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
                 random_importance_weights = self.update_weights( random_importance_weights, sources_gradient, learning_rate )
                 # define a point when to stop learning
-                #is_optimal = self.check_optimality( cost_source, learned_cost, epsilon )
                 is_optimal = self.check_optimality_gradient( sources_gradient, previous_gradient )
                 if is_optimal == True:
                     print "optimal weights learned in %d iterations" % iteration

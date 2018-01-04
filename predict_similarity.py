@@ -57,12 +57,12 @@ class PredictToolSimilarity:
             input_tokens = utils._remove_duplicate_file_types( input_tokens )
             output_tokens = utils._restore_space( utils._get_text( row, "outputs" ) )
             output_tokens = utils._remove_duplicate_file_types( output_tokens )
-            if input_tokens == "":
-                tokens = output_tokens
-            elif output_tokens == "":
-                tokens = input_tokens
-            else:
+            if input_tokens is not "" and output_tokens is not "":
                 tokens = input_tokens + ' ' + output_tokens
+            elif output_tokens is not "":
+                tokens = output_tokens
+            elif input_tokens is not "":
+                tokens = input_tokens
         elif source == 'name_desc_edam_help':
             tokens = utils._restore_space( utils._get_text( row, "name" ) ) + ' '
             tokens += utils._restore_space( utils._get_text( row, "description" ) ) + ' '
@@ -184,10 +184,9 @@ class PredictToolSimilarity:
                 for index_y, item_y in enumerate( sim_mat ):
                     # compute jaccard as well as cosine scores
                     # compare which is better and then assign the better one
-                    jaccard_score = utils._jaccard_score( item_x, item_y )
-                    cosine_score = utils._cosine_angle_score( item_x, item_y )
+                    pair_score = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._cosine_angle_score( item_x, item_y )
                     # assign similarity score for a pair of tool their vectors
-                    sim_scores[ index_x ][ index_y ] = jaccard_score if jaccard_score > cosine_score else cosine_score
+                    sim_scores[ index_x ][ index_y ] = pair_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 
