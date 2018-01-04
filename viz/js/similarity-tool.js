@@ -4,9 +4,13 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/line_search/viz/data/similarity_matrix.json";
+        path = ""; // download the similarity json file from https://github.com/anuprulez/large_files_repository
         
-    $.getJSON( "data/similarity_matrix.json", function( data ) {
+    if ( path === "" ) {
+        console.error( "Download json file from 'https://github.com/anuprulez/large_files_repository' to your local computer and set this variable" );
+        return;
+    }
+    $.getJSON( path, function( data ) {
         console.log(data);
         var toolIdsTemplate = "";
             list_tool_names = data[ data.length - 1 ]
@@ -42,7 +46,7 @@ $(document).ready(function(){
             var toolResults = data[ counter ];
             if ( toolResults.root_tool.id === selectedToolId ) {
                 var toolScores = toolResults.similar_tools,
-                    aveToolScores = toolResults.average_similar_tools,
+                    aveToolScores = toolResults.aggregate_similar_tools,
                     template = "";
                     
                 // make html for the selected tool
@@ -53,16 +57,16 @@ $(document).ready(function(){
                 // make html for similar tools found by optimizing BM25 scores using Gradient Descent
                 $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using optimal weights for the sources</h4>", "Score" ) );
                 
-                // make html for similar tools found using average scores of BM25
+                // make html for similar tools found using aggregate scores of BM25
                 $el_tools.append( createHTML( aveToolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using aggregate BM25 similarity scores</h4>", "Score" ) );
                 
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
                 
-                // plot optimal vs average scores
-                $el_tools.append( "<div id='scatter-optimal-average'></div>" );
-                plotScatterOptimalAggreagateScores( toolResults, "scatter-optimal-average", selectedToolId );
+                // plot optimal vs aggregate scores
+                $el_tools.append( "<div id='scatter-optimal-aggregate'></div>" );
+                plotScatterOptimalAggreagateScores( toolResults, "scatter-optimal-aggregate", selectedToolId );
                 
                 // plot learning rate vs iterations
                 $el_tools.append( "<div id='learning-rate-iterations'></div>" );
@@ -178,7 +182,7 @@ $(document).ready(function(){
     
     var plotScatterOptimalAggreagateScores = function( scores, $elPlot, selectedToolId ) {
         var optimal_scores = scores.optimal_similar_scores,
-            average_scores = scores.average_similar_scores,
+            aggregate_scores = scores.aggregate_similar_scores,
             x_axis = [];
         for( var i = 0, len = optimal_scores.length; i < len; i++ ) {
             x_axis.push( i + 1 );
@@ -195,7 +199,7 @@ $(document).ready(function(){
 
 	var trace2 = {
 	    x: x_axis,
-	    y: average_scores,
+	    y: aggregate_scores,
 	    mode: 'markers',
 	    type: 'scatter',
 	    name: 'Aggregate scores',

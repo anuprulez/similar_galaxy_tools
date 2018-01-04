@@ -88,6 +88,27 @@ class GradientDescentOptimizer:
                 optimal = False
                 break
         return optimal
+     
+    @classmethod
+    def check_optimality_gradient( self, gradient, previous_gradient = None ):
+        """
+        Check if the learning in the weights has become stable
+        """
+        epsilon = 1e-6
+        optimal = False
+        for source in gradient:
+            if abs( gradient[ source ] ) <  epsilon:
+                optimal = True
+            elif previous_gradient:
+                if abs( previous_gradient[ source ] ) == abs( gradient[ source ] ):
+                    optimal = True
+                else:
+                    optimal = False
+                    break
+            else:
+                optimal = False
+                break
+        return optimal
         
     @classmethod
     def compute_loss( self, weight, tool_scores, num_all_tools ):
@@ -120,6 +141,7 @@ class GradientDescentOptimizer:
             cost_iteration = list()
             uniform_cost_iteration = list()
             lr_iteration = list()
+            previous_gradient = None
             for iteration in range( self.number_iterations ):
                 sources_gradient = dict()
                 cost_sources = list()
@@ -148,10 +170,12 @@ class GradientDescentOptimizer:
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
                 random_importance_weights = self.update_weights( random_importance_weights, sources_gradient, learning_rate )
                 # define a point when to stop learning
-                is_optimal = self.check_optimality( cost_source, learned_cost, epsilon )
+                #is_optimal = self.check_optimality( cost_source, learned_cost, epsilon )
+                is_optimal = self.check_optimality_gradient( sources_gradient, previous_gradient )
                 if is_optimal == True:
                     print "optimal weights learned in %d iterations" % iteration
                     break
+                previous_gradient = sources_gradient
                 learned_cost = cost_source
             cost_tools.append( cost_iteration )
             uniform_cost_tools.append( uniform_cost_iteration )
