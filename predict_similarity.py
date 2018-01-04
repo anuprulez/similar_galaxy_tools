@@ -21,7 +21,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 20
+        self.tools_show = 10
 
     @classmethod
     def read_file( self ):
@@ -107,7 +107,6 @@ class PredictToolSimilarity:
                         else:
                             term_frequency[ token ] += 1
                 files[ item ] = term_frequency
-            # parameters
             N = len( files )
             average_file_length = float( total_file_length ) / N
 
@@ -165,9 +164,7 @@ class PredictToolSimilarity:
             for tool_item in doc_tokens:
                 for word_score in doc_tokens[ tool_item ]:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    # we take of score 1 if we need exact word matching for input and output file types.
-                    # otherwise we take ranked scores for each token
-                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ] #1 if source == "input_output" else word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -185,9 +182,12 @@ class PredictToolSimilarity:
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
+                    # compute jaccard as well as cosine scores
+                    # compare which is better and then assign the better one
+                    jaccard_score = utils._jaccard_score( item_x, item_y )
+                    cosine_score = utils._cosine_angle_score( item_x, item_y )
                     # assign similarity score for a pair of tool their vectors
-                    #pair_score = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._cosine_angle_score( item_x, item_y )
-                    sim_scores[ index_x ][ index_y ] = utils._cosine_angle_score( item_x, item_y )
+                    sim_scores[ index_x ][ index_y ] = jaccard_score if jaccard_score > cosine_score else cosine_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 
@@ -222,19 +222,37 @@ class PredictToolSimilarity:
         for index, item in enumerate( similarity_matrix ):
             tool_similarity = dict()
             scores = list()
-            average_scores = list()
+            aggregate_scores = list()
             root_tool = {}
             tool_id = tools_list[ index ]
-            all_average_scores = [ 0.5 * ( x + y ) for x, y in zip( original_matrix[ "input_output" ][ index ], original_matrix[ "name_desc_edam_help" ][ index ] ) ]
-            item_list = item.tolist()
-            loss_average_scores = [ y - x for x, y in zip( ideal_scores, all_average_scores ) ]
-            loss_optimal_scores = [ y - x for x, y in zip( ideal_scores, item_list ) ]
+            
+            # row of similarity scores for a tool against all tools
+            row_input_output = original_matrix[ "input_output" ][ index ]
+            row_name_desc = original_matrix[ "name_desc_edam_help" ][ index ]
+            
+            # sum the scores from multiple sources
+            aggregate_normalized_scores = [ ( x + y ) for x, y in zip( row_input_output, row_name_desc ) ]
+            # normalize the scores for each tool by dividing with the max score
+            aggregate_normalized_scores = [ float( i ) / np.max( aggregate_normalized_scores ) for i in aggregate_normalized_scores ]
+            
+            optimal_normalized_scores = item.tolist()
+            # normalize the optimal scores
+            optimal_normalized_scores = [ float( j ) / np.max( optimal_normalized_scores ) for j in optimal_normalized_scores ]
+            
+            # compute the losses of aggregate and optimal scores against the ideal scores
+            loss_aggregate_scores = [ y - x for x, y in zip( ideal_scores, aggregate_normalized_scores ) ]
+            loss_optimal_scores = [ y - x for x, y in zip( ideal_scores, optimal_normalized_scores ) ]
+            
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
-                score = round( item[ tool_index ], 2 )
-                input_output_score = round( original_matrix[ "input_output" ][ index ][ tool_index ], 2 )
-                name_desc_edam_help_score = round( original_matrix[ "name_desc_edam_help" ][ index ][ tool_index ], 2 )
-                average_score = 0.5 * ( input_output_score + name_desc_edam_help_score )
+                # optimal similarity score for a tool against a tool
+                score = round( optimal_normalized_scores[ tool_index ], 2 )
+                # similarity score with input and output file types
+                input_output_score = round( row_input_output[ tool_index ], 2 )
+                # similarity score with name, desc etc attributes
+                name_desc_edam_help_score = round( row_name_desc[ tool_index ], 2 )
+                # aggregate similarity score for tool against a tool
+                aggregate_score = round( aggregate_normalized_scores[ tool_index ], 2 )
                 # take similar tools found using Gradient Descent + BM25
                 if score > similarity_threshold:
                     record = {
@@ -252,33 +270,33 @@ class PredictToolSimilarity:
                         root_tool = record
                     else:
                         scores.append( record )
-                # take similar tools found using average BM25 scores
-                if average_score > similarity_threshold:
-                    average_record = {
+                # take similar tools found using aggregate BM25 scores
+                if aggregate_score > similarity_threshold:
+                    aggregate_record = {
                        "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
                        "id": rowj[ "id" ],
                        "input_types": utils._get_text( rowj, "inputs" ),
                        "output_types": utils._get_text( rowj, "outputs" ),
                        "what_it_does": utils._get_text( rowj, "help" ),
                        "edam_text": utils._get_text( rowj, "edam_topics" ),
-                       "score": average_score,
+                       "score": aggregate_score,
                        "input_output_score": input_output_score,
                        "name_desc_edam_help_score": name_desc_edam_help_score
                     }
                     if rowj[ "id" ] != tool_id:
-                        average_scores.append( average_record )
+                        aggregate_scores.append( aggregate_record )
 
             tool_similarity[ "root_tool" ] = root_tool
             sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )
-            sorted_average_scores = sorted( average_scores, key = operator.itemgetter( "score" ), reverse = True )
+            sorted_aggregate_scores = sorted( aggregate_scores, key = operator.itemgetter( "score" ), reverse = True )
             # don't take all the tools predicted, just TOP something
             tool_similarity[ "similar_tools" ] = sorted_scores[ : self.tools_show ]
-            tool_similarity[ "average_similar_tools" ] = sorted_average_scores[ : self.tools_show ]
+            tool_similarity[ "aggregate_similar_tools" ] = sorted_aggregate_scores[ : self.tools_show ]
             tool_similarity[ "optimal_weights" ] = optimal_weights[ tool_id ]
             tool_similarity[ "cost_iterations" ] = cost_tools[ index ]
             tool_similarity[ "learning_rates_iterations" ] = learning_rates[ tool_id ]
             tool_similarity[ "optimal_similar_scores" ] = loss_optimal_scores
-            tool_similarity[ "average_similar_scores" ] = loss_average_scores
+            tool_similarity[ "aggregate_similar_scores" ] = loss_aggregate_scores
             tool_similarity[ "uniform_cost_tools" ] = uniform_cost_tools[ index ]
             similarity.append( tool_similarity )
             
