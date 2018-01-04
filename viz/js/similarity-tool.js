@@ -4,13 +4,8 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = ""; // download the similarity json file from https://github.com/anuprulez/large_files_repository
-    if ( path === "" ) {
-        console.error( "Download json file from 'https://github.com/anuprulez/large_files_repository' to your local computer and set this variable" );
-        return;
-    }
+        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/ee95c58c7d30a47ecb20eca62a750ddf32a182b1/viz/data/similarity_matrix.json";
     $.getJSON( path, function( data ) {
-        console.log(data);
         var toolIdsTemplate = "";
             list_tool_names = data[ data.length - 1 ]
             slicedData = data.slice( 0, data.length - 1 );

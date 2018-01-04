@@ -164,7 +164,7 @@ class PredictToolSimilarity:
             for tool_item in doc_tokens:
                 for word_score in doc_tokens[ tool_item ]:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = 1 if source == "input_output" else word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -182,11 +182,8 @@ class PredictToolSimilarity:
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
-                    # compute jaccard as well as cosine scores
-                    # compare which is better and then assign the better one
-                    pair_score = utils._jaccard_score( item_x, item_y ) if source == "input_output" else utils._cosine_angle_score( item_x, item_y )
-                    # assign similarity score for a pair of tool their vectors
-                    sim_scores[ index_x ][ index_y ] = pair_score
+                    # compute cosine scores between two vectors as their similarity scores
+                    sim_scores[ index_x ][ index_y ] = utils._cosine_angle_score( item_x, item_y )
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 

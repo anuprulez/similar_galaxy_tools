@@ -94,7 +94,7 @@ class GradientDescentOptimizer:
         """
         Check if the learning in the weights has become stable
         """
-        epsilon = 1e-8
+        epsilon = 1e-10
         optimal = False
         for source in gradient:
             if abs( gradient[ source ] ) <  epsilon:
