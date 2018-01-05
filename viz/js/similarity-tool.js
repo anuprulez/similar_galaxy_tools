@@ -4,7 +4,11 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/ee95c58c7d30a47ecb20eca62a750ddf32a182b1/viz/data/similarity_matrix.json";
+        path = ""; // Download the file "https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json" and add the path
+    if ( path === "" ) {
+        console.error( "Down the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path" );
+        return;
+    }
     $.getJSON( path, function( data ) {
         var toolIdsTemplate = "";
             list_tool_names = data[ data.length - 1 ]
@@ -101,6 +105,7 @@ $(document).ready(function(){
     var createHTML = function( toolScores, originalToolId, headerText, scoreHeaderText ) {
         var template = headerText;
         template += "<table><thead>";
+        template += "<th>S.No.</th>";
         template += "<th>Id</th>";
         template += "<th> Input output score - Source_1 </th>";
         template += "<th> Name desc. Edam help score - Source_2 </th>";
@@ -112,23 +117,28 @@ $(document).ready(function(){
         template += "<th> Help text (what it does) </th>";
         template += "<th> EDAM </th>";
         template += "</thead><tbody>";
-        sum = 0;
+        var prevRank = 0;
+        var prevScore = 0
         for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
             var tool = toolScores[ counter_ts ],
-                tool_score = tool.score.toFixed( 2 );
-            sum += parseFloat( tool_score );
+                toolScore = tool.score.toFixed( 2 ),
+                rank = 0;
+            rank = ( prevScore === toolScore ) ? prevRank : parseInt( counter_ts + 1 );
             template += "<tr>";
+            template += "<td>" + parseInt( counter_ts + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
             template += "<td>" + tool.input_output_score + "</td>";
             template += "<td>" + tool.name_desc_edam_help_score + "</td>";
-            template += "<td>" + tool_score + "</td>";
-            template += "<td>" + parseInt( counter_ts + 1 ) + "</td>";
+            template += "<td>" + toolScore + "</td>";
+            template += "<td>" + rank + "</td>";
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
             template += "<td>" + tool.what_it_does + "</td>";
             template += "<td>" + tool.edam_text + "</td>";
             template += "</tr>";
+            prevRank = rank;
+            prevScore = toolScore;
         }
         template += "</tbody></table>";
         return template;
