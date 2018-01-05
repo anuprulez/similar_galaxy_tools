@@ -52,8 +52,8 @@ def _jaccard_score( vector1, vector2 ):
     """
     Get jaccard score for two vectors
     """
-    intersection = [ 1 for a, b in zip( vector1, vector2 ) if a > 0 and b > 0 ]
-    union = [ 1 for a, b in zip( vector1, vector2 ) if a > 0 or b > 0 ]
+    intersection = [ 1 for a, b in zip( vector1, vector2 ) if a == 1 and b == 1 ]
+    union = [ 1 for a, b in zip( vector1, vector2 ) if a == 1 or b == 1 ]
     union_len = len( union )
 
     if union_len == 0:

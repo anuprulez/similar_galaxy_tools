@@ -21,7 +21,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 10
+        self.tools_show = 20
 
     @classmethod
     def read_file( self ):
@@ -164,7 +164,11 @@ class PredictToolSimilarity:
             for tool_item in doc_tokens:
                 for word_score in doc_tokens[ tool_item ]:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    document_tokens_matrix[ counter ][ word_index ] = 1 if source == "input_output" else word_score[ 1 ]
+                    if source == "input_output":
+                        token_score = 1
+                    else:
+                        token_score = word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = token_score
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -183,7 +187,14 @@ class PredictToolSimilarity:
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
                     # compute cosine scores between two vectors as their similarity scores
-                    sim_scores[ index_x ][ index_y ] = utils._cosine_angle_score( item_x, item_y )
+                    if source == "input_output":
+                        pair_score = utils._jaccard_score( item_x, item_y )
+                    else:
+                        pair_score_cosine = utils._cosine_angle_score( item_x, item_y )
+                        pair_score_jaccard = utils._jaccard_score( item_x, item_y )
+                        pair_score = pair_score_cosine if pair_score_cosine > pair_score_jaccard else pair_score_jaccard
+                        #pair_score = utils._cosine_angle_score( item_x, item_y )
+                    sim_scores[ index_x ][ index_y ] = pair_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 
