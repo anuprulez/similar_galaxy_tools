@@ -189,7 +189,6 @@ class PredictToolSimilarity:
                     # compute cosine scores between two vectors as their similarity scores
                     if source == "input_output":
                         pair_score = utils._jaccard_score( item_x, item_y )
-                        pair_score = np.log( 1 + ( pair_score * 0.5 ) )
                     else:
                         pair_score_cosine = utils._cosine_angle_score( item_x, item_y )
                         pair_score_jaccard = utils._jaccard_score( item_x, item_y )
