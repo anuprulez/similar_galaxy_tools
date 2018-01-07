@@ -189,6 +189,7 @@ class PredictToolSimilarity:
                     # compute cosine scores between two vectors as their similarity scores
                     if source == "input_output":
                         pair_score = utils._jaccard_score( item_x, item_y )
+                        pair_score = np.log( 1 + ( pair_score * 0.5 ) )
                     else:
                         pair_score_cosine = utils._cosine_angle_score( item_x, item_y )
                         pair_score_jaccard = utils._jaccard_score( item_x, item_y )
@@ -297,11 +298,11 @@ class PredictToolSimilarity:
             tool_similarity[ "similar_tools" ] = sorted_scores
             tool_similarity[ "average_similar_tools" ] = sorted_average_scores
             tool_similarity[ "optimal_weights" ] = optimal_weights[ tool_id ]
-            tool_similarity[ "cost_iterations" ] = cost_tools[ index ]
+            tool_similarity[ "cost_iterations" ] = cost_tools[ tool_id ]
             tool_similarity[ "learning_rates_iterations" ] = learning_rates[ tool_id ]
             tool_similarity[ "optimal_similar_scores" ] = loss_optimal_scores
             tool_similarity[ "average_similar_scores" ] = loss_average_scores
-            tool_similarity[ "uniform_cost_tools" ] = uniform_cost_tools[ index ]
+            tool_similarity[ "uniform_cost_tools" ] = uniform_cost_tools[ tool_id ]
             tool_similarity[ "gradient_io_iteration" ] = gradients[ tool_id ][ "input_output" ]
             tool_similarity[ "gradient_nd_iteration" ] = gradients[ tool_id ][ "name_desc_edam_help" ]
             similarity.append( tool_similarity )
