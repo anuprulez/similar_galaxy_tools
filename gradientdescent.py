@@ -65,6 +65,18 @@ class GradientDescentOptimizer:
             if is_optimal == True:
                 break
         return eta
+     
+    @classmethod
+    def normalize_weights( self, weights ):
+        """
+        Normalize the weights so that their sum is 1
+        """
+        sum_weights = 0
+        for source in weights:
+            sum_weights += weights[ source ]
+        for source in weights:
+            weights[ source ] = weights[ source ] / sum_weights
+        return weights
 
     @classmethod
     def update_weights( self, weights, gradient, learning_rate ):
@@ -162,23 +174,25 @@ class GradientDescentOptimizer:
                     gradient = np.dot( tools_score_source, loss ) / num_all_tools
                     # add gradient for a source
                     sources_gradient[ source ] = gradient
+                # define a point when to stop learning
+                is_optimal = self.check_optimality_gradient( sources_gradient, previous_gradient )
+                if is_optimal == True:
+                    print "optimal weights learned in %d iterations" % iteration
+                    break
                 mean_cost = np.mean( cost_sources )
                 learning_rate = self.backtracking_line_search( random_importance_weights, sources_gradient, tool_similarity_scores, num_all_tools )
                 lr_iteration.append( learning_rate )
                 cost_iteration.append( mean_cost )
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
                 random_importance_weights = self.update_weights( random_importance_weights, sources_gradient, learning_rate )
-                # define a point when to stop learning
-                is_optimal = self.check_optimality_gradient( sources_gradient, previous_gradient )
-                if is_optimal == True:
-                    print "optimal weights learned in %d iterations" % iteration
-                    break
                 previous_gradient = sources_gradient
                 learned_cost = cost_source
             cost_tools.append( cost_iteration )
             uniform_cost_tools.append( uniform_cost_iteration )
             print random_importance_weights
+            normalized_weights = self.normalize_weights( random_importance_weights )
+            print normalized_weights
             print "=================================================="
-            tools_optimal_weights[ tools_list[ tool_index ] ] = random_importance_weights
+            tools_optimal_weights[ tools_list[ tool_index ] ] = normalized_weights
             learning_rates[ tools_list[ tool_index ] ] = lr_iteration
         return tools_optimal_weights, cost_tools, self.number_iterations, learning_rates, uniform_cost_tools
