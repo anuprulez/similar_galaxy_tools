@@ -21,7 +21,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 10
+        self.tools_show = 20
 
     @classmethod
     def read_file( self ):
@@ -164,7 +164,11 @@ class PredictToolSimilarity:
             for tool_item in doc_tokens:
                 for word_score in doc_tokens[ tool_item ]:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    document_tokens_matrix[ counter ][ word_index ] = 1 if source == "input_output" else word_score[ 1 ]
+                    if source == "input_output":
+                        token_score = 1
+                    else:
+                        token_score = word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = token_score
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -183,7 +187,14 @@ class PredictToolSimilarity:
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
                     # compute cosine scores between two vectors as their similarity scores
-                    sim_scores[ index_x ][ index_y ] = utils._cosine_angle_score( item_x, item_y )
+                    if source == "input_output":
+                        pair_score = utils._jaccard_score( item_x, item_y )
+                        pair_score = np.log( 1 + pair_score ) # scale down the file type similarity
+                    else:
+                        pair_score_cosine = utils._cosine_angle_score( item_x, item_y )
+                        pair_score_jaccard = utils._jaccard_score( item_x, item_y )
+                        pair_score = pair_score_cosine if pair_score_cosine > pair_score_jaccard else pair_score_jaccard
+                    sim_scores[ index_x ][ index_y ] = pair_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 
@@ -227,7 +238,7 @@ class PredictToolSimilarity:
             row_name_desc = original_matrix[ "name_desc_edam_help" ][ index ]
             
             # sum the scores from multiple sources
-            aggregate_normalized_scores = [ ( x + y ) for x, y in zip( row_input_output, row_name_desc ) ]
+            aggregate_normalized_scores = [ ( x + y ) / 2. for x, y in zip( row_input_output, row_name_desc ) ]
             # normalize the scores for each tool by dividing with the max score
             aggregate_normalized_scores = [ float( i ) / np.max( aggregate_normalized_scores ) for i in aggregate_normalized_scores ]
             
@@ -283,11 +294,16 @@ class PredictToolSimilarity:
                         aggregate_scores.append( aggregate_record )
 
             tool_similarity[ "root_tool" ] = root_tool
-            sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )
-            sorted_aggregate_scores = sorted( aggregate_scores, key = operator.itemgetter( "score" ), reverse = True )
+            
+            sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )[ : self.tools_show ]
+            #sorted_scores_name_desc = sorted( sorted_scores, key = operator.itemgetter( "name_desc_edam_help_score" ), reverse = True )
+            
+            sorted_aggregate_scores = sorted( aggregate_scores, key = operator.itemgetter( "score" ), reverse = True )[ : self.tools_show ]
+            #sorted_aggregate_scores_name_desc = sorted( sorted_aggregate_scores, key = operator.itemgetter( "name_desc_edam_help_score" ), reverse = True )
+            
             # don't take all the tools predicted, just TOP something
-            tool_similarity[ "similar_tools" ] = sorted_scores[ : self.tools_show ]
-            tool_similarity[ "aggregate_similar_tools" ] = sorted_aggregate_scores[ : self.tools_show ]
+            tool_similarity[ "similar_tools" ] = sorted_scores
+            tool_similarity[ "aggregate_similar_tools" ] = sorted_aggregate_scores
             tool_similarity[ "optimal_weights" ] = optimal_weights[ tool_id ]
             tool_similarity[ "cost_iterations" ] = cost_tools[ index ]
             tool_similarity[ "learning_rates_iterations" ] = learning_rates[ tool_id ]
