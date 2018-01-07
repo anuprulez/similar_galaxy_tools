@@ -189,11 +189,12 @@ class PredictToolSimilarity:
                     # compute cosine scores between two vectors as their similarity scores
                     if source == "input_output":
                         pair_score = utils._jaccard_score( item_x, item_y )
-                        pair_score = np.log( 1 + pair_score ) # scale down the file type similarity
+                        #pair_score = np.log( 1 + ( pair_score / 2. ) ) # scale down the file type similarity
                     else:
                         pair_score_cosine = utils._cosine_angle_score( item_x, item_y )
                         pair_score_jaccard = utils._jaccard_score( item_x, item_y )
                         pair_score = pair_score_cosine if pair_score_cosine > pair_score_jaccard else pair_score_jaccard
+                        #pair_score = np.exp( pair_score )
                     sim_scores[ index_x ][ index_y ] = pair_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
@@ -238,7 +239,7 @@ class PredictToolSimilarity:
             row_name_desc = original_matrix[ "name_desc_edam_help" ][ index ]
             
             # sum the scores from multiple sources
-            aggregate_normalized_scores = [ ( x + y ) / 2. for x, y in zip( row_input_output, row_name_desc ) ]
+            aggregate_normalized_scores = [ ( x + y ) for x, y in zip( row_input_output, row_name_desc ) ]
             # normalize the scores for each tool by dividing with the max score
             aggregate_normalized_scores = [ float( i ) / np.max( aggregate_normalized_scores ) for i in aggregate_normalized_scores ]
             

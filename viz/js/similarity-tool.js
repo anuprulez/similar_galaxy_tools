@@ -4,12 +4,12 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = ""; // Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path
+        path = "data/similarity_matrix.json"; // Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path
     if ( path === "" ) {
         console.error( "Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path" );
         return;
     }
-    $.getJSON( "data/similarity_matrix.json", function( data ) {
+    $.getJSON( path, function( data ) {
         var toolIdsTemplate = "";
             list_tool_names = data[ data.length - 1 ]
             slicedData = data.slice( 0, data.length - 1 );
@@ -121,7 +121,7 @@ $(document).ready(function(){
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
         template += "<th> Help text (what it does) </th>";
-        template += "<th> EDAM </th>";
+        //template += "<th> EDAM </th>";
         template += "</thead><tbody>";
         var prevRank = 0;
         var prevScore = 0
@@ -141,7 +141,7 @@ $(document).ready(function(){
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
             template += "<td>" + tool.what_it_does + "</td>";
-            template += "<td>" + tool.edam_text + "</td>";
+            //template += "<td>" + tool.edam_text + "</td>";
             template += "</tr>";
             prevRank = rank;
             prevScore = toolScore;
