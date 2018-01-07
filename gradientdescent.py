@@ -181,8 +181,8 @@ class GradientDescentOptimizer:
             print weights
             print "=================================================="
             tools_optimal_weights[ tool_id ] = weights
-            cost_tools[ tool_id ] = cost_iteration
             learning_rates[ tool_id ] = lr_iteration
+            cost_tools[ tool_id ] = cost_iteration
             uniform_cost_tools[ tool_id ] = uniform_cost_iteration
             gradients[ tool_id ] = { self.sources[ 0 ]: gradient_io_iteration, self.sources[ 1 ]: gradient_nd_iteration }
         return tools_optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients
