@@ -290,8 +290,8 @@ class PredictToolSimilarity:
 
             tool_similarity[ "root_tool" ] = root_tool
             
-            sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )[ : self.tools_show ]
-            sorted_average_scores = sorted( average_scores, key = operator.itemgetter( "score" ), reverse = True )[ : self.tools_show ]
+            sorted_scores = sorted( scores, key = operator.itemgetter( "name_desc_edam_help_score" ), reverse = True )[ : self.tools_show ]
+            sorted_average_scores = sorted( average_scores, key = operator.itemgetter( "name_desc_edam_help_score" ), reverse = True )[ : self.tools_show ]
             
             # don't take all the tools predicted, just TOP something
             tool_similarity[ "similar_tools" ] = sorted_scores

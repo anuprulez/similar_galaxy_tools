@@ -177,7 +177,6 @@ class GradientDescentOptimizer:
                     break
                 previous_gradient = sources_gradient
             # optimal weights learned
-            
             print weights
             print "=================================================="
             tools_optimal_weights[ tool_id ] = weights
