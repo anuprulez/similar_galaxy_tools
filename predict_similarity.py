@@ -21,7 +21,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 20
+        self.tools_show = 30
 
     @classmethod
     def read_file( self ):
@@ -186,7 +186,7 @@ class PredictToolSimilarity:
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
                 for index_y, item_y in enumerate( sim_mat ):
-                    # compute cosine scores between two vectors as their similarity scores
+                    # compute similarity scores between two vectors
                     if source == "input_output":
                         pair_score = utils._jaccard_score( item_x, item_y )
                     else:
@@ -221,7 +221,6 @@ class PredictToolSimilarity:
         tools_info = dict()
         similarity_threshold = 0
         similarity = list()
-        ideal_scores = [ 1 for x in range( len( tools_list ) ) ]
         for j, rowj in dataframe.iterrows():
             tools_info[ rowj[ "id" ] ] = rowj
             
@@ -235,16 +234,8 @@ class PredictToolSimilarity:
             row_input_output = original_matrix[ "input_output" ][ index ]
             row_name_desc = original_matrix[ "name_desc_edam_help" ][ index ]
             # sum the scores from multiple sources
-            average_normalized_scores = [ ( x + y ) for x, y in zip( row_input_output, row_name_desc ) ]
-            # normalize the scores for each tool by dividing with the max score
-            average_normalized_scores = [ float( i ) / np.max( average_normalized_scores ) for i in average_normalized_scores ]
+            average_normalized_scores = [ ( x + y ) / 2. for x, y in zip( row_input_output, row_name_desc ) ]
             optimal_normalized_scores = item.tolist()
-            # normalize the optimal scores
-            optimal_normalized_scores = [ float( j ) / np.max( optimal_normalized_scores ) for j in optimal_normalized_scores ]
-            # compute the losses of average and optimal scores against the ideal scores
-            loss_average_scores = [ y - x for x, y in zip( ideal_scores, average_normalized_scores ) ]
-            loss_optimal_scores = [ y - x for x, y in zip( ideal_scores, optimal_normalized_scores ) ]
-            
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
                 # optimal similarity score for a tool against a tool
@@ -289,18 +280,17 @@ class PredictToolSimilarity:
                         average_scores.append( average_record )
 
             tool_similarity[ "root_tool" ] = root_tool
-            
-            sorted_scores = sorted( scores, key = operator.itemgetter( "name_desc_edam_help_score" ), reverse = True )[ : self.tools_show ]
-            sorted_average_scores = sorted( average_scores, key = operator.itemgetter( "name_desc_edam_help_score" ), reverse = True )[ : self.tools_show ]
-            
+            sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )[ : self.tools_show ]
+            sorted_average_scores = sorted( average_scores, key = operator.itemgetter( "score" ), reverse = True )[ : self.tools_show ]            
+
             # don't take all the tools predicted, just TOP something
             tool_similarity[ "similar_tools" ] = sorted_scores
             tool_similarity[ "average_similar_tools" ] = sorted_average_scores
             tool_similarity[ "optimal_weights" ] = optimal_weights[ tool_id ]
             tool_similarity[ "cost_iterations" ] = cost_tools[ tool_id ]
             tool_similarity[ "learning_rates_iterations" ] = learning_rates[ tool_id ]
-            tool_similarity[ "optimal_similar_scores" ] = loss_optimal_scores
-            tool_similarity[ "average_similar_scores" ] = loss_average_scores
+            tool_similarity[ "optimal_similar_scores" ] = optimal_normalized_scores
+            tool_similarity[ "average_similar_scores" ] = average_normalized_scores
             tool_similarity[ "uniform_cost_tools" ] = uniform_cost_tools[ tool_id ]
             tool_similarity[ "gradient_io_iteration" ] = gradients[ tool_id ][ "input_output" ]
             tool_similarity[ "gradient_nd_iteration" ] = gradients[ tool_id ][ "name_desc_edam_help" ]
