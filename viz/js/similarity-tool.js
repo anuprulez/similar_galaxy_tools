@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = ""; // Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path
+        path = "data/similarity_matrix.json"; // Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path
     if ( path === "" ) {
         console.error( "Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path" );
         return;

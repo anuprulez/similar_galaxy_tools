@@ -48,6 +48,18 @@ def _check_number( item ):
     except Exception as exception:
         return False
 
+def l1_norm( vector ):
+    norm = np.sum( vector )
+    if norm == 0:
+        return 0
+    else:
+        return vector / norm
+
+def _euclidean_distance( x, y ):
+    x_norm = l1_norm( x )
+    y_norm = l1_norm( y )
+    return np.sqrt( np.sum( ( x_norm - y_norm ) ** 2 ) )
+
 def _jaccard_score( vector1, vector2 ):
     """
     Get jaccard score for two vectors
@@ -67,13 +79,15 @@ def _cosine_angle_score( vector1, vector2 ):
     """
     # if either of the vectors is zero, then similarity is also 0 
     # which means the vectors cannot be compared
-    vec1_length = np.sqrt( np.dot( vector1, vector1 ) )
-    vec2_length = np.sqrt( np.dot( vector2, vector2 ) )
+    vector1_norm = l1_norm( vector1 )
+    vector2_norm = l1_norm( vector2 )
+    vec1_length = np.sqrt( np.dot( vector1_norm, vector1_norm ) )
+    vec2_length = np.sqrt( np.dot( vector2_norm, vector2_norm ) )
 
     if vec1_length == 0 or vec2_length == 0:
         return 0
-    else:  
-        return np.dot( vector1, vector2 ) / ( vec1_length * vec2_length )
+    else:
+        return np.dot( vector1_norm, vector2_norm ) / ( vec1_length * vec2_length )
 
 def _jaccard_score( vector1, vector2 ):
     """
