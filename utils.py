@@ -48,18 +48,14 @@ def _check_number( item ):
     except Exception as exception:
         return False
 
-def _jaccard_score( vector1, vector2 ):
-    """
-    Get jaccard score for two vectors
-    """
-    intersection = [ 1 for a, b in zip( vector1, vector2 ) if a == 1 and b == 1 ]
-    union = [ 1 for a, b in zip( vector1, vector2 ) if a == 1 or b == 1 ]
-    union_len = len( union )
+def l1_norm( vector ):
+    norm = np.sum( vector )
+    return 0 if norm == 0 else vector / norm
 
-    if union_len == 0:
-        return 0
-    else:
-        return float( len( intersection ) ) / union_len
+def _euclidean_distance( x, y ):
+    x_norm = l1_norm( x )
+    y_norm = l1_norm( y )
+    return np.sqrt( np.sum( ( x_norm - y_norm ) ** 2 ) )
 
 def _cosine_angle_score( vector1, vector2 ):
     """
@@ -69,10 +65,9 @@ def _cosine_angle_score( vector1, vector2 ):
     # which means the vectors cannot be compared
     vec1_length = np.sqrt( np.dot( vector1, vector1 ) )
     vec2_length = np.sqrt( np.dot( vector2, vector2 ) )
-
     if vec1_length == 0 or vec2_length == 0:
         return 0
-    else:  
+    else:
         return np.dot( vector1, vector2 ) / ( vec1_length * vec2_length )
 
 def _jaccard_score( vector1, vector2 ):
