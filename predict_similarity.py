@@ -243,7 +243,7 @@ class PredictToolSimilarity:
             io_prob_dist = [ float( item ) / io_sum for item in row_input_output ]
             nd_prob_dist = [ float( item ) / nd_sum for item in row_name_desc ]
 
-            joint_prob_list = [ np.log( epsilon + io_prob ) * np.log( epsilon + nd_prob ) for io_prob, nd_prob in zip( io_prob_dist, nd_prob_dist ) ]
+            joint_prob_list = [ ( np.log( epsilon + io_prob ) + np.log( epsilon + nd_prob ) ) for io_prob, nd_prob in zip( io_prob_dist, nd_prob_dist ) ]
             max_prob = np.max( joint_prob_list )
             if max_prob == 0:
                 max_prob = epsilon
