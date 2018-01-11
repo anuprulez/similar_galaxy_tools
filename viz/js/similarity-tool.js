@@ -119,15 +119,16 @@ $(document).ready(function(){
         template += "<th> Input output score - Source_1 </th>";
         template += "<th> Name desc. Edam help score - Source_2 </th>";
         template += "<th> " + scoreHeaderText + "</th>";
+        template += "<th> Sigmoid score </th>";
         template += "<th> Rank </th>";
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
-        //template += "<th> Help text (what it does) </th>";
-        //template += "<th> EDAM </th>";
+        template += "<th> Help text (what it does) </th>";
+        template += "<th> EDAM </th>";
         template += "</thead><tbody>";
         var prevRank = 0;
-        var prevScore = 0
+        var prevScore = 0;
         for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
             var tool = toolScores[ counter_ts ],
                 toolScore = tool.score.toFixed( 2 ),
@@ -139,12 +140,13 @@ $(document).ready(function(){
             template += "<td>" + tool.input_output_score + "</td>";
             template += "<td>" + tool.name_desc_edam_help_score + "</td>";
             template += "<td>" + toolScore + "</td>";
+            template += "<td>" + combinationScore + "</td>";
             template += "<td>" + rank + "</td>";
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
-            //template += "<td>" + tool.what_it_does + "</td>";
-            //template += "<td>" + tool.edam_text + "</td>";
+            template += "<td>" + tool.what_it_does + "</td>";
+            template += "<td>" + tool.edam_text + "</td>";
             template += "</tr>";
             prevRank = rank;
             prevScore = toolScore;

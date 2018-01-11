@@ -21,7 +21,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 30
+        self.tools_show = 50
 
     @classmethod
     def read_file( self ):
@@ -186,10 +186,6 @@ class PredictToolSimilarity:
                     # compute similarity scores between two vectors
                     if source == "input_output":
                         pair_score = utils._jaccard_score( item_x, item_y )
-                        #print utils._cosine_angle_score( item_x, item_y )
-                        #print 1 - utils._euclidean_distance( item_x, item_y )
-                        #print "--------------------------------"
-                        #pair_score = np.log( 1 + pair_score )
                     else:
                         pair_score = utils._cosine_angle_score( item_x, item_y )
                     tool_scores[ index_y ] = pair_score
@@ -235,6 +231,7 @@ class PredictToolSimilarity:
             # sum the scores from multiple sources
             average_normalized_scores = [ ( x + y ) / 2. for x, y in zip( row_input_output, row_name_desc ) ]
             optimal_normalized_scores = item.tolist()
+
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
                 # optimal similarity score for a tool against a tool
@@ -245,6 +242,8 @@ class PredictToolSimilarity:
                 name_desc_edam_help_score = round( row_name_desc[ tool_index ], 2 )
                 # average similarity score for tool against a tool
                 average_score = round( average_normalized_scores[ tool_index ], 2 )
+
+                # mutual information
                 # take similar tools found using Gradient Descent + BM25
                 if score > similarity_threshold:
                     record = {
