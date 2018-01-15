@@ -42,7 +42,7 @@ class GradientDescentOptimizer:
         """
         Check if the learning in the weights has become stable
         """
-        epsilon = 1e-5
+        epsilon = 1e-6
         optimal = False
         for source in gradient:
             if abs( gradient[ source ] ) <  epsilon:
@@ -59,14 +59,13 @@ class GradientDescentOptimizer:
         return optimal
 
     @classmethod
-    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools ):
+    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score ):
         """
         Find the optimal step size/ learning rate for gradient descent
         """
         eta = 1
         beta = 0.75
         alpha = 0.1
-        ideal_score = np.repeat( self.best_similarity_score, num_all_tools )
         while True:
             eta = beta * eta
             update = dict()
@@ -120,7 +119,7 @@ class GradientDescentOptimizer:
         uniform_weight = 1. / len( self.sources )
         similarity_matrix_sources = similarity_matrix
         # an array of maximum achievable similarity score for a pair of tools
-        ideal_tool_score = np.repeat( self.best_similarity_score, num_all_tools )
+        ideal_tool_score = np.repeat( np.log( self.best_similarity_score / num_all_tools ), num_all_tools )
         for tool_index in range( num_all_tools ):
             tool_id = tools_list[ tool_index ]
             print "Tool index: %d and tool name: %s" % ( tool_index, tool_id )
@@ -155,12 +154,14 @@ class GradientDescentOptimizer:
                     uniform_cost_sources.append( mean_uniform_loss )
                     cost_source[ source ] = mean_loss
                     # compute average gradient
-                    gradient = np.dot( tools_score_source, loss ) / num_all_tools
+                    gradient = np.dot( tools_score_source, loss )
                     # gather gradient for a source
                     sources_gradient[ source ] = gradient
                 mean_cost = np.mean( cost_sources )
+                #print mean_cost
+                #print sources_gradient
                 # compute learning rate using line search
-                learning_rate = self.backtracking_line_search( weights, sources_gradient, tool_similarity_scores, num_all_tools )
+                learning_rate = self.backtracking_line_search( weights, sources_gradient, tool_similarity_scores, num_all_tools, ideal_tool_score )
                 lr_iteration.append( learning_rate )
                 # gather cost for each iteration
                 cost_iteration.append( mean_cost )
@@ -184,4 +185,5 @@ class GradientDescentOptimizer:
             cost_tools[ tool_id ] = cost_iteration
             uniform_cost_tools[ tool_id ] = uniform_cost_iteration
             gradients[ tool_id ] = { self.sources[ 0 ]: gradient_io_iteration, self.sources[ 1 ]: gradient_nd_iteration }
+            #break
         return tools_optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients

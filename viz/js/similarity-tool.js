@@ -130,7 +130,8 @@ $(document).ready(function(){
         var prevScore = 0;
         for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
             var tool = toolScores[ counter_ts ],
-                toolScore = tool.score.toFixed( 2 ),
+                //toolScore = tool.score.toFixed( 2 ),
+                toolScore = tool.score,
                 rank = 0;
             rank = ( prevScore === toolScore ) ? prevRank : parseInt( counter_ts + 1 );
             template += "<tr>";
