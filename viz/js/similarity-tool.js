@@ -52,22 +52,22 @@ $(document).ready(function(){
                 // make html for the selected tool
                 $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "<h4>Selected tool: " +  selectedToolId + "</h4>", "Score(optimal weights)" ) );
                 // show optimal weights
-                $el_tools.append( showWeights( toolResults.optimal_weights, "Optimal importance weights learned" ) );
+                //$el_tools.append( showWeights( toolResults.optimal_weights, "Optimal importance weights learned" ) );
 
                 // make html for similar tools found using joint probability scores
                 $el_tools.append( createHTML( jointLogProbScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using log joint probability score</h4>", "Score" ) );
                 
                 // make html for similar tools found by optimizing BM25 scores using Gradient Descent
-                $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using optimal weights for the sources</h4>", "Score" ) );
+                //$el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using optimal weights for the sources</h4>", "Score" ) );
                 
                 // make html for similar tools found using average scores of BM25
                 $el_tools.append( createHTML( aveToolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using average BM25 similarity scores</h4>", "Score" ) );
                 
                 // plot optimal vs average scores
-                $el_tools.append( "<div id='scatter-optimal-average'></div>" );
-                plotScatterOptimalAverageScores( toolResults, "scatter-optimal-average", selectedToolId );
+                //$el_tools.append( "<div id='scatter-optimal-average'></div>" );
+                //plotScatterOptimalAverageScores( toolResults, "scatter-optimal-average", selectedToolId );
  
-                $el_tools.append( "<div id='scatter-optimal-average-top-results'></div>" );
+                /*$el_tools.append( "<div id='scatter-optimal-average-top-results'></div>" );
                 plotScatterOptimalAverageScoresTopResults( toolResults, "scatter-optimal-average-top-results", selectedToolId );
                 
                 $el_tools.append( "<div id='tool-io-gradient-iterations'></div>" );
@@ -82,7 +82,7 @@ $(document).ready(function(){
                 
                 // plot learning rate vs iterations
                 $el_tools.append( "<div id='learning-rate-iterations'></div>" );
-                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
+                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );*/
                 availableSimilarTool = true;
                 break;
             }
@@ -126,6 +126,8 @@ $(document).ready(function(){
         template += "<th> Input output score - Source_1 </th>";
         template += "<th> Name desc. Edam help score - Source_2 </th>";
         template += "<th> " + scoreHeaderText + "</th>";
+        template += "<th> Input Output Prob </th>";
+        template += "<th> Name Desc Prob </th>";
         template += "<th> Rank </th>";
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
@@ -137,6 +139,7 @@ $(document).ready(function(){
         for( var counterTS = 0, len_ts = toolScores.length; counterTS < len_ts; counterTS++ ) {
             var tool = toolScores[ counterTS ],
                 toolScore = tool.score.toFixed( 2 ),
+                //toolScore = tool.score,
                 rank = 0;
             rank = ( prevScore === toolScore ) ? prevRank : parseInt( counterTS + 1 );
             template += "<tr>";
@@ -145,6 +148,8 @@ $(document).ready(function(){
             template += "<td>" + tool.input_output_score + "</td>";
             template += "<td>" + tool.name_desc_edam_help_score + "</td>";
             template += "<td>" + toolScore + "</td>";
+            template += "<td>" + tool.input_output_prob + "</td>";
+            template += "<td>" + tool.name_desc_edam_help_prob + "</td>";
             template += "<td>" + rank + "</td>";
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
