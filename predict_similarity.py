@@ -198,7 +198,6 @@ class PredictToolSimilarity:
         Convert the similarity scores into log probability distributions
         """
         correct_sum = 1
-        log_0 = -1e-6 # a small negative number
         all_tools_len = len( all_tools )
         similarity_matrix_prob_dist_sources = dict()
         for source in similarity_matrix_sources:
@@ -209,8 +208,7 @@ class PredictToolSimilarity:
                 row_sum = np.sum( row )
                 row_sum = row_sum if row_sum > 0 else correct_sum
                 prob_dist = [ float( item_similarity ) / row_sum for item_similarity in row ]
-                log_prob_dist = [ np.log( prob_dist_item ) if prob_dist_item > 0 else log_0 for prob_dist_item in prob_dist ]
-                similarity_matrix_prob_dist[ index ][ : ] = log_prob_dist
+                similarity_matrix_prob_dist[ index ][ : ] = prob_dist
             similarity_matrix_prob_dist_sources[ source ] = similarity_matrix_prob_dist
         return similarity_matrix_prob_dist_sources
 
@@ -353,14 +351,14 @@ if __name__ == "__main__":
     print "Computed similarity in %d seconds" % int( end_time_similarity_comp - start_time_similarity_comp )
 
     print "Converting similarities to probability distributions..."
-    similarity_matrix_log_prob_dist_sources = tool_similarity.convert_prob_distributions( tools_distance_matrix, files_list )
+    similarity_matrix_prob_dist_sources = tool_similarity.convert_prob_distributions( tools_distance_matrix, files_list )
 
     print "Learning optimal weights..."
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
-    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_matrix_log_prob_dist_sources, files_list )
+    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_matrix_prob_dist_sources, tools_distance_matrix, files_list )
 
     print "Assign importance to tools similarity matrix..."
-    similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_matrix_log_prob_dist_sources, files_list, optimal_weights )
+    similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_matrix_prob_dist_sources, files_list, optimal_weights )
 
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, similarity_matrix_original, learning_rates, uniform_cost_tools, gradients )

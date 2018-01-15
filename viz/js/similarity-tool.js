@@ -123,8 +123,8 @@ $(document).ready(function(){
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
-        template += "<th> Help text (what it does) </th>";
-        template += "<th> EDAM </th>";
+        //template += "<th> Help text (what it does) </th>";
+        //template += "<th> EDAM </th>";
         template += "</thead><tbody>";
         var prevRank = 0;
         var prevScore = 0;
@@ -144,8 +144,8 @@ $(document).ready(function(){
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
-            template += "<td>" + tool.what_it_does + "</td>";
-            template += "<td>" + tool.edam_text + "</td>";
+            //template += "<td>" + tool.what_it_does + "</td>";
+            //template += "<td>" + tool.edam_text + "</td>";
             template += "</tr>";
             prevRank = rank;
             prevScore = toolScore;
