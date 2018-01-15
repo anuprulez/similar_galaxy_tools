@@ -154,7 +154,7 @@ class GradientDescentOptimizer:
                     uniform_cost_sources.append( mean_uniform_loss )
                     cost_source[ source ] = mean_loss
                     # compute average gradient
-                    gradient = np.dot( tools_score_source, loss )
+                    gradient = np.dot( tools_score_source, loss ) / num_all_tools
                     # gather gradient for a source
                     sources_gradient[ source ] = gradient
                 mean_cost = np.mean( cost_sources )
