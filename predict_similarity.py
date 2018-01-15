@@ -21,7 +21,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 50
+        self.tools_show = 20
 
     @classmethod
     def read_file( self ):
@@ -193,6 +193,26 @@ class PredictToolSimilarity:
         return similarity_matrix_sources
 
     @classmethod
+    def convert_prob_distributions( self, similarity_matrix_sources, all_tools ):
+        """
+        Convert the similarity scores into log probability distributions
+        """
+        correct_sum = 1
+        all_tools_len = len( all_tools )
+        similarity_matrix_prob_dist_sources = dict()
+        for source in similarity_matrix_sources:
+            similarity_matrix_prob_dist = np.zeros( [ all_tools_len, all_tools_len] )
+            similarity_matrix = similarity_matrix_sources[ source ]
+            for index in range( all_tools_len ):
+                row = similarity_matrix[ index ]
+                row_sum = np.sum( row )
+                row_sum = row_sum if row_sum > 0 else correct_sum
+                prob_dist = [ float( item_similarity ) / row_sum for item_similarity in row ]
+                similarity_matrix_prob_dist[ index ][ : ] = prob_dist
+            similarity_matrix_prob_dist_sources[ source ] = similarity_matrix_prob_dist
+        return similarity_matrix_prob_dist_sources
+
+    @classmethod
     def assign_similarity_importance( self, similarity_matrix_sources, tools_list, optimal_weights ):
         """
         Assign importance to the similarity scores coming for different sources
@@ -235,17 +255,17 @@ class PredictToolSimilarity:
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
                 # optimal similarity score for a tool against a tool
-                score = round( optimal_normalized_scores[ tool_index ], 2 )
+                score = round( optimal_normalized_scores[ tool_index ], 4 )
                 # similarity score with input and output file types
-                input_output_score = round( row_input_output[ tool_index ], 2 )
+                input_output_score = round( row_input_output[ tool_index ], 4 )
                 # similarity score with name, desc etc attributes
-                name_desc_edam_help_score = round( row_name_desc[ tool_index ], 2 )
+                name_desc_edam_help_score = round( row_name_desc[ tool_index ], 4 )
                 # average similarity score for tool against a tool
-                average_score = round( average_normalized_scores[ tool_index ], 2 )
+                average_score = round( average_normalized_scores[ tool_index ], 4 )
 
                 # mutual information
                 # take similar tools found using Gradient Descent + BM25
-                if score > similarity_threshold:
+                if np.abs( score ) > similarity_threshold:
                     record = {
                        "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
                        "id": rowj[ "id" ],
@@ -262,7 +282,7 @@ class PredictToolSimilarity:
                     else:
                         scores.append( record )
                 # take similar tools found using average BM25 scores
-                if average_score > similarity_threshold:
+                if np.abs( average_score ) > similarity_threshold:
                     average_record = {
                        "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
                        "id": rowj[ "id" ],
@@ -330,12 +350,15 @@ if __name__ == "__main__":
     end_time_similarity_comp = time.time()
     print "Computed similarity in %d seconds" % int( end_time_similarity_comp - start_time_similarity_comp )
 
+    print "Converting similarities to probability distributions..."
+    similarity_matrix_prob_dist_sources = tool_similarity.convert_prob_distributions( tools_distance_matrix, files_list )
+
     print "Learning optimal weights..."
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
-    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( tools_distance_matrix, files_list )
+    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_matrix_prob_dist_sources, tools_distance_matrix, files_list )
 
     print "Assign importance to tools similarity matrix..."
-    similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( tools_distance_matrix, files_list, optimal_weights )
+    similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_matrix_prob_dist_sources, files_list, optimal_weights )
 
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, similarity_matrix_original, learning_rates, uniform_cost_tools, gradients )
