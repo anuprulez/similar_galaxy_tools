@@ -136,7 +136,6 @@ class GradientDescentOptimizer:
                 cost_sources = list()
                 gradient_source = list()
                 uniform_cost_sources = list()
-                cost_source = dict()
                 tool_similarity_scores = dict()
                 
                 # compute gradient, loss and update weight for each source   
@@ -156,13 +155,12 @@ class GradientDescentOptimizer:
                     
                     # compute losses
                     loss, uniform_loss = self.compute_loss( weight, uniform_weight, tools_score_source, ideal_tool_score )
-                    mean_loss = np.sum( loss )
-                    mean_uniform_loss = np.sum( uniform_loss )
+                    squared_loss = np.sum( loss ** 2 )
+                    squared_uniform_loss = np.sum( uniform_loss ** 2 )
                     
                     # add cost for a tool's source
-                    cost_sources.append( mean_loss )
-                    uniform_cost_sources.append( mean_uniform_loss )
-                    cost_source[ source ] = mean_loss
+                    cost_sources.append( squared_loss )
+                    uniform_cost_sources.append( squared_uniform_loss )
                     
                     # compute average gradient
                     gradient = np.dot( tools_score_source, loss )
