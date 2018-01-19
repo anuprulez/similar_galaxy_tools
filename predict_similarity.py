@@ -1,5 +1,5 @@
 """
-Predict similarity among tools by analyzing the attributes and 
+Predict similarity among tools by analyzing the attributes and
 finding proximity using Best Match (BM25) and Gradient Descent algorithms
 """
 import sys
@@ -9,7 +9,6 @@ import pandas as pd
 import operator
 import json
 import time
-from math import *
 
 import utils
 import gradientdescent
@@ -47,7 +46,7 @@ class PredictToolSimilarity:
     @classmethod
     def get_tokens_from_source( self, row, source ):
         """
-        Fetch tokens from different sources namely input and output files, names and desc of tools and 
+        Fetch tokens from different sources namely input and output files, names and desc of tools and
         further help and EDAM sources
         """
         tokens = ''
@@ -117,7 +116,8 @@ class PredictToolSimilarity:
                 file_length = len( file_item )
                 for token in file_item:
                     tf = file_item[ token ]
-                    tf = float( tf ) / file_length # normalize the term freq of token for each document
+                    # normalize the term freq of token for each document
+                    tf = float( tf ) / file_length
                     idf = np.log2( N / len( inverted_frequency[ token ] ) )
                     alpha = ( 1 - b ) + ( float( b * file_length ) / average_file_length )
                     tf_star = tf * float( ( k + 1 ) ) / ( k * alpha + tf )
@@ -128,7 +128,6 @@ class PredictToolSimilarity:
             for item in files:
                 file_item = files[ item ]
                 sorted_x = sorted( file_item.items(), key=operator.itemgetter( 1 ), reverse=True )
-                scores = [ score for ( token, score ) in sorted_x ]
                 selected_tokens = [ (token, score ) for ( token, score ) in sorted_x ]
                 selected_tokens_sorted = sorted( selected_tokens, key=operator.itemgetter( 1 ), reverse=True )
                 refined_tokens[ item ] = selected_tokens_sorted
@@ -218,7 +217,7 @@ class PredictToolSimilarity:
         Assign importance to the similarity scores coming for different sources
         """
         similarity_matrix_learned = list()
-        all_tools = len( tools_list )        
+        all_tools = len( tools_list )
         for tool_index, tool in enumerate( tools_list ):
             sim_mat_tool_learned = np.zeros( all_tools )
             for source in similarity_matrix_sources:
@@ -298,8 +297,8 @@ class PredictToolSimilarity:
                         average_scores.append( average_record )
 
             tool_similarity[ "root_tool" ] = root_tool
-            sorted_scores = sorted( scores, key = operator.itemgetter( "score" ), reverse = True )[ : self.tools_show ]
-            sorted_average_scores = sorted( average_scores, key = operator.itemgetter( "score" ), reverse = True )[ : self.tools_show ]            
+            sorted_scores = sorted( scores, key=operator.itemgetter( "score" ), reverse=True )[ : self.tools_show ]
+            sorted_average_scores = sorted( average_scores, key=operator.itemgetter( "score" ), reverse=True )[ : self.tools_show ]
 
             # don't take all the tools predicted, just TOP something
             tool_similarity[ "similar_tools" ] = sorted_scores
@@ -313,12 +312,11 @@ class PredictToolSimilarity:
             tool_similarity[ "gradient_io_iteration" ] = gradients[ tool_id ][ "input_output" ]
             tool_similarity[ "gradient_nd_iteration" ] = gradients[ tool_id ][ "name_desc_edam_help" ]
             similarity.append( tool_similarity )
-            
         all_tools = dict()
         all_tools[ "list_tools" ] = tools_list
         similarity.append( all_tools )
         similarity_json = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + 'similarity_matrix.json' )
-        with open( similarity_json,'w' ) as file:
+        with open( similarity_json, 'w' ) as file:
             file.write( json.dumps( similarity ) )
             file.close()
 
@@ -330,7 +328,7 @@ if __name__ == "__main__":
         exit( 1 )
 
     start_time = time.time()
-    np.seterr( all = 'ignore' )
+    np.seterr( all='ignore' )
     tool_similarity = PredictToolSimilarity( sys.argv[ 1 ] )
     dataframe = tool_similarity.read_file()
     print "Read tool files"
@@ -362,6 +360,5 @@ if __name__ == "__main__":
 
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, similarity_matrix_original, learning_rates, uniform_cost_tools, gradients )
-    
     end_time = time.time()
     print "Program finished in %d seconds" % int( end_time - start_time )

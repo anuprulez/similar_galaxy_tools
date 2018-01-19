@@ -1,5 +1,9 @@
-table, th, td {
-    border: 1px solid black;
+.main-container {
+    margin-left: 1%;
+}
+
+.table-header-text {
+    margin-top: 1%;
 }
 
 .tool-results {
