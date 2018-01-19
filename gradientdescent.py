@@ -39,13 +39,13 @@ class GradientDescentOptimizer:
         """
         Check if the learning in the weights has become stable
         """
-        epsilon = 1e-6
+        epsilon = 1e-10
         optimal = False
         for source in gradient:
             if abs( gradient[ source ] ) < epsilon:
                 optimal = True
             elif previous_gradient:
-                if abs( previous_gradient[ source ] ) == abs( gradient[ source ] ):
+                if ( abs( previous_gradient[ source ] ) - abs( gradient[ source ] ) < epsilon ):
                     optimal = True
                 else:
                     optimal = False
