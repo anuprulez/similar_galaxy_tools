@@ -4,9 +4,9 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "data/similarity_matrix.json"; // Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path
+        path = "data/similarity_matrix.json";
     if ( path === "" ) {
-        console.error( "Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path" );
+        console.error( "Error in loading JSON file" );
         return;
     }
     $.getJSON( path, function( data ) {
@@ -48,15 +48,15 @@ $(document).ready(function(){
                     template = "";
                     
                 // make html for the selected tool
-                $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "<h4>Selected tool: " +  selectedToolId + "</h4>", "Score(optimal weights)" ) );
+                $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );
                 // show optimal weights
                 $el_tools.append( showWeights( toolResults.optimal_weights, "Optimal importance weights learned" ) );
                 
                 // make html for similar tools found by optimizing BM25 scores using Gradient Descent
-                $el_tools.append( createHTML( toolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using optimal weights for the sources</h4>", "Score" ) );
+                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of probabilities</h4>", "Score", false ) );
                 
                 // make html for similar tools found using average scores of BM25
-                $el_tools.append( createHTML( aveToolScores, selectedToolId, "<h4> Similar tools for the selected tool: " +  selectedToolId + " found using average BM25 similarity scores</h4>", "Score" ) );
+                $el_tools.append( createHTML( aveToolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found using average probabilities</h4>", "Optimal probability combination score", false ) );
                 
                 // plot optimal vs average scores
                 $el_tools.append( "<div id='scatter-optimal-average'></div>" );
@@ -87,10 +87,6 @@ $(document).ready(function(){
          }
     });
     
-    sumArray = function( a, b ) {
-       return a + b;
-    };
-    
     var showWeights = function( weights, headerText ) {
         var template = "";
         template = "<div><h4> " + headerText + " </h4>"
@@ -102,7 +98,7 @@ $(document).ready(function(){
                 template += "<div>" + "Name, description, help and EDAM ( weight_2 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
         }
-        template += "<p>Score = weight_1 * source_1 + weight_2 * source_2</p>";
+        template += "<p>Score = weight_1 * probability_input_output + weight_2 * probability_name_desc_edam_help</p>";
         template += "</div>";
         return template;
     };
@@ -111,15 +107,17 @@ $(document).ready(function(){
         return Math.round( parseFloat( number ) * 100) / 100;
     };
 
-    var createHTML = function( toolScores, originalToolId, headerText, scoreHeaderText ) {
-        var template = headerText;
-        template += "<table><thead>";
+    var createHTML = function( toolScores, originalToolId, headerText, scoreHeaderText, isHeader ) {
+        var template = "<div class='table-header-text'>" + headerText + "</div>";
+        template += "<div class='table-responsive'><table class='table table-bordered table-striped thead-dark'><thead>";
         template += "<th>S.No.</th>";
         template += "<th>Id</th>";
-        template += "<th> Input output score - Source_1 </th>";
-        template += "<th> Name desc. Edam help score - Source_2 </th>";
-        template += "<th> " + scoreHeaderText + "</th>";
-        template += "<th> Rank </th>";
+        if ( !isHeader ) {
+            template += "<th> Input output probability score </th>";
+            template += "<th> Name desc. Edam help probability score </th>";
+            template += "<th> " + scoreHeaderText + "</th>";
+            template += "<th> Rank </th>";
+        }
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
@@ -136,10 +134,12 @@ $(document).ready(function(){
             template += "<tr>";
             template += "<td>" + parseInt( counter_ts + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
-            template += "<td>" + tool.input_output_score + "</td>";
-            template += "<td>" + tool.name_desc_edam_help_score + "</td>";
-            template += "<td>" + toolScore + "</td>";
-            template += "<td>" + rank + "</td>";
+            if ( !isHeader ) {
+                template += "<td>" + tool.input_output_score + "</td>";
+                template += "<td>" + tool.name_desc_edam_help_score + "</td>";
+                template += "<td>" + toolScore + "</td>";
+                template += "<td>" + rank + "</td>";
+            }
             template += "<td>" + tool.name_description + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
@@ -149,7 +149,7 @@ $(document).ready(function(){
             prevRank = rank;
             prevScore = toolScore;
         }
-        template += "</tbody></table>";
+        template += "</tbody></table></div>";
         return template;
     };
     

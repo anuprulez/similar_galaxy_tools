@@ -2,11 +2,8 @@
 Performs optimization to find optimal importance weights for the sources
 of tokens using Gradient Descent
 """
-
 import numpy as np
-import operator
 import random
-import utils
 
 
 class GradientDescentOptimizer:
@@ -16,7 +13,7 @@ class GradientDescentOptimizer:
         self.number_iterations = number_iterations
         self.sources = [ 'input_output', 'name_desc_edam_help' ]
         self.best_similarity_score = 1.0
-        
+
     @classmethod
     def get_random_weights( self ):
         """
@@ -26,7 +23,7 @@ class GradientDescentOptimizer:
         for item in self.sources:
             weights[ item ] = random.random()
         return self.normalize_weights( weights )
-        
+
     @classmethod
     def normalize_weights( self, weights ):
         """
@@ -36,16 +33,16 @@ class GradientDescentOptimizer:
         for source in weights:
             weights[ source ] = weights[ source ] / sum_weights
         return weights
-    
+
     @classmethod
-    def check_optimality_gradient( self, gradient, previous_gradient = None ):
+    def check_optimality_gradient( self, gradient, previous_gradient=None ):
         """
         Check if the learning in the weights has become stable
         """
         epsilon = 1e-6
         optimal = False
         for source in gradient:
-            if abs( gradient[ source ] ) <  epsilon:
+            if abs( gradient[ source ] ) < epsilon:
                 optimal = True
             elif previous_gradient:
                 if abs( previous_gradient[ source ] ) == abs( gradient[ source ] ):
@@ -82,7 +79,7 @@ class GradientDescentOptimizer:
                 else:
                     is_optimal = False
                     break
-            if is_optimal == True:
+            if is_optimal is True:
                 break
         return eta
 
@@ -94,7 +91,7 @@ class GradientDescentOptimizer:
         for source in weights:
             weights[ source ] = weights[ source ] - learning_rate * gradient[ source ]
         return self.normalize_weights( weights )
-        
+
     @classmethod
     def compute_loss( self, weight, uniform_weight, tool_scores, ideal_tool_score ):
         """
@@ -128,65 +125,51 @@ class GradientDescentOptimizer:
             uniform_cost_iteration = list()
             lr_iteration = list()
             previous_gradient = None
-            
             # find optimal weights through these iterations
             for iteration in range( self.number_iterations ):
                 sources_gradient = dict()
                 ideal_score_sources = dict()
                 cost_sources = list()
-                gradient_source = list()
                 uniform_cost_sources = list()
                 tool_similarity_scores = dict()
-                
-                # compute gradient, loss and update weight for each source   
+                # compute gradient, loss and update weight for each source
                 for source in similarity_matrix_prob:
                     weight = weights[ source ]
                     tools_score_source = similarity_matrix_prob[ source ][ tool_index ]
                     tool_similarity_scores[ source ] = tools_score_source
-                    
                     # compute sum of scores to normalize
                     sum_scores = np.sum( similarity_matrix_original[ source ][ tool_index ] )
                     sum_scores = sum_scores if sum_scores > 0 else 1
-                    
                     # compute maximum possible scores that a weighted probability can reach
                     # in order to calculate the losses
                     ideal_tool_score = np.repeat( self.best_similarity_score / sum_scores, num_all_tools )
                     ideal_score_sources[ source ] = ideal_tool_score
-                    
                     # compute losses
                     loss, uniform_loss = self.compute_loss( weight, uniform_weight, tools_score_source, ideal_tool_score )
                     squared_loss = np.sum( loss ** 2 )
                     squared_uniform_loss = np.sum( uniform_loss ** 2 )
-                    
                     # add cost for a tool's source
                     cost_sources.append( squared_loss )
                     uniform_cost_sources.append( squared_uniform_loss )
-                    
                     # compute average gradient
                     gradient = np.dot( tools_score_source, loss )
-                    
                     # gather gradient for a source
                     sources_gradient[ source ] = gradient
                 mean_cost = np.mean( cost_sources )
-                
                 # compute learning rate using line search
                 learning_rate = self.backtracking_line_search( weights, sources_gradient, tool_similarity_scores, num_all_tools, ideal_score_sources )
                 lr_iteration.append( learning_rate )
-                
                 # gather cost for each iteration
                 cost_iteration.append( mean_cost )
-                
                 # gather gradients
                 gradient_io_iteration.append( sources_gradient[ self.sources[ 0 ] ] )
                 gradient_nd_iteration.append( sources_gradient[ self.sources[ 1 ] ] )
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
-                
                 # update weights
                 weights = self.update_weights( weights, sources_gradient, learning_rate )
-                
                 # define a point when to stop learning
                 is_optimal = self.check_optimality_gradient( sources_gradient, previous_gradient )
-                if is_optimal == True:
+                if is_optimal is True:
                     print "optimal weights learned in %d iterations" % iteration
                     break
                 previous_gradient = sources_gradient

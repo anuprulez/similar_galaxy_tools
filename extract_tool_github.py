@@ -74,7 +74,7 @@ class ExtractToolXML:
         file_dir = dname + self.directory
         if not os.path.exists( file_dir ):
             os.makedirs( file_dir )
-        os.chdir( file_dir )      
+        os.chdir( file_dir )
         tools_dataframe.to_csv( self.tool_data_filename, encoding='utf-8' )
         end_time = time.time()
         print "%d tools read in %d seconds" % ( len( processed_tools ), int( end_time - start_time ) )
@@ -139,7 +139,7 @@ class ExtractToolXML:
             record_id = root.get( "id", None )
             # read those xml only if it is a tool
             if root.tag == "tool" and record_id is not None and record_id is not '':
-                #print xml_file_path
+                # print xml_file_path
                 record[ "id" ] = record_id
                 record[ "name" ] = root.get( "name" )
                 for child in root:
@@ -182,9 +182,10 @@ class ExtractToolXML:
                 return record
             else:
                 return None
-        except Exception as exp:
+        except Exception:
             print "Exception in converting xml to dict"
             return None
+
 
 if __name__ == "__main__":
 
@@ -193,4 +194,3 @@ if __name__ == "__main__":
         exit( 1 )
     extract_tool = ExtractToolXML( sys.argv[ 1 ] )
     extract_tool.read_tool_xml( "data_source.config" )
-
