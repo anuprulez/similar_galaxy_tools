@@ -1,22 +1,38 @@
 import re
 import numpy as np
 import nltk
+from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
 nltk.download('averaged_perceptron_tagger')
+nltk.download('stopwords')
 port_stemmer = PorterStemmer()
-token_category_list = [ 'NNS', 'NN', 'NNP', 'NNPS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP' ]
+
+# accept tokens that fall in these category
+token_category_list = [ 'JJ', 'NNS', 'NN', 'NNP', 'NNPS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ' ]
+stop_words = set( stopwords.words( 'english' ) )
+# manual list of non-informative words
+non_informative_words = [ "data", "type", "file", "program", "tool", "dataset", "result", "support", "detail", "certain", "contain", "common", "use", "http", "found", "www", "large", "short", "full", "complet", "term", "field" ]
 
 
 def _get_text( row, attr ):
+    """
+    Get the row from a dataframe
+    """
     return "" if type( row[ attr ] ) is float else str( row[ attr ] )
 
 
 def _remove_special_chars( text ):
+    """
+    Remove special characters in text
+    """
     return re.sub( '[^a-zA-Z0-9]', ' ', text )
 
 
 def _remove_duplicate_file_types( tokens ):
+    """
+    Remove duplicate files
+    """
     tokens_list = tokens.split( " " )
     unique_tokens = ''
     for item in tokens_list:
@@ -32,6 +48,10 @@ def _clean_tokens( text_list ):
     tokens = nltk.pos_tag( tokens )
     # accept words that fall in the category mentioned (verbs, nouns)
     tokens = [ port_stemmer.stem( item ) for ( item, tag ) in tokens if tag in token_category_list ]
+    # remove stop words in English
+    tokens = [ word for word in tokens if word not in stop_words ]
+    # manual removal of non informative words
+    tokens = [ word for word in tokens if word not in non_informative_words ]
     return tokens
 
 
@@ -60,6 +80,9 @@ def l1_norm( vector ):
 
 
 def _euclidean_distance( x, y ):
+    """
+    Get euclidean distance between two vectors
+    """
     x_norm = l1_norm( x )
     y_norm = l1_norm( y )
     return np.sqrt( np.sum( ( x_norm - y_norm ) ** 2 ) )

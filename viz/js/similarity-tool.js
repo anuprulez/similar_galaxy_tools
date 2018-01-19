@@ -50,6 +50,8 @@ $(document).ready(function(){
                 // make html for the selected tool
                 $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );
 
+                $el_tools.append( "<div><p>Joint probability score = probability_input_output * probability_name_desc_edam_help</p></div>" );
+
                 // make html for similar tools found using joint probability scores
                 $el_tools.append( createHTML( jointLogProbScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + "</b> found using joint probability score", "Joint probability score", false ) );
                 
@@ -74,7 +76,9 @@ $(document).ready(function(){
     var createHTML = function( toolScores, originalToolId, headerText, scoreHeaderText, isHeader ) {
         var template = "<div class='table-header-text'>" + headerText + "</div>",
             prevRank = 0,
-            prevScore = 0;
+            prevScore = 0,
+            maxShowStringLen = 30,
+            digitPrecision = 5;
         template += "<div class='table-responsive'><table class='table table-bordered table-striped thead-dark'><thead>";
         template += "<th>S.No.</th>";
         template += "<th>Id</th>";
@@ -90,26 +94,29 @@ $(document).ready(function(){
         template += "<th> Help text (what it does) </th>";
         template += "<th> EDAM </th>";
         template += "</thead><tbody class='table-striped'>";
-        var prevRank = 0;
-        var prevScore = 0;
+        
         for( var counterTS = 0, len = toolScores.length; counterTS < len; counterTS++ ) {
             var tool = toolScores[ counterTS ],
-                toolScore = tool.score,
-                rank = 0;
+                toolScore = tool.score.toFixed(7),
+                rank = 0,
+                helpText = tool.what_it_does,
+                nameDesc = tool.name_description,
+                showHelpText = ( helpText.length > maxShowStringLen && !isHeader ) ? helpText.substring(0, maxShowStringLen) + "..." : helpText;
+
             rank = ( prevScore === toolScore ) ? prevRank : parseInt( counterTS + 1 );
             template += "<tr>";
             template += "<td>" + parseInt( counterTS + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
             if ( !isHeader ) {
-                template += "<td>" + tool.input_output_prob + "</td>";
-                template += "<td>" + tool.name_desc_edam_help_prob + "</td>";
+                template += "<td>" + tool.input_output_prob.toFixed(digitPrecision) + "</td>";
+                template += "<td>" + tool.name_desc_edam_help_prob.toFixed(digitPrecision) + "</td>";
                 template += "<td>" + toolScore + "</td>";
                 template += "<td>" + rank  + "</td>";
             }
-            template += "<td>" + tool.name_description + "</td>";
+            template += "<td>" + nameDesc + "</td>";
             template += "<td>" + tool.input_types + "</td>";
             template += "<td>" + tool.output_types + "</td>";
-            template += "<td>" + tool.what_it_does + "</td>";
+            template += "<td title='"+ helpText +"'>" + showHelpText + "</td>";
             template += "<td>" + tool.edam_text + "</td>";
             template += "</tr>";
             prevRank = rank;
