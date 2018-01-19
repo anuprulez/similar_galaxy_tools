@@ -4,9 +4,9 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "data/similarity_matrix.json"; // Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path
+        path = "data/similarity_matrix.json";
     if ( path === "" ) {
-        console.error( "Download the file at: https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json and add the path" );
+        console.error( "Error in loading JSON file" );
         return;
     }
     $.getJSON( path, function( data ) {
@@ -56,7 +56,7 @@ $(document).ready(function(){
                 $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of probabilities</h4>", "Score", false ) );
                 
                 // make html for similar tools found using average scores of BM25
-                $el_tools.append( createHTML( aveToolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found using average probabilities</h4>", "Score", false ) );
+                $el_tools.append( createHTML( aveToolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found using average probabilities</h4>", "Optimal probability combination score", false ) );
                 
                 // plot optimal vs average scores
                 $el_tools.append( "<div id='scatter-optimal-average'></div>" );
