@@ -11,9 +11,6 @@ port_stemmer = PorterStemmer()
 # accept tokens that fall in these category
 token_category_list = [ 'JJ', 'NNS', 'NN', 'NNP', 'NNPS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ' ]
 stop_words = set( stopwords.words( 'english' ) )
-# manual list of non-informative words
-non_informative_words = [ "data", "type", "file", "program", "tool", "dataset", "result", "support", "detail", "certain", "contain", "common", "use", "http", "found", "www", "large", "short", "full", "complet", "term", "field" ]
-
 
 def _get_text( row, attr ):
     """
@@ -41,17 +38,17 @@ def _remove_duplicate_file_types( tokens ):
     return unique_tokens
 
 
-def _clean_tokens( text_list ):
+def _clean_tokens( text_list, stop_words ):
     # discard numbers and one letter words
     tokens = [ item.lower() for item in text_list if len( item ) > 1 and not _check_number( item ) ]
+    # remove stop words
+    tokens = [ item for item in tokens if item not in stop_words ]  
     # differentiate words based on their types as nouns, verbs etc
     tokens = nltk.pos_tag( tokens )
     # accept words that fall in the category mentioned (verbs, nouns)
     tokens = [ port_stemmer.stem( item ) for ( item, tag ) in tokens if tag in token_category_list ]
     # remove stop words in English
     tokens = [ word for word in tokens if word not in stop_words ]
-    # manual removal of non informative words
-    tokens = [ word for word in tokens if word not in non_informative_words ]
     return tokens
 
 
