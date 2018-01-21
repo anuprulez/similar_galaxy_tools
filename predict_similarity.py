@@ -76,7 +76,15 @@ class PredictToolSimilarity:
         """
         k = 1.75
         b = 0.75
+        stop_words_file = "stop_words.txt"
+        all_stopwords = list()
         refined_tokens_sources = dict()
+        
+        # collect all the stopwords
+        with open( stop_words_file ) as file:
+            lines = file.read()
+            all_stopwords = lines.split( "\n" )
+        
         for source in tokens:
             refined_tokens = dict()
             files = dict()
@@ -87,7 +95,7 @@ class PredictToolSimilarity:
                 file_id += 1
                 file_tokens = tokens[ source ][ item ].split(" ")
                 if source not in "input_output":
-                    file_tokens = utils._clean_tokens( file_tokens )
+                    file_tokens = utils._clean_tokens( file_tokens, all_stopwords )
                 total_file_length += len( file_tokens )
                 term_frequency = dict()
                 for token in file_tokens:
@@ -124,13 +132,10 @@ class PredictToolSimilarity:
                     tf_idf = tf_star * idf
                     file_item[ token ] = tf_idf
 
-            # filter tokens based on the BM25 scores. Not all tokens are important
+            # filter tokens based on the BM25 scores and stop words. Not all tokens are important
             for item in files:
-                file_item = files[ item ]
-                sorted_x = sorted( file_item.items(), key=operator.itemgetter( 1 ), reverse=True )
-                selected_tokens = [ (token, score ) for ( token, score ) in sorted_x ]
-                selected_tokens_sorted = sorted( selected_tokens, key=operator.itemgetter( 1 ), reverse=True )
-                refined_tokens[ item ] = selected_tokens_sorted
+                file_tokens = files[ item ]
+                refined_tokens[ item ] = [ ( token, score ) for ( token, score ) in file_tokens.items() ]
             tokens_file_name = 'tokens_' + source + '.txt'
             token_file_path = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + tokens_file_name )
             with open( token_file_path, 'w' ) as file:
