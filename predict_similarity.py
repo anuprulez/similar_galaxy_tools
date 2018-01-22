@@ -199,7 +199,7 @@ class PredictToolSimilarity:
     @classmethod
     def convert_prob_distributions( self, similarity_matrix_sources, all_tools ):
         """
-        Convert the similarity scores into log probability distributions
+        Convert the similarity scores into probability distributions
         """
         correct_sum = 1
         all_tools_len = len( all_tools )
