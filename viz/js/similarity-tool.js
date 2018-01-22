@@ -44,26 +44,16 @@ $(document).ready(function(){
         for( var counter = 0, len = data.length; counter < len; counter++ ) {
             var toolResults = data[ counter ];
             if ( toolResults.root_tool.id === selectedToolId ) {
-                var jointLogProbScores = toolResults.joint_prob_similar_tools,
-                    template = "";
-                    
+                var sourceProbScores = toolResults.source_prob_similar_tools,
+                    template = "";  
                 // make html for the selected tool
                 $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );
-
-                $el_tools.append( "<div><p>Joint probability score = probability_input_output * probability_name_desc_edam_help</p></div>" );
-
                 // make html for similar tools found using joint probability scores
-                $el_tools.append( createHTML( jointLogProbScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + "</b> found using joint probability score", "Joint probability score", false ) );
+                $el_tools.append( createHTML( sourceProbScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + "</b> found using source probability score", "Source probability score", false ) );
                 
                 // plots for probability scores
                 $el_tools.append( "<div id='io-prob-dist'></div>" );
-                plotScatterData( toolResults.io_prob_dist, "io-prob-dist", "Probability scores for input output source for: " + selectedToolId, listTools );
-
-                $el_tools.append( "<div id='nd-prob-dist'></div>" );
-                plotScatterData( toolResults.nd_prob_dist, "nd-prob-dist", "Probability scores for name description source for: " + selectedToolId, listTools );
-                $el_tools.append( "<div id='joint-prob-dist'></div>" );
-                plotScatterData( toolResults.joint_prob_dist, "joint-prob-dist", "Joint probability scores for the above sources for: " + selectedToolId, listTools );
-                
+                plotScatterData( toolResults.source_prob_dist, "io-prob-dist", "Probability scores for input output source for: " + selectedToolId, listTools );
                 availableSimilarTool = true;
                 break;
             }
@@ -83,8 +73,7 @@ $(document).ready(function(){
         template += "<th>S.No.</th>";
         template += "<th>Id</th>";
         if ( !isHeader ) {
-            template += "<th> Input output probability score </th>";
-            template += "<th> Name desc. edam help probability score </th>";
+            template += "<th> Input output name desc. edam help probability score </th>";
             template += "<th> " + scoreHeaderText + "</th>";
             template += "<th> Rank </th>";
         }
@@ -108,8 +97,7 @@ $(document).ready(function(){
             template += "<td>" + parseInt( counterTS + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
             if ( !isHeader ) {
-                template += "<td>" + tool.input_output_prob.toFixed(digitPrecision) + "</td>";
-                template += "<td>" + tool.name_desc_edam_help_prob.toFixed(digitPrecision) + "</td>";
+                template += "<td>" + tool.source_prob.toFixed(digitPrecision) + "</td>";
                 template += "<td>" + toolScore + "</td>";
                 template += "<td>" + rank  + "</td>";
             }

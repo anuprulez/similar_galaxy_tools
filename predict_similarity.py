@@ -17,7 +17,7 @@ class PredictToolSimilarity:
 
     @classmethod
     def __init__( self, tools_data_path ):
-        self.data_source = [ 'input_output', 'name_desc_edam_help' ]
+        self.data_source = [ 'input_output_name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
         self.tools_show = 20
 
@@ -49,23 +49,20 @@ class PredictToolSimilarity:
         further help and EDAM sources
         """
         tokens = ''
-        if source == 'input_output':
-            # remove duplicate file type individually from input and output file types and merge
-            input_tokens = utils._restore_space( utils._get_text( row, "inputs" ) )
-            input_tokens = utils._remove_duplicate_file_types( input_tokens )
-            output_tokens = utils._restore_space( utils._get_text( row, "outputs" ) )
-            output_tokens = utils._remove_duplicate_file_types( output_tokens )
-            if input_tokens is not "" and output_tokens is not "":
-                tokens = input_tokens + ' ' + output_tokens
-            elif output_tokens is not "":
-                tokens = output_tokens
-            elif input_tokens is not "":
-                tokens = input_tokens
-        elif source == 'name_desc_edam_help':
-            tokens = utils._restore_space( utils._get_text( row, "name" ) ) + ' '
-            tokens += utils._restore_space( utils._get_text( row, "description" ) ) + ' '
-            tokens += utils._get_text( row, "help" ) + ' '
-            tokens += utils._get_text( row, "edam_topics" )
+        input_tokens = utils._restore_space( utils._get_text( row, "inputs" ) )
+        input_tokens = utils._remove_duplicate_file_types( input_tokens )
+        output_tokens = utils._restore_space( utils._get_text( row, "outputs" ) )
+        output_tokens = utils._remove_duplicate_file_types( output_tokens )
+        if input_tokens is not "" and output_tokens is not "":
+            tokens = input_tokens + ' ' + output_tokens + ' '
+        elif output_tokens is not "":
+            tokens = output_tokens + ' '
+        elif input_tokens is not "":
+            tokens = input_tokens + ' '
+        tokens += utils._restore_space( utils._get_text( row, "name" ) ) + ' '
+        tokens += utils._restore_space( utils._get_text( row, "description" ) ) + ' '
+        tokens += utils._get_text( row, "help" ) + ' '
+        tokens += utils._get_text( row, "edam_topics" )
         return utils._remove_special_chars( tokens )
 
     @classmethod
@@ -76,6 +73,13 @@ class PredictToolSimilarity:
         k = 1.75
         b = 0.75
         refined_tokens_sources = dict()
+        stop_words_file = "stop_words.txt"
+
+        # collect all the stopwords
+        with open( stop_words_file ) as file:
+            lines = file.read()
+            all_stopwords = lines.split( "\n" )
+
         for source in tokens:
             refined_tokens = dict()
             files = dict()
@@ -85,8 +89,7 @@ class PredictToolSimilarity:
             for item in tokens[ source ]:
                 file_id += 1
                 file_tokens = tokens[ source ][ item ].split(" ")
-                if source not in "input_output":
-                    file_tokens = utils._clean_tokens( file_tokens )
+                file_tokens = utils._clean_tokens( file_tokens, all_stopwords )
                 total_file_length += len( file_tokens )
                 term_frequency = dict()
                 for token in file_tokens:
@@ -125,11 +128,8 @@ class PredictToolSimilarity:
 
             # filter tokens based on the BM25 scores. Not all tokens are important
             for item in files:
-                file_item = files[ item ]
-                sorted_x = sorted( file_item.items(), key=operator.itemgetter( 1 ), reverse=True )
-                selected_tokens = [ (token, score ) for ( token, score ) in sorted_x ]
-                selected_tokens_sorted = sorted( selected_tokens, key=operator.itemgetter( 1 ), reverse=True )
-                refined_tokens[ item ] = selected_tokens_sorted
+                file_tokens = files[ item ]
+                refined_tokens[ item ] = [ ( token, score ) for ( token, score ) in file_tokens.items() ]
             tokens_file_name = 'tokens_' + source + '.txt'
             token_file_path = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + tokens_file_name )
             with open( token_file_path, 'w' ) as file:
@@ -162,7 +162,7 @@ class PredictToolSimilarity:
             for tool_item in doc_tokens:
                 for word_score in doc_tokens[ tool_item ]:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    document_tokens_matrix[ counter ][ word_index ] = 1 if source == "input_output" else word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -182,10 +182,7 @@ class PredictToolSimilarity:
                 tool_scores = sim_scores[ index_x ]
                 for index_y, item_y in enumerate( sim_mat ):
                     # compute similarity scores between two vectors
-                    if source == "input_output":
-                        pair_score = utils._jaccard_score( item_x, item_y )
-                    else:
-                        pair_score = utils._cosine_angle_score( item_x, item_y )
+                    pair_score = utils._cosine_angle_score( item_x, item_y )
                     tool_scores[ index_y ] = pair_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
@@ -222,23 +219,14 @@ class PredictToolSimilarity:
 
         for index, item in enumerate( tools_list ):
             tool_similarity = dict()
-            joint_similarity_scores = list()
+            prob_similarity_scores = list()
             root_tool = {}
             tool_id = tools_list[ index ]
-
             # row of probability scores for a tool against all tools
-            row_input_output_prob = similarity_matrix[ self.data_source[ 0 ] ][ index ]
-            row_name_desc_prob = similarity_matrix[ self.data_source[ 1 ] ][ index ]
-
+            row_source_prob = similarity_matrix[ self.data_source[ 0 ] ][ index ]
             # find the mean probability scores to fill in the zero probability values
-            mean_io_prob = np.mean( row_input_output_prob )
-            mean_nd_prob = np.mean( row_name_desc_prob )
-
-            row_io_updated_prob = [ item if item > 0 else mean_io_prob for item in row_input_output_prob ]
-            row_nd_updated_prob = [ item if item > 0 else mean_nd_prob for item in row_name_desc_prob ]
-
-            # find joint probability for independent sources
-            joint_probability_list = [ io_prob * nd_prob for io_prob, nd_prob in zip( row_io_updated_prob, row_nd_updated_prob ) ]
+            mean_io_prob = np.mean( row_source_prob )
+            row_source_updated_prob = [ item if item > 0 else mean_io_prob for item in row_source_prob ]
 
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
@@ -249,21 +237,18 @@ class PredictToolSimilarity:
                    "output_types": utils._get_text( rowj, "outputs" ),
                    "what_it_does": utils._get_text( rowj, "help" ),
                    "edam_text": utils._get_text( rowj, "edam_topics" ),
-                   "score": joint_probability_list[ tool_index ],
-                   "input_output_prob": row_input_output_prob[ tool_index ],
-                   "name_desc_edam_help_prob": row_name_desc_prob[ tool_index ]
+                   "score": row_source_updated_prob[ tool_index ],
+                   "source_prob": row_source_updated_prob[ tool_index ],
                 }
                 if rowj[ "id" ] == tool_id:
                     root_tool = record
                 else:
-                    joint_similarity_scores.append( record )
+                    prob_similarity_scores.append( record )
 
             tool_similarity[ "root_tool" ] = root_tool
-            sorted_joint_similarity_scores = sorted( joint_similarity_scores, key=operator.itemgetter("score"), reverse=True )[:self.tools_show ]         
-            tool_similarity[ "joint_prob_similar_tools" ] = sorted_joint_similarity_scores
-            tool_similarity[ "io_prob_dist" ] = row_input_output_prob.tolist()
-            tool_similarity[ "nd_prob_dist" ] = row_name_desc_prob.tolist()
-            tool_similarity[ "joint_prob_dist" ] = joint_probability_list
+            sorted_prob_similarity_scores = sorted( prob_similarity_scores, key=operator.itemgetter("score"), reverse=True )[:self.tools_show ]         
+            tool_similarity[ "source_prob_similar_tools" ] = sorted_prob_similarity_scores
+            tool_similarity[ "source_prob_dist" ] = row_source_prob.tolist()
             similarity.append( tool_similarity )
             print "Tool index: %d finished" % index
         print "Writing results to a JSON file..."
