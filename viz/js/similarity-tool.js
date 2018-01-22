@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/gd_prob_dist/viz/data/similarity_matrix.json";
+        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json";
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;

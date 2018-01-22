@@ -135,7 +135,10 @@ class PredictToolSimilarity:
             # filter tokens based on the BM25 scores and stop words. Not all tokens are important
             for item in files:
                 file_tokens = files[ item ]
-                refined_tokens[ item ] = [ ( token, score ) for ( token, score ) in file_tokens.items() ]
+                sum_score = np.sum( [ score for ( token, score ) in file_tokens.items() ] )
+                if sum_score == 0:
+                    sum_score = 1.0
+                refined_tokens[ item ] = [ ( token, ( float( score ) / sum_score ) ) for ( token, score ) in file_tokens.items() ]
             tokens_file_name = 'tokens_' + source + '.txt'
             token_file_path = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + tokens_file_name )
             with open( token_file_path, 'w' ) as file:
@@ -168,7 +171,7 @@ class PredictToolSimilarity:
             for tool_item in doc_tokens:
                 for word_score in doc_tokens[ tool_item ]:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    document_tokens_matrix[ counter ][ word_index ] = 1 if source == "input_output" else word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ] #1 if source == "input_output" else word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
