@@ -11,7 +11,7 @@ port_stemmer = PorterStemmer()
 # accept tokens that fall in these category
 token_category_list = [ 'JJ', 'NNS', 'NN', 'NNP', 'NNPS', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ' ]
 stopwords = set( stopwords.words( 'english' ) )
-
+non_informative_words = [ "data", "file", "files", "option", "number", "numbers", "input", "output", "dataset", "datasets", "program", "programs", "tool", "tools", "format", "sequences", "sequence", "example", "examples", "sample", "samples", "multiple" ]
 
 def _get_text( row, attr ):
     """
@@ -45,7 +45,9 @@ def _clean_tokens( text_list, stop_words ):
     # remove stop words
     tokens = [ item for item in tokens if item not in stop_words ]
     # remove stop words in NLTK library
-    tokens = [ word for word in tokens if word not in stopwords ] 
+    tokens = [ word for word in tokens if word not in stopwords ]
+    # remove non informative words in context to the tools
+    tokens = [ word for word in tokens if word not in non_informative_words ] 
     # differentiate words based on their types as nouns, verbs etc
     tokens = nltk.pos_tag( tokens )
     # accept words that fall in the category mentioned (verbs, nouns)
