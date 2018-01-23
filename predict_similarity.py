@@ -187,11 +187,11 @@ class PredictToolSimilarity:
                 tool_scores = sim_scores[ index_x ]
                 for index_y, item_y in enumerate( sim_mat ):
                     # compute similarity scores between two vectors
-                    '''if source == "input_output":
+                    if source == "input_output":
                         pair_score = utils._jaccard_score( item_x, item_y )
                     else:
-                        pair_score = utils._cosine_angle_score( item_x, item_y )'''
-                    tool_scores[ index_y ] = utils._cosine_angle_score( item_x, item_y )
+                        pair_score = utils._cosine_angle_score( item_x, item_y )
+                    tool_scores[ index_y ] = pair_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 

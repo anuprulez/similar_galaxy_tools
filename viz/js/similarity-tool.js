@@ -68,11 +68,11 @@ $(document).ready(function(){
                 $el_tools.append( "<div id='tool-combined-gradient-iterations'></div>" );
                 plotCombinedGradients( toolResults.gradient_io_iteration, toolResults.gradient_nd_iteration, 'tool-combined-gradient-iterations', selectedToolId );
 
-                $el_tools.append( "<div id='tool-io-gradient-iterations'></div>" );
-                plotGradients( toolResults.gradient_io_iteration, "tool-io-gradient-iterations", selectedToolId, "Gradient vs iterations for Input Output" );
+                //$el_tools.append( "<div id='tool-io-gradient-iterations'></div>" );
+                //plotGradients( toolResults.gradient_io_iteration, "tool-io-gradient-iterations", selectedToolId, "Gradient vs iterations for Input Output" );
                 
-                $el_tools.append( "<div id='tool-nd-gradient-iterations'></div>" );
-                plotGradients( toolResults.gradient_nd_iteration, "tool-nd-gradient-iterations", selectedToolId, "Gradient vs iterations for Name Desc" );
+                //$el_tools.append( "<div id='tool-nd-gradient-iterations'></div>" );
+                //plotGradients( toolResults.gradient_nd_iteration, "tool-nd-gradient-iterations", selectedToolId, "Gradient vs iterations for Name Desc" );
                 
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
