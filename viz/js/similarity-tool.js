@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         listTools = null,
-        path = "data/similarity_matrix.json";
+        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/one_source/viz/data/similarity_matrix.json";
     if ( path === "" ) {
         console.error( "Error in reading the JSON file path" );
         return;
@@ -53,7 +53,7 @@ $(document).ready(function(){
                 
                 // plots for probability scores
                 $el_tools.append( "<div id='io-prob-dist'></div>" );
-                plotScatterData( toolResults.source_prob_dist, "io-prob-dist", "Probability scores for input output source for: " + selectedToolId, listTools );
+                plotScatterData( toolResults.source_prob_dist, "io-prob-dist", "Probability scores of input output name desc. edam help source for: " + selectedToolId, listTools );
                 availableSimilarTool = true;
                 break;
             }

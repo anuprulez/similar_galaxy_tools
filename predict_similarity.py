@@ -129,7 +129,9 @@ class PredictToolSimilarity:
             # filter tokens based on the BM25 scores. Not all tokens are important
             for item in files:
                 file_tokens = files[ item ]
-                refined_tokens[ item ] = [ ( token, score ) for ( token, score ) in file_tokens.items() ]
+                tokens_scores = [ ( token, score ) for ( token, score ) in file_tokens.items() ]
+                sorted_tokens = sorted( tokens_scores, key=operator.itemgetter( 1 ), reverse=True )
+                refined_tokens[ item ] = sorted_tokens
             tokens_file_name = 'tokens_' + source + '.txt'
             token_file_path = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + tokens_file_name )
             with open( token_file_path, 'w' ) as file:
@@ -182,8 +184,7 @@ class PredictToolSimilarity:
                 tool_scores = sim_scores[ index_x ]
                 for index_y, item_y in enumerate( sim_mat ):
                     # compute similarity scores between two vectors
-                    pair_score = utils._cosine_angle_score( item_x, item_y )
-                    tool_scores[ index_y ] = pair_score
+                    tool_scores[ index_y ] = utils._cosine_angle_score( item_x, item_y )
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 
