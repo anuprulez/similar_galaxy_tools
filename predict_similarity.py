@@ -94,7 +94,7 @@ class PredictToolSimilarity:
             for item in tokens[ source ]:
                 file_id += 1
                 file_tokens = tokens[ source ][ item ].split(" ")
-                if source not in "input_output":
+                if source in "name_desc_edam_help":
                     file_tokens = utils._clean_tokens( file_tokens, all_stopwords )
                 total_file_length += len( file_tokens )
                 term_frequency = dict()
@@ -116,7 +116,6 @@ class PredictToolSimilarity:
                 files[ item ] = term_frequency
             N = len( files )
             average_file_length = float( total_file_length ) / N
-
             # find BM25 score for each token of each tool. It helps to determine
             # how important each word is with respect to the tool and other tools
             for item in files:
@@ -131,14 +130,12 @@ class PredictToolSimilarity:
                     tf_star = tf * float( ( k + 1 ) ) / ( k * alpha + tf )
                     tf_idf = tf_star * idf
                     file_item[ token ] = tf_idf
-
             # filter tokens based on the BM25 scores and stop words. Not all tokens are important
             for item in files:
                 file_tokens = files[ item ]
-                sum_score = np.sum( [ score for ( token, score ) in file_tokens.items() ] )
-                if sum_score == 0:
-                    sum_score = 1.0
-                refined_tokens[ item ] = [ ( token, ( float( score ) / sum_score ) ) for ( token, score ) in file_tokens.items() ]
+                tokens_scores = [ ( token, score ) for ( token, score ) in file_tokens.items() ]
+                sorted_tokens = sorted( tokens_scores, key=operator.itemgetter( 1 ), reverse=True )
+                refined_tokens[ item ] = sorted_tokens
             tokens_file_name = 'tokens_' + source + '.txt'
             token_file_path = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + tokens_file_name )
             with open( token_file_path, 'w' ) as file:
@@ -164,14 +161,13 @@ class PredictToolSimilarity:
                     word = word_score[ 0 ]
                     if word not in all_tokens:
                         all_tokens.append( word )
-
             # create tools x tokens matrix containing respective frequency or relevance score for each term
             document_tokens_matrix= np.zeros( ( len( tools_list ), len( all_tokens ) ) )
             counter = 0
             for tool_item in doc_tokens:
                 for word_score in doc_tokens[ tool_item ]:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ] #1 if source == "input_output" else word_score[ 1 ]
+                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -191,11 +187,11 @@ class PredictToolSimilarity:
                 tool_scores = sim_scores[ index_x ]
                 for index_y, item_y in enumerate( sim_mat ):
                     # compute similarity scores between two vectors
-                    if source == "input_output":
+                    '''if source == "input_output":
                         pair_score = utils._jaccard_score( item_x, item_y )
                     else:
-                        pair_score = utils._cosine_angle_score( item_x, item_y )
-                    tool_scores[ index_y ] = pair_score
+                        pair_score = utils._cosine_angle_score( item_x, item_y )'''
+                    tool_scores[ index_y ] = utils._cosine_angle_score( item_x, item_y )
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 
