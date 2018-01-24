@@ -31,7 +31,7 @@ class GradientDescentOptimizer:
         """
         sum_weights = np.sum( [ weights[ item ] for item in weights ] )
         for source in weights:
-            weights[ source ] = weights[ source ] / sum_weights
+            weights[ source ] = weights[ source ] / float( sum_weights )
         return weights
         
     @classmethod
@@ -62,14 +62,14 @@ class GradientDescentOptimizer:
     @classmethod
     def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score ):
         """
-        Find the optimal step size/ learning rate for gradient descent
+        Find the optimal step size/learning rate for gradient descent
         """
         eta = 1
-        beta = 0.4
+        beta = 0.5
         alpha = 0.1
         while True:
             eta = beta * eta
-            update = dict()
+            step_update = list()
             is_optimal = False
             for source in weights:
                 w_1 = weights[ source ] - eta * gradient[ source ]
@@ -77,12 +77,9 @@ class GradientDescentOptimizer:
                 loss_1 = w_1 * similarity[ source ] - ideal_score[ source ]
                 f_w1 = np.dot( loss_1, loss_1 )
                 f_w0 = np.dot( loss_0, loss_0 )
-                update[ source ] = f_w1 - f_w0 + alpha * eta * ( gradient[ source ] ** 2 )
-                if update[ source ] <= 0:
-                    is_optimal = True
-                else:
-                    is_optimal = False
-                    break
+                update = f_w1 - f_w0 + alpha * eta * ( gradient[ source ] ** 2 )
+                step_update.append( update )
+            is_optimal = all( n <= 0 for n in step_update )
             if is_optimal is True:
                 break
         return eta
