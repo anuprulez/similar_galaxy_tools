@@ -21,7 +21,7 @@ class GradientDescentOptimizer:
         """
         weights = dict()
         for item in self.sources:
-            weights[ item ] = 0.5
+            weights[ item ] = 1. / len( self.sources )
         return weights
 
     @classmethod
@@ -181,6 +181,6 @@ class GradientDescentOptimizer:
             tools_optimal_weights[ tool_id ] = weights
             learning_rates[ tool_id ] = lr_iteration
             cost_tools[ tool_id ] = cost_iteration
-            uniform_cost_tools[ tool_id ] = uniform_cost_iteration
+            uniform_cost_tools[ tool_id ] = uniform_cost_iteration[ 0 ]
             gradients[ tool_id ] = { self.sources[ 0 ]: gradient_io_iteration, self.sources[ 1 ]: gradient_nd_iteration }
         return tools_optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients

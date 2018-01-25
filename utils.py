@@ -3,6 +3,7 @@ import numpy as np
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+import matplotlib.pyplot as plt
 
 nltk.download( 'averaged_perceptron_tagger' )
 nltk.download( 'stopwords' )
@@ -116,3 +117,14 @@ def _jaccard_score( vector1, vector2 ):
         return 0
     else:
         return dot_product / float( jaccard_denominator )
+
+def _plot_singular_values_rank( rank_list, sum_singular_values_list ):
+    """
+    Generate plot of reduction in singular values with matrix's rank
+    """
+    plt.plot( rank_list, sum_singular_values_list )
+    plt.xlabel( 'Matrix rank' )
+    plt.ylabel( '% sum of singular values taken' )
+    plt.title( 'Variation of sum of singular values with matrix rank' )
+    plt.grid()
+    plt.show()
