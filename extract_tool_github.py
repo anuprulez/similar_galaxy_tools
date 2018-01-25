@@ -2,6 +2,7 @@
 Extract attributes and their values from the xml files of all tools.
 It pulls tools' files from GitHub
 """
+import re
 import sys
 import os
 import pandas as pd
@@ -165,7 +166,12 @@ class ExtractToolXML:
                         help_split = help_text.split( '\n\n' )
                         for index, item in enumerate( help_split ):
                             if 'What it does' in item or 'Syntax' in item:
-                                record[ child.tag ] = utils._remove_special_chars( help_split[ index + 1 ] )
+                                hlp_txt = help_split[ index + 1 ]
+                                list_urls = re.findall( 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', hlp_txt )
+                                if len( list_urls ) > 0:
+                                    for url in list_urls:
+                                        hlp_txt = hlp_txt.replace( url, '' )
+                                record[ child.tag ] = utils._remove_special_chars( hlp_txt )
                                 break
                     elif child.tag == "edam_topics":
                         for item in child:
