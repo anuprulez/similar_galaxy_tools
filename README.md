@@ -39,6 +39,9 @@ When this script finishes, it creates a JSON file with all the results and it is
 If you do not want to spend time on executing the scripts, please visit:
 https://rawgit.com/anuprulez/similar_galaxy_tools/master/viz/similarity_viz.html
 
-Please choose a tool from the dropdown and it will show the similar tools for the selected tool and plots.
+Browse through the similar tools computed using reduced dimensionality similarity matrices (Latent Semantic Analysis):
+https://rawgit.com/anuprulez/similar_galaxy_tools/lsi/viz/similarity_viz.html
+
+Choose a tool from the dropdown and it will show the similar tools for the selected tool and plots computed by merging all annotations into one source and normalising the similarity scores:
 Naive implementation: https://rawgit.com/anuprulez/similar_galaxy_tools/one_source/viz/similarity_viz.html
 
