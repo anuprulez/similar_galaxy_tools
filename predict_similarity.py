@@ -355,7 +355,7 @@ class PredictToolSimilarity:
 
             # don't take all the tools predicted, just TOP something
             tool_similarity[ "similar_tools" ] = sorted_scores
-            tool_similarity[ "average_similar_tools" ] = sorted_average_scores
+            #tool_similarity[ "average_similar_tools" ] = sorted_average_scores
             tool_similarity[ "optimal_weights" ] = optimal_weights[ tool_id ]
             tool_similarity[ "cost_iterations" ] = cost_tools[ tool_id ]
             #tool_similarity[ "learning_rates_iterations" ] = learning_rates[ tool_id ]

@@ -2,7 +2,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json";
+        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/lsi/viz/data/similarity_matrix.json";
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
@@ -54,14 +54,14 @@ $(document).ready(function(){
                 $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of probabilities</h4>", "Weighted probability score", false ) );
                
                 // make html for similar tools found using average scores of BM25
-                $el_tools.append( createHTML( aveToolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found using average probabilities</h4>", "Average probability score", false ) );
+                //$el_tools.append( createHTML( aveToolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found using average probabilities</h4>", "Average probability score", false ) );
                
                 // plot optimal vs average scores
                 $el_tools.append( "<div id='scatter-optimal-average'></div>" );
                 plotScatterOptimalAverageScores( toolResults, "scatter-optimal-average", selectedToolId );
  
-                $el_tools.append( "<div id='scatter-optimal-average-top-results'></div>" );
-                plotScatterOptimalAverageScoresTopResults( toolResults, "scatter-optimal-average-top-results", selectedToolId );
+                //$el_tools.append( "<div id='scatter-optimal-average-top-results'></div>" );
+                //plotScatterOptimalAverageScoresTopResults( toolResults, "scatter-optimal-average-top-results", selectedToolId );
                
                 $el_tools.append( "<div id='tool-combined-gradient-iterations'></div>" );
                 plotCombinedGradients( toolResults.gradient_io_iteration, toolResults.gradient_nd_iteration, 'tool-combined-gradient-iterations', selectedToolId );
