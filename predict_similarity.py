@@ -5,6 +5,8 @@ finding proximity using Best Match (BM25) and Gradient Descent algorithms
 import sys
 import os
 import numpy as np
+from numpy.linalg import matrix_rank
+from numpy.linalg import svd
 import pandas as pd
 import operator
 import json
@@ -129,9 +131,11 @@ class PredictToolSimilarity:
             # filter tokens based on the BM25 scores. Not all tokens are important
             for item in files:
                 file_tokens = files[ item ]
-                tokens_scores = [ ( token, score ) for ( token, score ) in file_tokens.items() ]
-                sorted_tokens = sorted( tokens_scores, key=operator.itemgetter( 1 ), reverse=True )
-                refined_tokens[ item ] = sorted_tokens
+                sum_scores = np.sum( [ score for ( token, score ) in file_tokens.items() ] )
+                sum_scores = 1.0 if sum_scores == 0 else sum_scores
+                #sorted_tokens = sorted( tokens_scores, key=operator.itemgetter( 1 ), reverse=True )
+                normalized_tokens_scores = [ ( token, score / float( sum_scores ) ) for ( token, score ) in file_tokens.items() ]
+                refined_tokens[ item ] = normalized_tokens_scores
             tokens_file_name = 'tokens_' + source + '.txt'
             token_file_path = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + tokens_file_name )
             with open( token_file_path, 'w' ) as file:
@@ -168,6 +172,52 @@ class PredictToolSimilarity:
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
+
+    @classmethod
+    def compute_low_rank_matrix( self, u, s, v, rank ):
+        """
+        Compute low rank approximation of a full rank matrix
+        """
+        u_approx = u[ :, :rank ]
+        s_approx = s[ :rank ]
+        sum_taken_percent = np.sum( s_approx ) / float( np.sum( s ) )
+        s_approx = np.diag( np.array( s_approx ) )
+        v_approx = v[ :rank, : ]
+        return [ u_approx.dot( s_approx ).dot( v_approx ), sum_taken_percent ]
+
+    @classmethod
+    def find_optimal_low_rank_matrix( self, orig_similarity_matrix, orig_rank, u, s, v, singular_reduction ):
+        """
+        Find the rank which captures most of the information from the original full rank matrix
+        """
+        '''rank_list = list()
+        sum_singular_values = list()
+        for rank in range( 0, orig_rank ):
+            compute_result = self.compute_low_rank_matrix( u, s, v, rank + 1 )
+            rank_list.append( ( rank + 1 ) / float( orig_rank ) )
+            sum_singular_values.append( compute_result[ 1 ] )
+        utils._plot_singular_values_rank( rank_list, sum_singular_values )'''
+        return self.compute_low_rank_matrix( u, s, v, int( singular_reduction * orig_rank ) )
+
+    @classmethod
+    def factor_matrices( self, document_tokens_matrix_sources ):
+        """
+        Latent semantic indexing on document tokens matrices
+        """
+        print "Computing lower rank representations of similarity matrices..."
+        approx_similarity_matrices = dict()
+        # it is number determined heuristically which helps capturing most of the
+        # information in the original similarity matrices.
+        singular_reduction = 0.4
+        for source in document_tokens_matrix_sources:
+            similarity_matrix = document_tokens_matrix_sources[ source ]
+            mat_rnk = matrix_rank( similarity_matrix )
+            u, s, v = svd( similarity_matrix )
+            # sort the singular values in descending order. Top ones most important
+            s_sorted = sorted( s, reverse=True )
+            compute_result = self.find_optimal_low_rank_matrix( similarity_matrix, mat_rnk, u, s_sorted, v, singular_reduction )
+            approx_similarity_matrices[ source ] = compute_result[ 0 ]
+        return approx_similarity_matrices
 
     @classmethod
     def find_tools_cos_distance_matrix( self, document_token_matrix_sources, tools_list ):
@@ -283,9 +333,12 @@ if __name__ == "__main__":
     document_tokens_matrix, files_list = tool_similarity.create_document_tokens_matrix( refined_tokens )
     print "Created tools tokens matrix"
 
+    document_tokens_matrix_factored = tool_similarity.factor_matrices( document_tokens_matrix )
+    print "Matrices factored"
+
     print "Computing similarity..."
     start_time_similarity_comp = time.time()
-    tools_distance_matrix = tool_similarity.find_tools_cos_distance_matrix( document_tokens_matrix, files_list )
+    tools_distance_matrix = tool_similarity.find_tools_cos_distance_matrix( document_tokens_matrix_factored, files_list )
     end_time_similarity_comp = time.time()
     print "Computed similarity in %d seconds" % int( end_time_similarity_comp - start_time_similarity_comp )
 

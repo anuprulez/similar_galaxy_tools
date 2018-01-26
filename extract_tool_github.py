@@ -2,6 +2,7 @@
 Extract attributes and their values from the xml files of all tools.
 It pulls tools' files from GitHub
 """
+import re
 import sys
 import os
 import pandas as pd
@@ -74,7 +75,7 @@ class ExtractToolXML:
         file_dir = dname + self.directory
         if not os.path.exists( file_dir ):
             os.makedirs( file_dir )
-        os.chdir( file_dir )      
+        os.chdir( file_dir )
         tools_dataframe.to_csv( self.tool_data_filename, encoding='utf-8' )
         end_time = time.time()
         print "%d tools read in %d seconds" % ( len( processed_tools ), int( end_time - start_time ) )
@@ -139,7 +140,7 @@ class ExtractToolXML:
             record_id = root.get( "id", None )
             # read those xml only if it is a tool
             if root.tag == "tool" and record_id is not None and record_id is not '':
-                #print xml_file_path
+                # print xml_file_path
                 record[ "id" ] = record_id
                 record[ "name" ] = root.get( "name" )
                 for child in root:
@@ -165,7 +166,12 @@ class ExtractToolXML:
                         help_split = help_text.split( '\n\n' )
                         for index, item in enumerate( help_split ):
                             if 'What it does' in item or 'Syntax' in item:
-                                record[ child.tag ] = utils._remove_special_chars( help_split[ index + 1 ] )
+                                hlp_txt = help_split[ index + 1 ]
+                                list_urls = re.findall( 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', hlp_txt )
+                                if len( list_urls ) > 0:
+                                    for url in list_urls:
+                                        hlp_txt = hlp_txt.replace( url, '' )
+                                record[ child.tag ] = utils._remove_special_chars( hlp_txt )
                                 break
                     elif child.tag == "edam_topics":
                         for item in child:
@@ -182,9 +188,10 @@ class ExtractToolXML:
                 return record
             else:
                 return None
-        except Exception as exp:
+        except Exception:
             print "Exception in converting xml to dict"
             return None
+
 
 if __name__ == "__main__":
 
@@ -193,4 +200,3 @@ if __name__ == "__main__":
         exit( 1 )
     extract_tool = ExtractToolXML( sys.argv[ 1 ] )
     extract_tool.read_tool_xml( "data_source.config" )
-
