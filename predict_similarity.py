@@ -12,6 +12,7 @@ import json
 import time
 import gensim
 from gensim.models.doc2vec import TaggedDocument
+from random import shuffle
 
 import utils
 import gradientdescent
@@ -66,13 +67,7 @@ class PredictToolSimilarity:
             elif input_tokens is not "":
                 tokens = input_tokens
         elif source == 'name_desc_edam_help':
-            input_tokens = utils._restore_space( utils._get_text( row, "inputs" ) )
-            input_tokens = utils._remove_duplicate_file_types( input_tokens )
-            output_tokens = utils._restore_space( utils._get_text( row, "outputs" ) )
-            output_tokens = utils._remove_duplicate_file_types( output_tokens )
-
-            tokens = input_tokens + ' ' + output_tokens
-            tokens += utils._restore_space( utils._get_text( row, "name" ) ) + ' '
+            tokens = utils._restore_space( utils._get_text( row, "name" ) ) + ' '
             tokens += utils._restore_space( utils._get_text( row, "description" ) ) + ' '
             tokens += utils._get_text( row, "help" ) + ' '
             tokens += utils._get_text( row, "edam_topics" )
@@ -181,13 +176,14 @@ class PredictToolSimilarity:
         for epoch in range( training_epochs ):
             if epoch % 2 == 0:
                 print ( 'Training epoch %s' % epoch )
+            shuffle( tagged_documents )
             model.train( tagged_documents, total_examples=model.corpus_count, epochs=model.iter )
             model.alpha -= 0.002  # decrease the learning rate
-            model.min_alpha = model.alpha  # fix the learning rate, no decay
+            #model.min_alpha = model.alpha  # fix the learning rate, no decay
         tools_similarity_dict = dict()
         tools_similarity = list()
         for index in range( len( tagged_documents ) ):
-            similarity = model.docvecs.most_similar( index, topn=50 )
+            similarity = model.docvecs.most_similar( index, topn=20 )
             sum_scores = np.sum( [ score for ( item, score ) in similarity ] )
             sum_scores = 1.0 if sum_scores == 0 else float( sum_scores )
             sim_scores = [ ( int( item_id ), score / sum_scores ) for ( item_id, score ) in similarity ]
