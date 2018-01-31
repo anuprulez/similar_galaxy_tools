@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json";
+        path = "data/similarity_matrix.json"; // https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
@@ -15,9 +15,9 @@ $(document).ready(function(){
             slicedData = data.slice( 0, data.length - 1 );
         // sort the tools in ascending order of their ids
         similarityData = slicedData.sort(function(a, b) {
-            if( a.root_tool.id !== undefined && b.root_tool.id !== undefined ) {
-                var first_id = a.root_tool.id.toLowerCase(),
-                    second_id = b.root_tool.id.toLowerCase();
+            if( a.root_tool !== undefined && b.root_tool !== undefined ) {
+                var first_id = a.root_tool.toLowerCase(),
+                    second_id = b.root_tool.toLowerCase();
                 if( first_id < second_id ) { return -1; }
                 if( first_id > second_id ) { return 1; }
                 return 0;
@@ -25,8 +25,8 @@ $(document).ready(function(){
         });
         for( var counter = 0, len = similarityData.length; counter < len; counter++ ) {
             var toolResults = similarityData[ counter ]; 
-            if( toolResults.root_tool.id !== undefined ) {
-                toolIdsTemplate += "<option value='" + toolResults.root_tool.id + "'>" + toolResults.root_tool.id + "</options>";
+            if( toolResults.root_tool !== undefined ) {
+                toolIdsTemplate += "<option value='" + toolResults.root_tool + "'>" + toolResults.root_tool + "</options>";
             }
         } // end of for loop
         $( ".tool-ids" ).append( toolIdsTemplate );
@@ -42,31 +42,32 @@ $(document).ready(function(){
         $el_tools.empty();
         for( var counter = 0, len = data.length; counter < len; counter++ ) {
             var toolResults = data[ counter ];
-            if ( toolResults.root_tool.id === selectedToolId ) {
-                var toolScores = toolResults.similar_tools,
-                    aveToolScores = toolResults.average_similar_tools,
+            if ( toolResults.root_tool === selectedToolId ) {
+                var similarRootTools = toolResults.similar_tools,
                     template = "";
-                    
+                rootTool = similarRootTools.slice( 0, 1 );
+                console.log( rootTool );
+                similarTools = similarRootTools.slice( 1, );
                 // make html for the selected tool
-                $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );
+                $el_tools.append( createHTML( rootTool, selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );
                 // show optimal weights
-                $el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
+                //$el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
                 
                 // make html for similar tools found by optimizing BM25 scores using Gradient Descent
-                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of probabilities</h4>", "Weighted probability score", false ) );
+                $el_tools.append( createHTML( similarTools, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of probabilities</h4>", "Weighted probability score", false ) );
                 
                 // make html for similar tools found using average scores of BM25
-                $el_tools.append( createHTML( aveToolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found using average probabilities</h4>", "Average probability score", false ) );
+                //$el_tools.append( createHTML( aveToolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found using average probabilities</h4>", "Average probability score", false ) );
                 
                 // plot optimal vs average scores
-                $el_tools.append( "<div id='scatter-optimal-average'></div>" );
-                plotScatterOptimalAverageScores( toolResults, "scatter-optimal-average", selectedToolId );
+                //$el_tools.append( "<div id='scatter-optimal-average'></div>" );
+                //plotScatterOptimalAverageScores( toolResults, "scatter-optimal-average", selectedToolId );
  
-                $el_tools.append( "<div id='scatter-optimal-average-top-results'></div>" );
-                plotScatterOptimalAverageScoresTopResults( toolResults, "scatter-optimal-average-top-results", selectedToolId );
+                //$el_tools.append( "<div id='scatter-optimal-average-top-results'></div>" );
+                //plotScatterOptimalAverageScoresTopResults( toolResults, "scatter-optimal-average-top-results", selectedToolId );
                 
-                $el_tools.append( "<div id='tool-combined-gradient-iterations'></div>" );
-                plotCombinedGradients( toolResults.gradient_io_iteration, toolResults.gradient_nd_iteration, 'tool-combined-gradient-iterations', selectedToolId );
+                //$el_tools.append( "<div id='tool-combined-gradient-iterations'></div>" );
+                //plotCombinedGradients( toolResults.gradient_io_iteration, toolResults.gradient_nd_iteration, 'tool-combined-gradient-iterations', selectedToolId );
 
                 //$el_tools.append( "<div id='tool-io-gradient-iterations'></div>" );
                 //plotGradients( toolResults.gradient_io_iteration, "tool-io-gradient-iterations", selectedToolId, "Gradient vs iterations for Input Output" );
@@ -75,12 +76,12 @@ $(document).ready(function(){
                 //plotGradients( toolResults.gradient_nd_iteration, "tool-nd-gradient-iterations", selectedToolId, "Gradient vs iterations for Name Desc" );
                 
                 // plot loss drop vs iterations
-                $el_tools.append( "<div id='tool-cost-iterations'></div>" );
-                plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
+                //$el_tools.append( "<div id='tool-cost-iterations'></div>" );
+                //plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
                 
                 // plot learning rate vs iterations
-                $el_tools.append( "<div id='learning-rate-iterations'></div>" );
-                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
+                //$el_tools.append( "<div id='learning-rate-iterations'></div>" );
+                //plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
                 availableSimilarTool = true;
                 break;
             }
@@ -118,8 +119,8 @@ $(document).ready(function(){
         template += "<th>S.No.</th>";
         template += "<th>Id</th>";
         if ( !isHeader ) {
-            template += "<th> Input output probability score </th>";
-            template += "<th> Name desc. Edam help probability score </th>";
+            //template += "<th> Input output probability score </th>";
+            //template += "<th> Name desc. Edam help probability score </th>";
             template += "<th> " + scoreHeaderText + "</th>";
             template += "<th> Rank </th>";
         }
@@ -135,7 +136,7 @@ $(document).ready(function(){
                 toolScore = tool.score,
                 rank = 0,
                 helpText = tool.what_it_does,
-                nameDesc = tool.name_description,
+                nameDesc = tool.name_description;
                 showHelpText = ( helpText.length > maxShowStringLen && !isHeader ) ? helpText.substring(0, maxShowStringLen) + "..." : helpText;
 
             rank = ( prevScore === toolScore ) ? prevRank : parseInt( counter_ts + 1 );
@@ -143,8 +144,8 @@ $(document).ready(function(){
             template += "<td>" + parseInt( counter_ts + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
             if ( !isHeader ) {
-                template += "<td>" + tool.input_output_score + "</td>";
-                template += "<td>" + tool.name_desc_edam_help_score + "</td>";
+                //template += "<td>" + tool.input_output_score + "</td>";
+                //template += "<td>" + tool.name_desc_edam_help_score + "</td>";
                 template += "<td>" + toolScore + "</td>";
                 template += "<td>" + rank + "</td>";
             }
