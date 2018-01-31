@@ -46,7 +46,6 @@ $(document).ready(function(){
                 var similarRootTools = toolResults.similar_tools,
                     template = "";
                 rootTool = similarRootTools.slice( 0, 1 );
-                console.log( rootTool );
                 similarTools = similarRootTools.slice( 1, );
                 // make html for the selected tool
                 $el_tools.append( createHTML( rootTool, selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );

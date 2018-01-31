@@ -66,7 +66,13 @@ class PredictToolSimilarity:
             elif input_tokens is not "":
                 tokens = input_tokens
         elif source == 'name_desc_edam_help':
-            tokens = utils._restore_space( utils._get_text( row, "name" ) ) + ' '
+            input_tokens = utils._restore_space( utils._get_text( row, "inputs" ) )
+            input_tokens = utils._remove_duplicate_file_types( input_tokens )
+            output_tokens = utils._restore_space( utils._get_text( row, "outputs" ) )
+            output_tokens = utils._remove_duplicate_file_types( output_tokens )
+
+            tokens = input_tokens + ' ' + output_tokens
+            tokens += utils._restore_space( utils._get_text( row, "name" ) ) + ' '
             tokens += utils._restore_space( utils._get_text( row, "description" ) ) + ' '
             tokens += utils._get_text( row, "help" ) + ' '
             tokens += utils._get_text( row, "edam_topics" )
@@ -171,9 +177,9 @@ class PredictToolSimilarity:
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
         training_epochs = 20
-        model = gensim.models.Doc2Vec( tagged_documents, dm = 0, alpha=0.05, size= 100, min_alpha=0.025, min_count=0 )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, alpha=0.05, min_alpha=0.025, min_count=1, window=10, size=100, sample=1e-4, negative=5 )
         for epoch in range( training_epochs ):
-            if epoch % 20 == 0:
+            if epoch % 2 == 0:
                 print ( 'Training epoch %s' % epoch )
             model.train( tagged_documents, total_examples=model.corpus_count, epochs=model.iter )
             model.alpha -= 0.002  # decrease the learning rate
@@ -181,7 +187,7 @@ class PredictToolSimilarity:
         tools_similarity_dict = dict()
         tools_similarity = list()
         for index in range( len( tagged_documents ) ):
-            similarity = model.docvecs.most_similar( index )
+            similarity = model.docvecs.most_similar( index, topn=50 )
             sum_scores = np.sum( [ score for ( item, score ) in similarity ] )
             sum_scores = 1.0 if sum_scores == 0 else float( sum_scores )
             sim_scores = [ ( int( item_id ), score / sum_scores ) for ( item_id, score ) in similarity ]
@@ -362,8 +368,8 @@ if __name__ == "__main__":
 
     print "Writing results to a JSON file..."
     tool_similarity.associate_similarity( learned_simiarity_matrix, dataframe, tools_list )
-    #end_time = time.time()
-    #print "Program finished in %d seconds" % int( end_time - start_time )
+    end_time = time.time()
+    print "Program finished in %d seconds" % int( end_time - start_time )
 
     '''print "Computing similarity..."
     start_time_similarity_comp = time.time()
