@@ -179,7 +179,7 @@ class PredictToolSimilarity:
             shuffle( tagged_documents )
             model.train( tagged_documents, total_examples=model.corpus_count, epochs=model.iter )
             model.alpha -= 0.002  # decrease the learning rate
-            #model.min_alpha = model.alpha  # fix the learning rate, no decay
+            model.min_alpha = model.alpha  # fix the learning rate, no decay
         tools_similarity_dict = dict()
         tools_similarity = list()
         for index in range( len( tagged_documents ) ):
