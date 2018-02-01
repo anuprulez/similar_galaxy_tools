@@ -36,7 +36,9 @@ The problem of 'good selection' of a learning rate has been solved using 'Backtr
 
 When this script finishes, it creates a JSON file with all the results and it is consumed by the html file. From the `/data` folder, please copy the file `similarity_matrix.json` and paste here '/viz/data'. Please visit `/viz` folder and open the html file "similarity_viz.html" in your browser. When the page opens, it lists all the tools in a select box. Please select any one and see the similar tools for the selected one. If there are no similar tool(s), an error message will appear. Along with the similar tools, it also shows the initial weights and learned weights for the sources and a plot of drop in cost with iterations for this selected tool.
 
-If you do not want to spend time on executing the scripts, please visit 
-`https://github.com/anuprulez/large_files_repository/blob/master/similarity_matrix.json` and download the JSON file. Add the path of this file to the 
-`viz/js/similarity-tool` (`path' variable) and open `similarity_viz.html`. Please choose a tool from the dropdown and it will show the latest results and plots.
+If you do not want to spend time on executing the scripts, please visit:
+https://rawgit.com/anuprulez/similar_galaxy_tools/master/viz/similarity_viz.html
+
+Please choose a tool from the dropdown and it will show the similar tools for the selected tool and plots.
+Naive implementation: https://rawgit.com/anuprulez/similar_galaxy_tools/one_source/viz/similarity_viz.html
 
