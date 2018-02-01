@@ -37,7 +37,7 @@ Optimal probability combination = arg max (w1, w2) ( w1 * vector_probability_1 +
 ## Results online!
 
 Please see this approach working at this [website](https://rawgit.com/anuprulez/similar_galaxy_tools/master/viz/similarity_viz.html).
-Please open this link and wait for few seconds as it loads (a big JSON file) a list of tools. Select your favourite tool and browse through the similar tools. Moreover, there are a couple of plots showing the optimal combination idea works better than the average approach. Also, it displays loss and gradient drop for the optimizer.
+Please open this link and wait for few seconds as it loads (a big JSON file) a list of tools. Select your favourite tool and browse through the similar tools which are listed in the descending order of their respective probability scores ('Weighted probability score' column in the table). Moreover, there are a couple of plots showing the optimal combination idea works better than the average approach. Also, it displays loss and gradient drop for the optimizer.
 
 
 
