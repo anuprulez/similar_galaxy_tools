@@ -23,7 +23,7 @@ class ExtractToolXML:
         self.file_extension = '.xml'
         self.base_url = 'https://api.github.com/repos/'
         self.directory = '/data'
-        self.tool_data_filename = 'processed_tools1.csv'
+        self.tool_data_filename = 'processed_tools2.csv'
         # please supply your GitHub's username and password to authenticate yourself
         # in order to be able to read files
         self.auth = auth
@@ -188,9 +188,9 @@ class ExtractToolXML:
                         help_text = child.text
                         help_split = help_text.split( '\n\n' )
                         for index, item in enumerate( help_split ):
-                            if 'What it does' in item or 'Syntax' in item or 'Inputs' in item or 'Input' in item or 'Output' in item or 'Outputs' in item:
+                            if 'What it does' in item:
                                 hlp_txt = help_split[ index + 1 ]
-                                clean_helptext += hlp_txt
+                                clean_helptext = hlp_txt
                         # if these categories inside help text are not present, then add complete help text
                         if clean_helptext == "":
                             clean_helptext = child.text

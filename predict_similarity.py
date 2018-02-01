@@ -24,7 +24,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 40
+        self.tools_show = 20
 
     @classmethod
     def read_file( self ):
@@ -83,12 +83,10 @@ class PredictToolSimilarity:
         stop_words_file = "stop_words.txt"
         all_stopwords = list()
         refined_tokens_sources = dict()
-        
         # collect all the stopwords
         with open( stop_words_file ) as file:
             lines = file.read()
             all_stopwords = lines.split( "\n" )
-        
         for source in tokens:
             refined_tokens = dict()
             files = dict()
@@ -137,9 +135,9 @@ class PredictToolSimilarity:
             # filter tokens based on the BM25 scores and stop words. Not all tokens are important
             for item in files:
                 file_tokens = files[ item ]
-                tokens_scores = [ token for ( token, score ) in file_tokens.items() ]
-                #sorted_tokens = sorted( tokens_scores, key=operator.itemgetter( 1 ), reverse=True )
-                refined_tokens[ item ] = tokens_scores
+                tokens_scores = [ ( token, score ) for ( token, score ) in file_tokens.items() ]
+                sorted_tokens = sorted( tokens_scores, key=operator.itemgetter( 1 ), reverse=True )
+                refined_tokens[ item ] = sorted_tokens
             tokens_file_name = 'tokens_' + source + '.txt'
             token_file_path = os.path.join( os.path.dirname( self.tools_data_path ) + '/' + tokens_file_name )
             with open( token_file_path, 'w' ) as file:
@@ -148,99 +146,106 @@ class PredictToolSimilarity:
             refined_tokens_sources[ source ] = refined_tokens
         return refined_tokens_sources
 
+    @classmethod
+    def create_input_output_tokens_matrix( self, documents_tokens ):
+        """
+        Create document tokens matrix
+        """
+        tools_list = list()
+        counter = 0
+        all_tokens = list()
+        doc_tokens = documents_tokens[ "input_output" ]
+        for tool_item in doc_tokens:
+            if tool_item not in tools_list:
+                tools_list.append( tool_item )
+            for word_score in doc_tokens[ tool_item ]:
+                word = word_score[ 0 ]
+                if word not in all_tokens:
+                    all_tokens.append( word )
+        # create tools x tokens matrix containing respective frequency or relevance score for each term
+        document_tokens_matrix = np.zeros( ( len( tools_list ), len( all_tokens ) ) )
+        for tool_item in doc_tokens:
+            for word_score in doc_tokens[ tool_item ]:
+                word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
+                document_tokens_matrix[ counter ][ word_index ] = 1
+            counter += 1
+        return document_tokens_matrix
+
+    @classmethod
+    def reject_outlier_tokens( self, tokens_list ):
+        """
+        Reject tokens which have low TF-IDF scores i.e. outliers
+        """
+        scores = [ score for ( token, score ) in tokens_list ]
+        standard_deviation = np.std( scores )
+        mean = np.mean( scores )
+        shortened_tokens_list = [ token for ( token, score ) in tokens_list if ( abs( score - mean ) < 2 * standard_deviation ) ]
+        return shortened_tokens_list
+
+    @classmethod
     def tag_document( self, tokens_sources ):
         """
         Get tagged documents
         """
-        tagged_doc = []
+        tagged_documents = []
         tools_list = list()
-        for source in tokens_sources:
-            doc_tokens = tokens_sources[ source ]
-            if source == "name_desc_edam_help":
-                tool_counter = 0
-                for tool in doc_tokens:
-                    if tool not in tools_list:
-                        tools_list.append( tool )
-                    tokens = doc_tokens[ tool ]
-                    td = TaggedDocument( gensim.utils.to_unicode(' '.join( tokens )).split(), [ tool_counter ] )
-                    tagged_doc.append( td )
-                    tool_counter += 1
-        return tagged_doc, tools_list
+        doc_tokens = tokens_sources[ "name_desc_edam_help" ]
+        tool_counter = 0
+        for tool in doc_tokens:
+            if tool not in tools_list:
+                tools_list.append( tool )
+            tokens = doc_tokens[ tool ]
+            tokens = self.reject_outlier_tokens( tokens )
+            td = TaggedDocument( gensim.utils.to_unicode(' '.join( tokens )).split(), [ tool_counter ] )
+            tagged_documents.append( td )
+            tool_counter += 1
+        return tagged_documents, tools_list
 
-    def find_document_similarity( self, tagged_documents ):
+    @classmethod
+    def find_document_similarity( self, tagged_documents, tools_list ):
         """
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
         training_epochs = 20
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, alpha=0.05, min_alpha=0.025, min_count=1, window=10, size=100, sample=1e-4, negative=5 )
+        len_tools = len( tools_list )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, alpha=0.1, min_alpha=0.025, min_count=1, window=10, size=100, sample=1e-4, negative=5 )
         for epoch in range( training_epochs ):
             if epoch % 2 == 0:
                 print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
             model.train( tagged_documents, total_examples=model.corpus_count, epochs=model.iter )
-            model.alpha -= 0.002  # decrease the learning rate
-            #model.min_alpha = model.alpha  # fix the learning rate, no decay
-        tools_similarity_dict = dict()
+            model.alpha -= 0.002
+            model.min_alpha = model.alpha
         tools_similarity = list()
-        for index in range( len( tagged_documents ) ):
-            similarity = model.docvecs.most_similar( index, topn=20 )
-            sum_scores = np.sum( [ score for ( item, score ) in similarity ] )
-            sum_scores = 1.0 if sum_scores == 0 else float( sum_scores )
-            sim_scores = [ ( int( item_id ), score / sum_scores ) for ( item_id, score ) in similarity ]
+        for index in range( len_tools ):
+            similarity = model.docvecs.most_similar( index, topn=len_tools )
+            sim_scores = [ ( int( item_id ), score ) for ( item_id, score ) in similarity ]
             sim_scores = sorted( sim_scores, key=operator.itemgetter( ( 0 ) ), reverse=False )
+            sim_scores.insert( index, ( index, 0.0 ) )
+            sim_scores = [ score for ( item_id, score ) in sim_scores ]
             tools_similarity.append( sim_scores )
         return tools_similarity
 
-    '''def create_document_tokens_matrix( self, documents_tokens ):
-        """
-        Create document tokens matrix
-        """
-        document_tokens_matrix_sources = dict()
-        tools_list = list()
-        for source in documents_tokens:
-            # create a unique list of all words
-            all_tokens = list()
-            doc_tokens = documents_tokens[ source ]
-            for tool_item in doc_tokens:
-                if tool_item not in tools_list:
-                    tools_list.append( tool_item )
-                for word_score in doc_tokens[ tool_item ]:
-                    word = word_score[ 0 ]
-                    if word not in all_tokens:
-                        all_tokens.append( word )
-            # create tools x tokens matrix containing respective frequency or relevance score for each term
-            document_tokens_matrix= np.zeros( ( len( tools_list ), len( all_tokens ) ) )
-            counter = 0
-            for tool_item in doc_tokens:
-                for word_score in doc_tokens[ tool_item ]:
-                    word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
-                counter += 1
-            document_tokens_matrix_sources[ source ] = document_tokens_matrix
-        return document_tokens_matrix_sources, tools_list
-
     @classmethod
-    def find_tools_cos_distance_matrix( self, document_token_matrix_sources, tools_list ):
+    def find_vector_distance_matrix( self, input_output_tokens_matrix, tools_list ):
         """
-        Find similarity distance using cosine distance among tools
+        Find similarity distance between vectors
         """
         mat_size = len( tools_list )
-        similarity_matrix_sources = dict()
-        for source in document_token_matrix_sources:
-            print "Computing similarity scores for source %s..." % source
-            sim_mat = document_token_matrix_sources[ source ]
-            sim_scores = np.zeros( ( mat_size, mat_size ) )
-            for index_x, item_x in enumerate( sim_mat ):
-                tool_scores = sim_scores[ index_x ]
-                for index_y, item_y in enumerate( sim_mat ):
-                    # compute similarity scores between two vectors
-                    if source == "input_output":
-                        pair_score = utils._jaccard_score( item_x, item_y )
-                    else:
-                        pair_score = utils._cosine_angle_score( item_x, item_y )
-                    tool_scores[ index_y ] = pair_score
-            similarity_matrix_sources[ source ] = sim_scores
-        return similarity_matrix_sources
+        sim_scores = np.zeros( [ mat_size, mat_size ] )
+        sim_mat = input_output_tokens_matrix
+        for index_x, item_x in enumerate( sim_mat ):
+            row_tool = tools_list[ index_x ]
+            tool_scores = sim_scores[ index_x ]
+            for index_y, item_y in enumerate( sim_mat ):
+                col_tool = tools_list[ index_y ]
+                # compute similarity scores between two vectors
+                if index_y == index_x:                  
+                    pair_score = 0
+                else:
+                    pair_score = utils._jaccard_score( item_x, item_y )
+                tool_scores[ index_y ] = pair_score
+        return sim_scores
 
     @classmethod
     def convert_prob_distributions( self, similarity_matrix_sources, all_tools ):
@@ -249,18 +254,18 @@ class PredictToolSimilarity:
         """
         correct_sum = 1
         all_tools_len = len( all_tools )
-        similarity_matrix_prob_dist_sources = dict()
-        for source in similarity_matrix_sources:
-            similarity_matrix_prob_dist = np.zeros( [ all_tools_len, all_tools_len] )
+        similarity_matrix_source_dict = dict()
+        for source in similarity_matrix_sources: 
             similarity_matrix = similarity_matrix_sources[ source ]
+            similarity_matrix_prob_dist = np.zeros( [ all_tools_len, all_tools_len ] )
             for index in range( all_tools_len ):
                 row = similarity_matrix[ index ]
                 row_sum = np.sum( row )
                 row_sum = row_sum if row_sum > 0 else correct_sum
-                prob_dist = [ float( item_similarity ) / row_sum for item_similarity in row ]
+                prob_dist = [ float( item_similarity ) / 1.0 for item_similarity in row ]
                 similarity_matrix_prob_dist[ index ][ : ] = prob_dist
-            similarity_matrix_prob_dist_sources[ source ] = similarity_matrix_prob_dist
-        return similarity_matrix_prob_dist_sources
+            similarity_matrix_source_dict[ source ] = similarity_matrix_prob_dist
+        return similarity_matrix_source_dict
 
     @classmethod
     def assign_similarity_importance( self, similarity_matrix_sources, tools_list, optimal_weights ):
@@ -276,10 +281,10 @@ class PredictToolSimilarity:
                 # add up the similarity scores from each source weighted by importance factors learned by machine leanring algorithm
                 sim_mat_tool_learned += optimal_weight_source * similarity_matrix_sources[ source ][ tool_index ]
             similarity_matrix_learned.append( sim_mat_tool_learned )
-        return similarity_matrix_sources, similarity_matrix_learned'''
+        return similarity_matrix_learned
 
     @classmethod
-    def associate_similarity( self, similarity_matrix, dataframe, tools_list ):
+    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, original_matrix, learning_rates, uniform_cost_tools, gradients ):
         """
         Get similar tools for each tool
         """
@@ -292,39 +297,74 @@ class PredictToolSimilarity:
         for index, item in enumerate( similarity_matrix ):
             tool_similarity = dict()
             scores = list()
-            root_tool = tools_list[ index ]
-            root_row = tools_info[ root_tool ]
+            average_scores = list()
+            root_tool = {}
+            tool_id = tools_list[ index ]
             # row of similarity scores for a tool against all tools
-            #optimal_normalized_scores = item
-            for similar_tool in item:
-                similar_tool_id = similar_tool[ 0 ]
-                rowj = tools_info[ tools_list[ similar_tool_id ] ]
-                score = similar_tool[ 1 ]
+            row_input_output = original_matrix[ "input_output" ][ index ]
+            row_name_desc = original_matrix[ "name_desc_edam_help" ][ index ]
+            # sum the scores from multiple sources
+            average_normalized_scores = [ ( x + y ) / 2. for x, y in zip( row_input_output, row_name_desc ) ]
+            optimal_normalized_scores = item.tolist()
+
+            for tool_index, tool_item in enumerate( tools_list ):
+                rowj = tools_info[ tool_item ]
+                # optimal similarity score for a tool against a tool
+                score = optimal_normalized_scores[ tool_index ]
+                # similarity score with input and output file types
+                input_output_score = row_input_output[ tool_index ]
+                # similarity score with name, desc etc attributes
+                name_desc_edam_help_score = row_name_desc[ tool_index ]
+                # average similarity score for tool against a tool
+                average_score = average_normalized_scores[ tool_index ]
+
+                # mutual information
                 # take similar tools found using Gradient Descent + BM25
                 record = {
-                       "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
-                       "id": rowj[ "id" ],
-                       "input_types": utils._get_text( rowj, "inputs" ),
-                       "output_types": utils._get_text( rowj, "outputs" ),
-                       "what_it_does": utils._get_text( rowj, "help" ),
-                       "edam_text": utils._get_text( rowj, "edam_topics" ),
-                       "score": score
+                   "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
+                   "id": rowj[ "id" ],
+                   "input_types": utils._get_text( rowj, "inputs" ),
+                   "output_types": utils._get_text( rowj, "outputs" ),
+                   "what_it_does": utils._get_text( rowj, "help" ),
+                   "edam_text": utils._get_text( rowj, "edam_topics" ),
+                   "score": score,
+                   "input_output_score": input_output_score,
+                   "name_desc_edam_help_score": name_desc_edam_help_score
                 }
-                scores.append( record )
-            root_record = {
-                   "name_description": root_row[ "name" ] + " " + ( utils._get_text( root_row, "description" ) ),
-                   "id": root_row[ "id" ],
-                   "input_types": utils._get_text( root_row, "inputs" ),
-                   "output_types": utils._get_text( root_row, "outputs" ),
-                   "what_it_does": utils._get_text( root_row, "help" ),
-                   "edam_text": utils._get_text( root_row, "edam_topics" ),
-                   "score": 1
-            }
-            scores.append( root_record )
+                if rowj[ "id" ] == tool_id:
+                    root_tool = record
+                else:
+                    scores.append( record )
+                # take similar tools found using average BM25 scores
+                average_record = {
+                   "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
+                   "id": rowj[ "id" ],
+                   "input_types": utils._get_text( rowj, "inputs" ),
+                   "output_types": utils._get_text( rowj, "outputs" ),
+                   "what_it_does": utils._get_text( rowj, "help" ),
+                   "edam_text": utils._get_text( rowj, "edam_topics" ),
+                   "score": average_score,
+                   "input_output_score": input_output_score,
+                   "name_desc_edam_help_score": name_desc_edam_help_score
+                }
+                if rowj[ "id" ] != tool_id:
+                    average_scores.append( average_record )
+
             tool_similarity[ "root_tool" ] = root_tool
-            sorted_scores = sorted( scores, key=operator.itemgetter( "score" ), reverse=True )
+            sorted_scores = sorted( scores, key=operator.itemgetter( "score" ), reverse=True )[ : self.tools_show ]
+            sorted_average_scores = sorted( average_scores, key=operator.itemgetter( "score" ), reverse=True )[ : self.tools_show ]
+
             # don't take all the tools predicted, just TOP something
             tool_similarity[ "similar_tools" ] = sorted_scores
+            #tool_similarity[ "average_similar_tools" ] = sorted_average_scores
+            tool_similarity[ "optimal_weights" ] = optimal_weights[ tool_id ]
+            tool_similarity[ "cost_iterations" ] = cost_tools[ tool_id ]
+            tool_similarity[ "learning_rates_iterations" ] = learning_rates[ tool_id ]
+            tool_similarity[ "optimal_similar_scores" ] = optimal_normalized_scores
+            tool_similarity[ "average_similar_scores" ] = average_normalized_scores
+            tool_similarity[ "uniform_cost_tools" ] = uniform_cost_tools[ tool_id ]
+            tool_similarity[ "gradient_io_iteration" ] = gradients[ tool_id ][ "input_output" ]
+            tool_similarity[ "gradient_nd_iteration" ] = gradients[ tool_id ][ "name_desc_edam_help" ]
             similarity.append( tool_similarity )
         all_tools = dict()
         all_tools[ "list_tools" ] = tools_list
@@ -353,37 +393,32 @@ if __name__ == "__main__":
     refined_tokens = tool_similarity.refine_tokens( tokens )
     print "Refined tokens"
 
-    similarity_matrix, files_list = tool_similarity.tag_document( refined_tokens )
-    print "Created tools similarity matrix"
-
     tagged_doc, tools_list = tool_similarity.tag_document( refined_tokens )
-    print "Created tools similarity matrix"
+    print "Created name desc. tokens matrix"
 
-    learned_simiarity_matrix = tool_similarity.find_document_similarity( tagged_doc )
-    print "Learned similarity using neural networks"
+    io_tokens_matrix = tool_similarity.create_input_output_tokens_matrix( refined_tokens )
+    print "Create input output tokens matrix"
 
-    print "Writing results to a JSON file..."
-    tool_similarity.associate_similarity( learned_simiarity_matrix, dataframe, tools_list )
-    end_time = time.time()
-    print "Program finished in %d seconds" % int( end_time - start_time )
+    print "Computing similarity..."
+    input_output_distance_matrix = tool_similarity.find_vector_distance_matrix( io_tokens_matrix, tools_list )
+    learned_simiarity_matrix_nd = tool_similarity.find_document_similarity( tagged_doc, tools_list )
+    print "Learned similarity for both the sources"
 
-    '''print "Computing similarity..."
-    start_time_similarity_comp = time.time()
-    tools_distance_matrix = tool_similarity.find_tools_cos_distance_matrix( document_tokens_matrix, files_list )
-    end_time_similarity_comp = time.time()
-    print "Computed similarity in %d seconds" % int( end_time_similarity_comp - start_time_similarity_comp )
+    distance_dict = dict()
+    distance_dict[ "name_desc_edam_help" ] = learned_simiarity_matrix_nd
+    distance_dict[ "input_output" ] = input_output_distance_matrix
 
     print "Converting similarities to probability distributions..."
-    similarity_matrix_prob_dist_sources = tool_similarity.convert_prob_distributions( tools_distance_matrix, files_list )
+    similarity_matrix_prob_dist_sources = tool_similarity.convert_prob_distributions( distance_dict, tools_list )
 
     print "Learning optimal weights..."
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
-    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_matrix_prob_dist_sources, tools_distance_matrix, files_list )
+    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_matrix_prob_dist_sources, distance_dict, tools_list )
 
     print "Assign importance to tools similarity matrix..."
-    similarity_matrix_original, similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_matrix_prob_dist_sources, files_list, optimal_weights )
+    similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_matrix_prob_dist_sources, tools_list, optimal_weights )
 
     print "Writing results to a JSON file..."
-    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, files_list, optimal_weights, cost_tools, similarity_matrix_original, learning_rates, uniform_cost_tools, gradients )
+    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, tools_list, optimal_weights, cost_tools, similarity_matrix_prob_dist_sources, learning_rates, uniform_cost_tools, gradients )
     end_time = time.time()
-    print "Program finished in %d seconds" % int( end_time - start_time )'''
+    print "Program finished in %d seconds" % int( end_time - start_time )
