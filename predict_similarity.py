@@ -196,7 +196,7 @@ class PredictToolSimilarity:
                 tools_list.append( tool )
             tokens = doc_tokens[ tool ]
             tokens = self.reject_outlier_tokens( tokens )
-            td = TaggedDocument( gensim.utils.to_unicode(' '.join( tokens )).split(), [ tool_counter ] )
+            td = TaggedDocument( gensim.utils.to_unicode(' '.join( tokens ) ).split(), [ tool_counter ] )
             tagged_documents.append( td )
             tool_counter += 1
         return tagged_documents, tools_list
@@ -206,16 +206,15 @@ class PredictToolSimilarity:
         """
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
-        training_epochs = 20
+        training_epochs = 100
         len_tools = len( tools_list )
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, alpha=0.1, min_alpha=0.025, min_count=1, window=10, size=100, sample=1e-4, negative=5 )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=100, negative=5, min_count=2, iter=10, seed=1337 )
         for epoch in range( training_epochs ):
-            if epoch % 2 == 0:
-                print ( 'Training epoch %s' % epoch )
+            print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
             model.train( tagged_documents, total_examples=model.corpus_count, epochs=model.iter )
-            model.alpha -= 0.002
-            model.min_alpha = model.alpha
+            #model.alpha -= 0.002
+            #model.min_alpha = model.alpha
         tools_similarity = list()
         for index in range( len_tools ):
             similarity = model.docvecs.most_similar( index, topn=len_tools )

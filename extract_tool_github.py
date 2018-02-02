@@ -23,7 +23,7 @@ class ExtractToolXML:
         self.file_extension = '.xml'
         self.base_url = 'https://api.github.com/repos/'
         self.directory = '/data'
-        self.tool_data_filename = 'processed_tools2.csv'
+        self.tool_data_filename = 'processed_tools3.csv'
         # please supply your GitHub's username and password to authenticate yourself
         # in order to be able to read files
         self.auth = auth
@@ -194,8 +194,14 @@ class ExtractToolXML:
                         # if these categories inside help text are not present, then add complete help text
                         if clean_helptext == "":
                             clean_helptext = child.text
+                        helptext_lines = clean_helptext.split( "." )
+                        helptext_lines = helptext_lines[ :4 ]
+                        clean_helptext = " ".join( helptext_lines )
                         clean_helptext = self.clear_urls( clean_helptext )
                         clean_helptext = utils._remove_special_chars( clean_helptext )
+                        print "=========================================="
+                        print clean_helptext
+                        
                         record[ child.tag ] = clean_helptext
                     elif child.tag == "edam_topics":
                         for item in child:

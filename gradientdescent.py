@@ -143,7 +143,7 @@ class GradientDescentOptimizer:
                     sum_scores = sum_scores if sum_scores > 0 else 1.0
                     # compute maximum possible scores that a weighted probability can reach
                     # in order to calculate the losses
-                    #max_score = self.best_similarity_score / sum_scores
+                    #max_score = self.best_similarity_score / float( sum_scores )
                     max_score = self.best_similarity_score
                     ideal_tool_score = np.repeat( max_score, num_all_tools )
                     ideal_score_sources[ source ] = ideal_tool_score
