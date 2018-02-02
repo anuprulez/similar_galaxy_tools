@@ -28,7 +28,7 @@ After having these tools-keywords matrices, we compute distances between a pair 
 
 Now, we have two probability distributions - there is a question of their optimal combination (a mixture of probabilities). A naive way would be to take an average of the probabilities. Another (and better) approach is to use an optimizer to learn the optimal weights on these two matrices. It is achieved using Gradient Descent optimizer. The learning rate is computed using Backtracking Line Search. For each tool, two scalar weights are learned for its corresponding vectors in two matrices.
 
-Optimal probability combination = arg max (w1, w2) ( w1 * vector_probability_1 + w2 * vector_probability_2 )
+![Optimal probability combination](https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/plots/argmax.png)
 
 - [Gradient descent wiki](https://en.wikipedia.org/wiki/Gradient_descent)
 - [Gradient descent](http://ruder.io/optimizing-gradient-descent/)
