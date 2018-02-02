@@ -24,7 +24,7 @@ class PredictToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam_help' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 40
+        self.tools_show = 50
 
     @classmethod
     def read_file( self ):
@@ -171,24 +171,37 @@ class PredictToolSimilarity:
         """
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
-        training_epochs = 20
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, alpha=0.1, min_alpha=0.025, min_count=1, window=10, size=100, sample=1e-4, negative=5 )
+        training_epochs = 100
+        # dm=1, dm_concat=1, size=100, window=5, negative=5, hs=0
+        # dm=0, alpha=0.1, min_alpha=0.025, min_count=1, window=10, size=100, sample=1e-4, negative=5
+
+        # dm/concat
+        #model = gensim.models.Doc2Vec( tagged_documents, dm=1, dm_concat=1, size=100, window=5, negative=5, hs=0, alpha=0.1, min_alpha=0.025 )
+        # , alpha=0.05, min_alpha=0.025
+        # dbow dm=0, size=100, negative=5, hs=0, min_count=2
+        model_dbow = gensim.models.Doc2Vec( tagged_documents, dm=0, size=100, negative=5, min_count=2, iter=10, seed=1337, dbow_words=1 )
+        #model_dm_mean = gensim.models.Doc2Vec( tagged_documents, dm=1, dm_concat=1, size=100, negative=5, min_count=2, alpha=0.05, min_alpha=0.025 )
+
+        # dm/mean dm=1, dm_mean=1, size=100, window=10, negative=5, hs=0, min_count=2
+        #model = gensim.models.Doc2Vec( tagged_documents, dm=1, dm_mean=1, size=100, window=10, negative=5, hs=0, min_count=0, alpha=0.1, min_alpha=0.025 )
+
         for epoch in range( training_epochs ):
-            if epoch % 2 == 0:
-                print ( 'Training epoch %s' % epoch )
+            print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
-            model.train( tagged_documents, total_examples=model.corpus_count, epochs=model.iter )
-            model.alpha -= 0.002  # decrease the learning rate
-            model.min_alpha = model.alpha  # fix the learning rate, no decay
+            model_dbow.train( tagged_documents, total_examples=model_dbow.corpus_count, epochs=model_dbow.iter )
+            #model_dm_mean.train( tagged_documents, total_examples=model_dm_mean.corpus_count, epochs=model_dm_mean.iter )
         tools_similarity_dict = dict()
         tools_similarity = list()
         for index in range( len( tagged_documents ) ):
-            similarity = model.docvecs.most_similar( index, topn=self.tools_show )
-            sum_scores = np.sum( [ score for ( item, score ) in similarity ] )
-            sum_scores = 1.0 if sum_scores == 0 else float( sum_scores )
-            sim_scores = [ ( int( item_id ), score / sum_scores ) for ( item_id, score ) in similarity ]
-            sim_scores = sorted( sim_scores, key=operator.itemgetter( ( 0 ) ), reverse=False )
-            tools_similarity.append( sim_scores )
+            similarity_dbow = model_dbow.docvecs.most_similar( index, topn=self.tools_show )
+            similarity_dbow_scores = [ ( int( item_id ), score ) for ( item_id, score ) in similarity_dbow ]
+            sim_scores_dbow = sorted( similarity_dbow_scores, key=operator.itemgetter( ( 0 ) ), reverse=False )
+            '''similarity_dm_mean = model_dm_mean.docvecs.most_similar( index, topn=self.tools_show )
+            similarity_dm_mean_scores = [ ( int( item_id ), score ) for ( item_id, score ) in similarity_dm_mean ]
+            sim_scores_mean = sorted( similarity_dm_mean_scores, key=operator.itemgetter( ( 0 ) ), reverse=False )'''
+            #sim_scores = [ ( item_id1, ( ( score1 + score2 ) / 2.0 ) ) for ( ( item_id1, score1 ), ( item_id2, score2 ) ) in zip( sim_scores_dbow, sim_scores_mean ) ]
+
+            tools_similarity.append( sim_scores_dbow )
         return tools_similarity
 
     '''def create_document_tokens_matrix( self, documents_tokens ):
@@ -352,9 +365,6 @@ if __name__ == "__main__":
 
     refined_tokens = tool_similarity.refine_tokens( tokens )
     print "Refined tokens"
-
-    similarity_matrix, files_list = tool_similarity.tag_document( refined_tokens )
-    print "Created tools similarity matrix"
 
     tagged_doc, tools_list = tool_similarity.tag_document( refined_tokens )
     print "Created tools similarity matrix"
