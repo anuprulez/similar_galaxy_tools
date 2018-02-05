@@ -54,7 +54,7 @@ class PredictToolSimilarity:
         further help and EDAM sources
         """
         tokens = ''
-        if source == 'input_output':
+        '''if source == 'input_output':
             # remove duplicate file type individually from input and output file types and merge
             input_tokens = utils._restore_space( utils._get_text( row, "inputs" ) )
             input_tokens = utils._remove_duplicate_file_types( input_tokens )
@@ -65,9 +65,20 @@ class PredictToolSimilarity:
             elif output_tokens is not "":
                 tokens = output_tokens
             elif input_tokens is not "":
+                tokens = input_tokens'''
+        if source == 'name_desc_edam_help':
+            input_tokens = utils._restore_space( utils._get_text( row, "inputs" ) )
+            input_tokens = utils._remove_duplicate_file_types( input_tokens )
+            output_tokens = utils._restore_space( utils._get_text( row, "outputs" ) )
+            output_tokens = utils._remove_duplicate_file_types( output_tokens )
+            if input_tokens is not "" and output_tokens is not "":
+                tokens = input_tokens + ' ' + output_tokens
+            elif output_tokens is not "":
+                tokens = output_tokens
+            elif input_tokens is not "":
                 tokens = input_tokens
-        elif source == 'name_desc_edam_help':
-            tokens = utils._restore_space( utils._get_text( row, "name" ) ) + ' '
+
+            tokens += utils._restore_space( utils._get_text( row, "name" ) ) + ' '
             tokens += utils._restore_space( utils._get_text( row, "description" ) ) + ' '
             tokens += utils._get_text( row, "help" ) + ' '
             tokens += utils._get_text( row, "edam_topics" )
@@ -171,7 +182,7 @@ class PredictToolSimilarity:
         """
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
-        training_epochs = 100
+        training_epochs = 20
         # dm=1, dm_concat=1, size=100, window=5, negative=5, hs=0
         # dm=0, alpha=0.1, min_alpha=0.025, min_count=1, window=10, size=100, sample=1e-4, negative=5
 
@@ -179,7 +190,7 @@ class PredictToolSimilarity:
         #model = gensim.models.Doc2Vec( tagged_documents, dm=1, dm_concat=1, size=100, window=5, negative=5, hs=0, alpha=0.1, min_alpha=0.025 )
         # , alpha=0.05, min_alpha=0.025
         # dbow dm=0, size=100, negative=5, hs=0, min_count=2
-        model_dbow = gensim.models.Doc2Vec( tagged_documents, dm=0, size=100, negative=5, min_count=2, iter=10, seed=1337, dbow_words=1 )
+        model_dbow = gensim.models.Doc2Vec( tagged_documents, dm=0, size=100, negative=5, min_count=1, iter=400, seed=1337, alpha=0.01, min_alpha=1e-4, sample=1e-5, dbow_words=1, window=10 )
         #model_dm_mean = gensim.models.Doc2Vec( tagged_documents, dm=1, dm_concat=1, size=100, negative=5, min_count=2, alpha=0.05, min_alpha=0.025 )
 
         # dm/mean dm=1, dm_mean=1, size=100, window=10, negative=5, hs=0, min_count=2
