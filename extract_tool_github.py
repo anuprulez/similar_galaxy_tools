@@ -199,10 +199,10 @@ class ExtractToolXML:
                         clean_helptext = " ".join( helptext_lines )
                         clean_helptext = self.clear_urls( clean_helptext )
                         clean_helptext = utils._remove_special_chars( clean_helptext )
-                        print "=========================================="
-                        print clean_helptext
-                        
-                        record[ child.tag ] = clean_helptext
+                        if "warningmark" is not in clean_helptext:
+                            record[ child.tag ] = clean_helptext
+                        else:
+                            record[ child.tag ] = ""
                     elif child.tag == "edam_topics":
                         for item in child:
                             if item.tag == "edam_topic":

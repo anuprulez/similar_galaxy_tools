@@ -22,7 +22,7 @@ class PredictToolSimilarity:
 
     @classmethod
     def __init__( self, tools_data_path ):
-        self.data_source = [ 'input_output', 'name_desc_edam_help' ]
+        self.data_source = [ 'input_output', 'name_desc_edam', "help_text" ]
         self.tools_data_path = tools_data_path
         self.tools_show = 20
 
@@ -66,11 +66,12 @@ class PredictToolSimilarity:
                 tokens = output_tokens
             elif input_tokens is not "":
                 tokens = input_tokens
-        elif source == 'name_desc_edam_help':
+        elif source == 'name_desc_edam':
             tokens = utils._restore_space( utils._get_text( row, "name" ) ) + ' '
             tokens += utils._restore_space( utils._get_text( row, "description" ) ) + ' '
-            tokens += utils._get_text( row, "help" ) + ' '
             tokens += utils._get_text( row, "edam_topics" )
+        elif source == "help_text":
+            tokens = utils._get_text( row, "help" )
         return utils._remove_special_chars( tokens )
 
     @classmethod
@@ -96,7 +97,7 @@ class PredictToolSimilarity:
             for item in tokens[ source ]:
                 file_id += 1
                 file_tokens = tokens[ source ][ item ].split(" ")
-                if source in "name_desc_edam_help":
+                if source in "name_desc_edam" or source in "help_text":
                     file_tokens = utils._clean_tokens( file_tokens, all_stopwords )
                 total_file_length += len( file_tokens )
                 term_frequency = dict()
@@ -147,14 +148,13 @@ class PredictToolSimilarity:
         return refined_tokens_sources
 
     @classmethod
-    def create_input_output_tokens_matrix( self, documents_tokens ):
+    def create_input_output_tokens_matrix( self, doc_tokens ):
         """
         Create document tokens matrix
         """
         tools_list = list()
         counter = 0
         all_tokens = list()
-        doc_tokens = documents_tokens[ "input_output" ]
         for tool_item in doc_tokens:
             if tool_item not in tools_list:
                 tools_list.append( tool_item )
@@ -183,13 +183,12 @@ class PredictToolSimilarity:
         return shortened_tokens_list
 
     @classmethod
-    def tag_document( self, tokens_sources ):
+    def tag_document( self, doc_tokens ):
         """
         Get tagged documents
         """
         tagged_documents = []
         tools_list = list()
-        doc_tokens = tokens_sources[ "name_desc_edam_help" ]
         tool_counter = 0
         for tool in doc_tokens:
             if tool not in tools_list:
@@ -208,7 +207,7 @@ class PredictToolSimilarity:
         """
         training_epochs = 20
         len_tools = len( tools_list )
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=200, negative=5, min_count=1, iter=400, seed=1337, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=200, negative=5, min_count=1, iter=10, seed=1337, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
         for epoch in range( training_epochs ):
             print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
@@ -256,7 +255,9 @@ class PredictToolSimilarity:
             similarity_matrix_prob_dist = np.zeros( [ all_tools_len, all_tools_len ] )
             for index in range( all_tools_len ):
                 row = similarity_matrix[ index ]
-                prob_dist = [ item_similarity for item_similarity in row ]
+                row_sum = np.sum( row )
+                row_sum = row_sum if row_sum > 0 else 1.0
+                prob_dist = [ float( item_similarity ) / row_sum for item_similarity in row ]
                 similarity_matrix_prob_dist[ index ][ : ] = prob_dist
             similarity_matrix_source_dict[ source ] = similarity_matrix_prob_dist
         return similarity_matrix_source_dict
@@ -384,20 +385,25 @@ if __name__ == "__main__":
     refined_tokens = tool_similarity.refine_tokens( tokens )
     print "Refined tokens"
 
-    tagged_doc, tools_list = tool_similarity.tag_document( refined_tokens )
+    tagged_doc_nd, tools_list = tool_similarity.tag_document( refined_tokens[ "name_desc_edam" ] )
     print "Created name desc. tokens matrix"
 
-    io_tokens_matrix = tool_similarity.create_input_output_tokens_matrix( refined_tokens )
+    tagged_doc_ht, tools_list = tool_similarity.tag_document( refined_tokens[ "help_text" ] )
+    print "Created help text tokens matrix"
+
+    io_tokens_matrix = tool_similarity.create_input_output_tokens_matrix( refined_tokens[ "input_output" ] )
     print "Create input output tokens matrix"
 
     print "Computing similarity..."
     input_output_distance_matrix = tool_similarity.find_vector_distance_matrix( io_tokens_matrix, tools_list )
-    learned_simiarity_matrix_nd = tool_similarity.find_document_similarity( tagged_doc, tools_list )
+    learned_simiarity_matrix_nd = tool_similarity.find_document_similarity( tagged_doc_nd, tools_list )
+    learned_simiarity_matrix_ht = tool_similarity.find_document_similarity( tagged_doc_ht, tools_list )
     print "Learned similarity for both the sources"
 
     distance_dict = dict()
-    distance_dict[ "name_desc_edam_help" ] = learned_simiarity_matrix_nd
+    distance_dict[ "name_desc_edam" ] = learned_simiarity_matrix_nd
     distance_dict[ "input_output" ] = input_output_distance_matrix
+    distance_dict[ "help_text" ] = learned_simiarity_matrix_ht
 
     print "Converting similarities to probability distributions..."
     similarity_matrix_prob_dist_sources = tool_similarity.convert_prob_distributions( distance_dict, tools_list )

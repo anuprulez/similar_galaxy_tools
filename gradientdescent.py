@@ -11,7 +11,7 @@ class GradientDescentOptimizer:
     @classmethod
     def __init__( self, number_iterations ):
         self.number_iterations = number_iterations
-        self.sources = [ 'input_output', 'name_desc_edam_help' ]
+        self.sources = [ 'input_output', 'name_desc_edam', "help_text" ]
         self.best_similarity_score = 1.0
 
     @classmethod
@@ -21,7 +21,7 @@ class GradientDescentOptimizer:
         """
         weights = dict()
         for item in self.sources:
-            weights[ item ] = 0.5
+            weights[ item ] = 1.0 / len( self.sources )
         return weights
 
     @classmethod
@@ -65,7 +65,7 @@ class GradientDescentOptimizer:
         Find the optimal step size/learning rate for gradient descent
         """
         eta = 1
-        beta = 0.75
+        beta = 0.3
         alpha = 0.1
         while True:
             eta = beta * eta
@@ -90,7 +90,9 @@ class GradientDescentOptimizer:
         Update the weights for each source using the learning rate and gradient and then normalize
         """
         for source in weights:
-            weights[ source ] = weights[ source ] - learning_rate * gradient[ source ]
+            weight_update = weights[ source ] - learning_rate * gradient[ source ]
+            if weight_update >= 0:
+               weights[ source ] = weight_update
         return self.normalize_weights( weights )
 
     @classmethod
@@ -140,7 +142,9 @@ class GradientDescentOptimizer:
                     tool_similarity_scores[ source ] = tools_score_source
                     # compute maximum possible scores that a weighted probability can reach
                     # in order to calculate the losses
-                    max_score = self.best_similarity_score
+                    sum_scores = np.sum( similarity_matrix_original[ source ][ tool_index ] )
+                    sum_scores = sum_scores if sum_scores > 0 else 1.0
+                    max_score = self.best_similarity_score / float( sum_scores )
                     ideal_tool_score = np.repeat( max_score, num_all_tools )
                     ideal_score_sources[ source ] = ideal_tool_score
                     # compute losses
