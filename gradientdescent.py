@@ -65,7 +65,7 @@ class GradientDescentOptimizer:
         Find the optimal step size/learning rate for gradient descent
         """
         eta = 1
-        beta = 0.3
+        beta = 0.75
         alpha = 0.1
         while True:
             eta = beta * eta
@@ -138,12 +138,8 @@ class GradientDescentOptimizer:
                     weight = weights[ source ]
                     tools_score_source = similarity_matrix_prob[ source ][ tool_index ]
                     tool_similarity_scores[ source ] = tools_score_source
-                    # compute sum of scores to normalize
-                    sum_scores = np.sum( similarity_matrix_original[ source ][ tool_index ] )
-                    sum_scores = sum_scores if sum_scores > 0 else 1.0
                     # compute maximum possible scores that a weighted probability can reach
                     # in order to calculate the losses
-                    #max_score = self.best_similarity_score / float( sum_scores )
                     max_score = self.best_similarity_score
                     ideal_tool_score = np.repeat( max_score, num_all_tools )
                     ideal_score_sources[ source ] = ideal_tool_score

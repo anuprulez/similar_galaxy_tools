@@ -167,7 +167,7 @@ class PredictToolSimilarity:
         for tool_item in doc_tokens:
             for word_score in doc_tokens[ tool_item ]:
                 word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                document_tokens_matrix[ counter ][ word_index ] = 1
+                document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
             counter += 1
         return document_tokens_matrix
 
@@ -206,15 +206,13 @@ class PredictToolSimilarity:
         """
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
-        training_epochs = 100
+        training_epochs = 20
         len_tools = len( tools_list )
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=100, negative=5, min_count=2, iter=10, seed=1337 )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=200, negative=5, min_count=1, iter=400, seed=1337, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
         for epoch in range( training_epochs ):
             print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
             model.train( tagged_documents, total_examples=model.corpus_count, epochs=model.iter )
-            #model.alpha -= 0.002
-            #model.min_alpha = model.alpha
         tools_similarity = list()
         for index in range( len_tools ):
             similarity = model.docvecs.most_similar( index, topn=len_tools )
@@ -251,17 +249,14 @@ class PredictToolSimilarity:
         """
         Convert the similarity scores into probability distributions
         """
-        correct_sum = 1
         all_tools_len = len( all_tools )
         similarity_matrix_source_dict = dict()
-        for source in similarity_matrix_sources: 
+        for source in similarity_matrix_sources:
             similarity_matrix = similarity_matrix_sources[ source ]
             similarity_matrix_prob_dist = np.zeros( [ all_tools_len, all_tools_len ] )
             for index in range( all_tools_len ):
                 row = similarity_matrix[ index ]
-                row_sum = np.sum( row )
-                row_sum = row_sum if row_sum > 0 else correct_sum
-                prob_dist = [ float( item_similarity ) / 1.0 for item_similarity in row ]
+                prob_dist = [ item_similarity for item_similarity in row ]
                 similarity_matrix_prob_dist[ index ][ : ] = prob_dist
             similarity_matrix_source_dict[ source ] = similarity_matrix_prob_dist
         return similarity_matrix_source_dict
@@ -316,9 +311,6 @@ class PredictToolSimilarity:
                 name_desc_edam_help_score = row_name_desc[ tool_index ]
                 # average similarity score for tool against a tool
                 average_score = average_normalized_scores[ tool_index ]
-
-                # mutual information
-                # take similar tools found using Gradient Descent + BM25
                 record = {
                    "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
                    "id": rowj[ "id" ],

@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "data/similarity_matrix.json"; // https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/gd_prob_dist/viz/data/similarity_matrix.json
+        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json";
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
@@ -46,7 +46,6 @@ $(document).ready(function(){
                 var toolScores = toolResults.similar_tools,
                     //aveToolScores = toolResults.average_similar_tools,
                     template = "";
-                    
                 // make html for the selected tool
                 $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );
                 // show optimal weights
