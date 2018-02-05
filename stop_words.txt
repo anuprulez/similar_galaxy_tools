@@ -688,3 +688,9 @@ short
 class
 infomark
 warningmark
+warn
+origin
+original
+view
+document
+documentation

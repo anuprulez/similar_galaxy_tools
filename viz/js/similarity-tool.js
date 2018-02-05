@@ -66,7 +66,7 @@ $(document).ready(function(){
                 //plotScatterOptimalAverageScoresTopResults( toolResults, "scatter-optimal-average-top-results", selectedToolId );
                 
                 $el_tools.append( "<div id='tool-combined-gradient-iterations'></div>" );
-                plotCombinedGradients( toolResults.gradient_io_iteration, toolResults.gradient_nd_iteration, 'tool-combined-gradient-iterations', selectedToolId );
+                plotCombinedGradients( toolResults.gradient_io_iteration, toolResults.gradient_nd_iteration, toolResults.gradient_ht_iteration, 'tool-combined-gradient-iterations', selectedToolId );
 
                 //$el_tools.append( "<div id='tool-io-gradient-iterations'></div>" );
                 //plotGradients( toolResults.gradient_io_iteration, "tool-io-gradient-iterations", selectedToolId, "Gradient vs iterations for Input Output" );
@@ -96,8 +96,11 @@ $(document).ready(function(){
             if( item === "input_output" ) {
                 template += "<div>" + "Input and output file types ( weight_1 ): <b>" + toPrecisionNumber( weights[ item ] ) + "</b></div>";
             }
-            else if( item === "name_desc_edam_help" ) {
-                template += "<div>" + "Name, description, help and EDAM ( weight_2 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+            else if( item === "name_desc_edam" ) {
+                template += "<div>" + "Name, description and EDAM ( weight_2 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+            }
+            else if( item === "help_text" ) {
+                template += "<div>" + "Help text ( weight_3 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
         }
         template += "<p>Score = weight_1 * probability_input_output + weight_2 * probability_name_desc_edam_help</p>";
@@ -119,7 +122,8 @@ $(document).ready(function(){
         template += "<th>Id</th>";
         if ( !isHeader ) {
             template += "<th> Input output probability score </th>";
-            template += "<th> Name desc. Edam help probability score </th>";
+            template += "<th> Name desc. Edam probability score </th>";
+            template += "<th> Help text probability score </th>";
             template += "<th> " + scoreHeaderText + "</th>";
             template += "<th> Rank </th>";
         }
@@ -144,7 +148,8 @@ $(document).ready(function(){
             template += "<td>" + tool.id + "</td>";
             if ( !isHeader ) {
                 template += "<td>" + tool.input_output_score + "</td>";
-                template += "<td>" + tool.name_desc_edam_help_score + "</td>";
+                template += "<td>" + tool.name_desc_edam_score + "</td>";
+                template += "<td>" + tool.help_text_score + "</td>";
                 template += "<td>" + toolScore + "</td>";
                 template += "<td>" + rank + "</td>";
             }
@@ -161,13 +166,13 @@ $(document).ready(function(){
         return template;
     };
 
-    var plotCombinedGradients = function( dataIOGradients, dataNDGradients, $elPlot, selectedToolId ) {
+    var plotCombinedGradients = function( dataIOGradients, dataNDGradients, dataHTGradients, $elPlot, selectedToolId ) {
         var iterations = dataIOGradients.length,
             xAxis = [],
             combinedGradients = [];
         for( var i = 0; i < iterations; i++ ) {
             xAxis.push( i + 1 );
-            combinedGradients.push( dataIOGradients[ i ] * dataIOGradients[ i ] + dataNDGradients[ i ] * dataNDGradients[ i ] );
+            combinedGradients.push( dataIOGradients[ i ] * dataIOGradients[ i ] + dataNDGradients[ i ] * dataNDGradients[ i ] + dataHTGradients[ i ] * dataHTGradients[ i ] );
         }
         
 	var trace1 = {
@@ -209,7 +214,6 @@ $(document).ready(function(){
 	};
 	
 	var plotData = [ trace1 ];
-	
 	var layout = {
             title: plotTitle,
             xaxis: {

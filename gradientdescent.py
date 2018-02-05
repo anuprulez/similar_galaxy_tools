@@ -90,9 +90,7 @@ class GradientDescentOptimizer:
         Update the weights for each source using the learning rate and gradient and then normalize
         """
         for source in weights:
-            weight_update = weights[ source ] - learning_rate * gradient[ source ]
-            if weight_update >= 0:
-               weights[ source ] = weight_update
+            weights[ source ] = weights[ source ] - learning_rate * gradient[ source ]
         return self.normalize_weights( weights )
 
     @classmethod
@@ -125,6 +123,7 @@ class GradientDescentOptimizer:
             cost_iteration = list()
             gradient_io_iteration = list()
             gradient_nd_iteration = list()
+            gradient_ht_iteration = list()
             uniform_cost_iteration = list()
             lr_iteration = list()
             previous_cost = None
@@ -142,10 +141,7 @@ class GradientDescentOptimizer:
                     tool_similarity_scores[ source ] = tools_score_source
                     # compute maximum possible scores that a weighted probability can reach
                     # in order to calculate the losses
-                    sum_scores = np.sum( similarity_matrix_original[ source ][ tool_index ] )
-                    sum_scores = sum_scores if sum_scores > 0 else 1.0
-                    max_score = self.best_similarity_score / float( sum_scores )
-                    ideal_tool_score = np.repeat( max_score, num_all_tools )
+                    ideal_tool_score = np.repeat( self.best_similarity_score, num_all_tools )
                     ideal_score_sources[ source ] = ideal_tool_score
                     # compute losses
                     loss, uniform_loss = self.compute_loss( weight, uniform_weight, tools_score_source, ideal_tool_score )
@@ -158,6 +154,11 @@ class GradientDescentOptimizer:
                     gradient = np.dot( tools_score_source, loss )
                     # gather gradient for a source
                     sources_gradient[ source ] = gradient
+                # define a point when to stop learning
+                is_optimal = self.check_optimality_cost( cost_sources, previous_cost )
+                if is_optimal is True:
+                    print "optimal weights learned in %d iterations" % iteration
+                    break
                 mean_cost = np.mean( cost_sources )
                 # compute learning rate using line search
                 learning_rate = self.backtracking_line_search( weights, sources_gradient, tool_similarity_scores, num_all_tools, ideal_score_sources )
@@ -167,14 +168,10 @@ class GradientDescentOptimizer:
                 # gather gradients
                 gradient_io_iteration.append( sources_gradient[ self.sources[ 0 ] ] )
                 gradient_nd_iteration.append( sources_gradient[ self.sources[ 1 ] ] )
+                gradient_ht_iteration.append( sources_gradient[ self.sources[ 2 ] ] )
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
                 # update weights
                 weights = self.update_weights( weights, sources_gradient, learning_rate )
-                # define a point when to stop learning
-                is_optimal = self.check_optimality_cost( cost_sources, previous_cost )
-                if is_optimal is True:
-                    print "optimal weights learned in %d iterations" % iteration
-                    break
                 previous_cost = cost_sources
             # optimal weights learned
             print weights
@@ -183,5 +180,5 @@ class GradientDescentOptimizer:
             learning_rates[ tool_id ] = lr_iteration
             cost_tools[ tool_id ] = cost_iteration
             uniform_cost_tools[ tool_id ] = uniform_cost_iteration
-            gradients[ tool_id ] = { self.sources[ 0 ]: gradient_io_iteration, self.sources[ 1 ]: gradient_nd_iteration }
+            gradients[ tool_id ] = { self.sources[ 0 ]: gradient_io_iteration, self.sources[ 1 ]: gradient_nd_iteration, self.sources[ 2 ]: gradient_ht_iteration }
         return tools_optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients
