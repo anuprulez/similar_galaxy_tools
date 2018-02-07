@@ -209,7 +209,7 @@ class PredictToolSimilarity:
         """
         training_epochs = 20
         len_tools = len( tools_list )
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=100, negative=5, min_count=1, iter=300, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=200, negative=5, min_count=1, iter=300, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
         for epoch in range( training_epochs ):
             print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
@@ -304,7 +304,7 @@ class PredictToolSimilarity:
             # sum the scores from multiple sources
             average_normalized_scores = [ ( x + y + z ) / len_datasources for x, y, z in zip( row_input_output, row_name_desc, row_help_text ) ]
             optimal_normalized_scores = item.tolist()
-
+            tool_gradients = gradients[ tool_id ]
             for tool_index, tool_item in enumerate( tools_list ):
                 rowj = tools_info[ tool_item ]
                 # optimal similarity score for a tool against a tool
@@ -362,9 +362,10 @@ class PredictToolSimilarity:
             tool_similarity[ "optimal_similar_scores" ] = optimal_normalized_scores
             tool_similarity[ "average_similar_scores" ] = average_normalized_scores
             tool_similarity[ "uniform_cost_tools" ] = uniform_cost_tools[ tool_id ]
-            tool_similarity[ "gradient_io_iteration" ] = gradients[ tool_id ][ "input_output" ]
-            tool_similarity[ "gradient_nd_iteration" ] = gradients[ tool_id ][ "name_desc_edam" ]
-            tool_similarity[ "gradient_ht_iteration" ] = gradients[ tool_id ][ "help_text" ]
+            io_gradient = tool_gradients[ "input_output" ]
+            nd_gradient = tool_gradients[ "name_desc_edam" ]
+            ht_gradient = tool_gradients[ "help_text" ]
+            tool_similarity[ "combined_gradients" ] = [ np.sqrt( x ** 2 + y ** 2 + z ** 2 ) for x, y, z in zip( io_gradient, nd_gradient, ht_gradient ) ]
             similarity.append( tool_similarity )
         all_tools = dict()
         all_tools[ "list_tools" ] = tools_list

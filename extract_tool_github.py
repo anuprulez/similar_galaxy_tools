@@ -23,7 +23,7 @@ class ExtractToolXML:
         self.file_extension = '.xml'
         self.base_url = 'https://api.github.com/repos/'
         self.directory = '/data'
-        self.tool_data_filename = 'processed_tools5.csv'
+        self.tool_data_filename = 'processed_tools.csv'
         # please supply your GitHub's username and password to authenticate yourself
         # in order to be able to read files
         self.auth = auth

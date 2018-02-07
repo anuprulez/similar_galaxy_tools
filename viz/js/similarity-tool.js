@@ -4,7 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json";
+        path = "data/similarity_matrix.json"; // https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
@@ -44,7 +44,6 @@ $(document).ready(function(){
             var toolResults = data[ counter ];
             if ( toolResults.root_tool.id === selectedToolId ) {
                 var toolScores = toolResults.similar_tools,
-                    //aveToolScores = toolResults.average_similar_tools,
                     template = "";
                 // make html for the selected tool
                 $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );
@@ -52,14 +51,14 @@ $(document).ready(function(){
                 $el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
                 
                 // make html for similar tools found by optimizing BM25 scores using Gradient Descent
-                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of probabilities</h4>", "Weighted probability score", false ) );
+                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of similarities</h4>", "Weighted similarity score", false ) );
                 
                 // plot optimal vs average scores
                 $el_tools.append( "<div id='scatter-optimal-average'></div>" );
                 plotScatterOptimalAverageScores( toolResults, "scatter-optimal-average", selectedToolId );
  
                 $el_tools.append( "<div id='tool-combined-gradient-iterations'></div>" );
-                plotCombinedGradients( toolResults.gradient_io_iteration, toolResults.gradient_nd_iteration, toolResults.gradient_ht_iteration, 'tool-combined-gradient-iterations', selectedToolId );
+                plotCombinedGradients( toolResults.combined_gradients, 'tool-combined-gradient-iterations', selectedToolId );
 
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
@@ -90,7 +89,7 @@ $(document).ready(function(){
                 template += "<div>" + "Help text ( weight_3 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
         }
-        template += "<p>Score = weight_1 * probability_input_output + weight_2 * probability_name_desc_edam_help</p>";
+        template += "<p>Score = weight_1 * similarity_input_output + weight_2 * similarity_name_desc_edam + weight_3 * similarity_help_text </p>";
         template += "</div>";
         return template;
     };
@@ -108,9 +107,9 @@ $(document).ready(function(){
         template += "<th>S.No.</th>";
         template += "<th>Id</th>";
         if ( !isHeader ) {
-            template += "<th> Input output probability score </th>";
-            template += "<th> Name desc. Edam probability score </th>";
-            template += "<th> Help text probability score </th>";
+            template += "<th> Input output similarity score </th>";
+            template += "<th> Name desc. edam similarity score </th>";
+            template += "<th> Help text similarity score </th>";
             template += "<th> " + scoreHeaderText + "</th>";
             template += "<th> Rank </th>";
         }
@@ -153,15 +152,12 @@ $(document).ready(function(){
         return template;
     };
 
-    var plotCombinedGradients = function( dataIOGradients, dataNDGradients, dataHTGradients, $elPlot, selectedToolId ) {
-        var iterations = dataIOGradients.length,
-            xAxis = [],
-            combinedGradients = [];
+    var plotCombinedGradients = function( combinedGradients, $elPlot, selectedToolId ) {
+        var iterations = combinedGradients.length,
+            xAxis = [];
         for( var i = 0; i < iterations; i++ ) {
             xAxis.push( i + 1 );
-            combinedGradients.push( dataIOGradients[ i ] * dataIOGradients[ i ] + dataNDGradients[ i ] * dataNDGradients[ i ] + dataHTGradients[ i ] * dataHTGradients[ i ] );
         }
-        
 	var trace1 = {
 	    x: xAxis,
 	    y: combinedGradients,
@@ -236,7 +232,7 @@ $(document).ready(function(){
 	    y: optimal_scores,
 	    mode: 'markers',
 	    type: 'scatter',
-	    name: 'Optimal probability scores',
+	    name: 'Optimal similarity scores',
 	    text: list_tool_names.list_tools
 	};
 
@@ -245,7 +241,7 @@ $(document).ready(function(){
 	    y: average_scores,
 	    mode: 'markers',
 	    type: 'scatter',
-	    name: 'Average probability scores',
+	    name: 'Average similarity scores',
 	    text: list_tool_names.list_tools
 	};
 
@@ -257,7 +253,7 @@ $(document).ready(function(){
 	    yaxis: {
 	        title: "Similarity score"
 	    },
-	    title:'Scatter plot of optimal and average combination of probability scores for tool: ' + selectedToolId
+	    title:'Scatter plot of optimal and average combination of similarity scores for tool: ' + selectedToolId
 	};
 	Plotly.newPlot( $elPlot, data, layout );
     };
