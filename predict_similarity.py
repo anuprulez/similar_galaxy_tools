@@ -209,7 +209,7 @@ class PredictToolSimilarity:
         """
         training_epochs = 20
         len_tools = len( tools_list )
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=200, negative=5, min_count=1, iter=300, seed=1337, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=100, negative=5, min_count=1, iter=300, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
         for epoch in range( training_epochs ):
             print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
@@ -220,7 +220,8 @@ class PredictToolSimilarity:
             sim_scores = [ ( int( item_id ), score ) for ( item_id, score ) in similarity ]
             sim_scores = sorted( sim_scores, key=operator.itemgetter( ( 0 ) ), reverse=False )
             sim_scores.insert( index, ( index, 0.0 ) )
-            sim_scores = [ score for ( item_id, score ) in sim_scores ]
+            # set the negative similarity to 0, take only positive ones
+            sim_scores = [ score if score > 0.0 else 0.0 for ( item_id, score ) in sim_scores ]
             tools_similarity.append( sim_scores )
         return tools_similarity
 

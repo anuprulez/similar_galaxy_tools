@@ -23,7 +23,7 @@ class ExtractToolXML:
         self.file_extension = '.xml'
         self.base_url = 'https://api.github.com/repos/'
         self.directory = '/data'
-        self.tool_data_filename = 'processed_tools4.csv'
+        self.tool_data_filename = 'processed_tools5.csv'
         # please supply your GitHub's username and password to authenticate yourself
         # in order to be able to read files
         self.auth = auth
@@ -173,17 +173,6 @@ class ExtractToolXML:
                                 file_formats.append( file_format )
                         record[ child.tag ] = '' if file_formats is None else ",".join( file_formats )
                     elif child.tag == 'help':
-                        '''help_text = child.text
-                        help_split = help_text.split( '\n\n' )
-                        for index, item in enumerate( help_split ):
-                            if 'What it does' in item or 'Syntax' in item:
-                                hlp_txt = help_split[ index + 1 ]
-                                list_urls = re.findall( 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', hlp_txt )
-                                if len( list_urls ) > 0:
-                                    for url in list_urls:
-                                        hlp_txt = hlp_txt.replace( url, '' )
-                                record[ child.tag ] = utils._remove_special_chars( hlp_txt )
-                                break'''
                         clean_helptext = ''
                         help_text = child.text
                         help_split = help_text.split( '\n\n' )
@@ -195,14 +184,11 @@ class ExtractToolXML:
                         if clean_helptext == "":
                             clean_helptext = child.text
                         helptext_lines = clean_helptext.split( "." )
-                        helptext_lines = helptext_lines[ :2 ]
+                        helptext_lines = helptext_lines[ :4 ]
                         clean_helptext = " ".join( helptext_lines )
                         clean_helptext = self.clear_urls( clean_helptext )
                         clean_helptext = utils._remove_special_chars( clean_helptext )
-                        if "warningmark" is not in clean_helptext:
-                            record[ child.tag ] = clean_helptext
-                        else:
-                            record[ child.tag ] = ""
+                        record[ child.tag ] = clean_helptext
                     elif child.tag == "edam_topics":
                         for item in child:
                             if item.tag == "edam_topic":

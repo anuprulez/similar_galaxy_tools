@@ -4,8 +4,7 @@ $(document).ready(function(){
 
     var similarityData = null,
         list_tool_names = null,
-        path = "data/similarity_matrix.json";
-        // https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json
+        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json";
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
@@ -55,25 +54,13 @@ $(document).ready(function(){
                 // make html for similar tools found by optimizing BM25 scores using Gradient Descent
                 $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of probabilities</h4>", "Weighted probability score", false ) );
                 
-                // make html for similar tools found using average scores of BM25
-                //$el_tools.append( createHTML( aveToolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found using average probabilities</h4>", "Average probability score", false ) );
-                
                 // plot optimal vs average scores
                 $el_tools.append( "<div id='scatter-optimal-average'></div>" );
                 plotScatterOptimalAverageScores( toolResults, "scatter-optimal-average", selectedToolId );
  
-                //$el_tools.append( "<div id='scatter-optimal-average-top-results'></div>" );
-                //plotScatterOptimalAverageScoresTopResults( toolResults, "scatter-optimal-average-top-results", selectedToolId );
-                
                 $el_tools.append( "<div id='tool-combined-gradient-iterations'></div>" );
                 plotCombinedGradients( toolResults.gradient_io_iteration, toolResults.gradient_nd_iteration, toolResults.gradient_ht_iteration, 'tool-combined-gradient-iterations', selectedToolId );
 
-                //$el_tools.append( "<div id='tool-io-gradient-iterations'></div>" );
-                //plotGradients( toolResults.gradient_io_iteration, "tool-io-gradient-iterations", selectedToolId, "Gradient vs iterations for Input Output" );
-                
-                //$el_tools.append( "<div id='tool-nd-gradient-iterations'></div>" );
-                //plotGradients( toolResults.gradient_nd_iteration, "tool-nd-gradient-iterations", selectedToolId, "Gradient vs iterations for Name Desc" );
-                
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
@@ -197,35 +184,6 @@ $(document).ready(function(){
 	Plotly.newPlot( $elPlot, plotData, layout );
     };
     
-    var plotGradients = function( data, $elPlot, selectedToolId, plotTitle ) {
-        var gradientIterations = data,
-            iterations = gradientIterations.length,
-            x_axis = [];
-        for( var i = 0; i < iterations; i++ ) {
-            x_axis.push( i + 1 );
-        }
-        
-	var trace1 = {
-	    x: x_axis,
-	    y: gradientIterations,
-	    type: 'scatter',
-	    mode: 'lines',
-	    name: 'Gradient drop vs iterations'
-	};
-	
-	var plotData = [ trace1 ];
-	var layout = {
-            title: plotTitle,
-            xaxis: {
-                title: 'Iterations'
-            },
-            yaxis: {
-                title: 'Gradient'
-            }
-        };
-	Plotly.newPlot( $elPlot, plotData, layout );
-    };
-    
     var plotCostVsIterations = function( toolScores, $elPlot, selectedToolId ) {
         var costIterations = toolScores.cost_iterations,
             costUniformTools = toolScores.uniform_cost_tools,
@@ -262,54 +220,6 @@ $(document).ready(function(){
                 title: 'Cost (Learned and average)'
             }
         };
-	Plotly.newPlot( $elPlot, data, layout );
-    };
-    
-    var plotScatterOptimalAverageScoresTopResults = function( scores, $elPlot, selectedToolId ) {
-        var optimal_scores = scores.similar_tools,
-            average_scores = scores.average_similar_tools,
-            x_axis = [],
-            optimal_scores_list = [],
-            average_scores_list = [],
-            optimal_tool_names = [],
-            average_tool_names = [];
-        for( var i = 0, len = optimal_scores.length; i < len; i++ ) {
-            x_axis.push( i + 1 );
-            optimal_scores_list.push( optimal_scores[ i ].score );
-            average_scores_list.push( average_scores[ i ].score );
-            optimal_tool_names.push( optimal_scores[ i ].id );
-            average_tool_names.push( average_scores[ i ].id );
-        }
-        
-        var trace1 = {
-	    x: x_axis,
-	    y: optimal_scores_list,
-	    mode: 'markers',
-	    type: 'scatter',
-	    name: 'Optimal probability scores',
-	    text: optimal_tool_names
-	};
-
-	var trace2 = {
-	    x: x_axis,
-	    y: average_scores_list,
-	    mode: 'markers',
-	    type: 'scatter',
-	    name: 'Average probability scores',
-	    text: average_tool_names
-	};
-
-	var data = [ trace1, trace2 ];
-
-	var layout = {
-	    xaxis: {
-	        title: "Tools"
-	    },
-	    yaxis: {
-	        title: "Similarity score"
-	    },
-	    title:'Scatter plot of optimal and average probability scores using input, output types for tool: ' + selectedToolId
-	};
 	Plotly.newPlot( $elPlot, data, layout );
     };
     

@@ -694,3 +694,7 @@ original
 view
 document
 documentation
+sequence
+sequences
+item
+click
