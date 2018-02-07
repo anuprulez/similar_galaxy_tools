@@ -39,6 +39,12 @@ Now, we have two probability distributions - there is a question of their optima
 Please see this approach working at this [website](https://rawgit.com/anuprulez/similar_galaxy_tools/master/viz/similarity_viz.html).
 Please open this link and wait for few seconds as it loads (a big JSON file) a list of tools. Select your favourite tool and browse through the similar tools which are listed in the descending order of their respective probability scores ('Weighted probability score' column in the table). Moreover, there are a couple of plots showing the optimal combination idea works better than the average approach. Also, it displays loss and gradient drop for the optimizer.
 
+## Text similarity using deep learning
+Rather than using cosine angle similarity for documents, deep learning approaches can be used to find similarity between documents. It learns a vector representation of a document (word embeddings). It is based on the [work](https://cs.stanford.edu/~quocle/paragraph_vector.pdf). A widely used implementation of this approach can be found [here](https://github.com/RaRe-Technologies/gensim ). Using this approach to find similarity between documents and optimizing the similarity scores among multiple sources of annotations, [site](https://rawgit.com/anuprulez/similar_galaxy_tools/doc2vec/viz/similarity_viz.html) displays the similar tools. This approach performs better than LSI approach because more number of similar tools are reported closer.
+
+
+
+
 
 
 
