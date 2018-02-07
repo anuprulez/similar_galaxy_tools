@@ -1,7 +1,4 @@
-
-
-$(document).ready(function(){
-
+$(document).ready(function() {
     var similarityData = null,
         list_tool_names = null,
         path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json";
@@ -9,10 +6,11 @@ $(document).ready(function(){
         console.error( "Error in loading JSON file" );
         return;
     }
+
     $.getJSON( path, function( data ) {
         var toolIdsTemplate = "";
-            list_tool_names = data[ data.length - 1 ]
-            slicedData = data.slice( 0, data.length - 1 );
+        list_tool_names = data[ data.length - 1 ];
+        slicedData = data.slice( 0, data.length - 1 );
         // sort the tools in ascending order of their ids
         similarityData = slicedData.sort(function(a, b) {
             if( a.root_tool.id !== undefined && b.root_tool.id !== undefined ) {
