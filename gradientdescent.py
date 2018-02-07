@@ -65,7 +65,7 @@ class GradientDescentOptimizer:
         Find the optimal step size/learning rate for gradient descent
         """
         eta = 1
-        beta = 0.5
+        beta = 0.3
         alpha = 0.1
         while True:
             eta = beta * eta
