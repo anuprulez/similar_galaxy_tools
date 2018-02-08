@@ -1,7 +1,8 @@
 $(document).ready(function() {
     var similarityData = null,
         list_tool_names = null,
-        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json";
+        path = "data/similarity_matrix.json";
+        // https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
@@ -61,10 +62,7 @@ $(document).ready(function() {
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
-                
-                // plot learning rate vs iterations
-                $el_tools.append( "<div id='learning-rate-iterations'></div>" );
-                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
+
                 availableSimilarTool = true;
                 break;
             }
@@ -180,11 +178,12 @@ $(document).ready(function() {
     
     var plotCostVsIterations = function( toolScores, $elPlot, selectedToolId ) {
         var costIterations = toolScores.cost_iterations,
-            costUniformTools = toolScores.uniform_cost_tools,
             iterations = costIterations.length,
+            costUniformTools = [],
             x_axis = [];
         for( var i = 0; i < iterations; i++ ) {
             x_axis.push( i + 1 );
+            costUniformTools.push( toolScores.uniform_cost_tools );
         }
         
 	var trace1 = {
@@ -253,31 +252,6 @@ $(document).ready(function() {
 	    },
 	    title:'Scatter plot of optimal and average combination of similarity scores for tool: ' + selectedToolId
 	};
-	Plotly.newPlot( $elPlot, data, layout );
-    };
-    
-    var plotLearningRatesVsIterations = function( toolScores, $elPlot, selectedToolId ) {
-        var lrIterations = toolScores.learning_rates_iterations,
-            iterations = lrIterations.length,
-            x_axis = [];
-        for( var i = 0; i < iterations; i++ ) {
-            x_axis.push( i + 1 );
-        }
-	var data = [{
-	    x: x_axis,
-	    y: lrIterations,
-	    type: 'scatter'
-	}];
-	
-	var layout = {
-            title:'Learning rates vs Iterations for the tool: ' + selectedToolId,
-            xaxis: {
-                title: 'Iterations'
-            },
-            yaxis: {
-                title: 'Learning rate / Step size'
-            }
-        };
 	Plotly.newPlot( $elPlot, data, layout );
     };
 });
