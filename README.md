@@ -19,24 +19,27 @@ The tools-keywords matrices are sparse. It contains relevant scores for each key
 
 ## Similarity matrices 
 
-After having these tools-keywords matrices, we compute distances between a pair of tools (now vectors) using Jaccard and Cosine distances. Calculating these distances between each pair of tools gives us a two N x N matrices (correlation or similarity matrices). Each row of a similarity matrix (for a source) denotes similarity scores of each tool with the current tool. Every entry in this matrices is a real number between 0 and 1. 0 means complete dissimilarity and 1 means complete similarity. These similarity matrices are normalized to have two probability distributions. It means that each row in a matrix would sum up to 1.
+After having these tools-keywords matrices, we compute distances between a pair of tools (now vectors) using Jaccard and Cosine distances. Calculating these distances between each pair of tools gives us a two N x N matrices (correlation or similarity matrices). Each row of a similarity matrix (for a source) denotes similarity scores of each tool with the current tool. Every entry in this matrices is a real number between 0 and 1. 0 means complete dissimilarity and 1 means complete similarity. These similarity matrices are normalized to have two similarity distributions. It means that each row in a matrix would sum up to 1.
 
 - [Jaccard similarity](https://www.cs.utah.edu/~jeffp/teaching/cs5955/L4-Jaccard+Shingle.pdf)
 - [Cosine similarity](http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6239224)
 
 ## Optimal combination
 
-Now, we have two probability distributions - there is a question of their optimal combination (a mixture of probabilities). A naive way would be to take an average of the probabilities. Another (and better) approach is to use an optimizer to learn the optimal weights on these two matrices. It is achieved using Gradient Descent optimizer. The learning rate is computed using Backtracking Line Search. For each tool, two scalar weights are learned for its corresponding vectors in two matrices.
+Now, we have two similarity distributions - there is a question of their optimal combination (a mixture of similarities). A naive way would be to take an average of the similarities. Another (and better) approach is to use an optimizer to learn the optimal weights on these two matrices. It is achieved using Gradient Descent optimizer. The learning rate is computed using Backtracking Line Search. For each tool, two scalar weights are learned for its corresponding vectors in two matrices.
 
-![Optimal probability combination](https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/plots/argmax.png)
+![Optimal similarity combination](https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/plots/argmax.png)
 
 - [Gradient descent wiki](https://en.wikipedia.org/wiki/Gradient_descent)
 - [Gradient descent](http://ruder.io/optimizing-gradient-descent/)
-- [Combining probability distributions](https://faculty.fuqua.duke.edu/~clemen/bio/Published%20Papers/28.CombiningDistributions-Clemen&Winkler-RA-99.pdf)
+- [Combining similarity distributions](https://faculty.fuqua.duke.edu/~clemen/bio/Published%20Papers/28.CombiningDistributions-Clemen&Winkler-RA-99.pdf)
+
+### Note
+In the equation (1), it a similarity distribution and not a probability distribution.
 
 ## Results online!
 
-Please see this approach working at this [website](https://rawgit.com/anuprulez/similar_galaxy_tools/master/viz/similarity_viz.html). Another approach using deep learning is [here](https://rawgit.com/anuprulez/similar_galaxy_tools/doc2vec/viz/similarity_viz.html). Please open this link and wait for few seconds as it loads (a big JSON file) a list of tools. Select your favourite tool and browse through the similar tools which are listed in the descending order of their respective probability scores ('Weighted probability score' column in the table). Moreover, there are a couple of plots showing the optimal combination idea works better than the average approach. Also, it displays plots for loss and gradient drop during optimization.
+Please see this approach working at this [website](https://rawgit.com/anuprulez/similar_galaxy_tools/master/viz/similarity_viz.html). Another approach using deep learning is [here](https://rawgit.com/anuprulez/similar_galaxy_tools/doc2vec/viz/similarity_viz.html). Please open this link and wait for few seconds as it loads (a big JSON file) a list of tools. Select your favourite tool and browse through the similar tools which are listed in the descending order of their respective similarity scores ('Weighted similarity score' column in the table). Moreover, there are a couple of plots showing the optimal combination idea works better than the average approach. Also, it displays plots for loss and gradient drop during optimization.
 
 ## Text similarity using deep learning
 
