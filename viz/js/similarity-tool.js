@@ -48,8 +48,8 @@ $(document).ready(function() {
                 // show optimal weights
                 $el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
                 
-                // make html for similar tools found by optimizing BM25 scores using Gradient Descent
-                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of similarities</h4>", "Weighted similarity score", false ) );
+                // make html for similar tools found by optimizing similarity scores using Gradient Descent
+                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of similarity scores from multiple sources</h4>", "Weighted similarity score", false ) );
                 
                 // plot optimal vs average scores
                 $el_tools.append( "<div id='scatter-optimal-average'></div>" );
@@ -61,10 +61,7 @@ $(document).ready(function() {
                 // plot loss drop vs iterations
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
-                
-                // plot learning rate vs iterations
-                $el_tools.append( "<div id='learning-rate-iterations'></div>" );
-                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
+
                 availableSimilarTool = true;
                 break;
             }
@@ -78,16 +75,16 @@ $(document).ready(function() {
         var template = "";
         for( var item in weights ) {
             if( item === "input_output" ) {
-                template += "<div>" + "Input and output file types ( weight_1 ): <b>" + toPrecisionNumber( weights[ item ] ) + "</b></div>";
+                template += "<div>" + "Input and output file types ( weight1 ): <b>" + toPrecisionNumber( weights[ item ] ) + "</b></div>";
             }
             else if( item === "name_desc_edam" ) {
-                template += "<div>" + "Name, description and EDAM ( weight_2 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+                template += "<div>" + "Name, description and EDAM ( weight2 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
             else if( item === "help_text" ) {
-                template += "<div>" + "Help text ( weight_3 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+                template += "<div>" + "Help text ( weight3 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
         }
-        template += "<p>Score = weight_1 * similarity_input_output + weight_2 * similarity_name_desc_edam + weight_3 * similarity_help_text </p>";
+        template += "<p>Score = weight1 * similarity_input_output + weight2 * similarity_name_desc_edam + weight3 * similarity_help_text </p>";
         template += "</div>";
         return template;
     };
@@ -105,30 +102,30 @@ $(document).ready(function() {
         template += "<th>S.No.</th>";
         template += "<th>Id</th>";
         if ( !isHeader ) {
-            template += "<th> Input output similarity score </th>";
-            template += "<th> Name desc. edam similarity score </th>";
-            template += "<th> Help text similarity score </th>";
+            template += "<th> Input and Output </th>";
+            template += "<th> Name, Desc. and EDAM  </th>";
+            template += "<th> Help text  </th>";
             template += "<th> " + scoreHeaderText + "</th>";
             template += "<th> Rank </th>";
         }
         template += "<th> Name and description </th>";
         template += "<th> Input files </th>";
         template += "<th> Output files </th>";
-        template += "<th> Help text (what it does) </th>";
+        template += "<th> Help text </th>";
         template += "<th> EDAM </th>";
         template += "</thead><tbody>";
         
-        for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
-            var tool = toolScores[ counter_ts ],
+        for( var counter = 0, len = toolScores.length; counter < len; counter++ ) {
+            var tool = toolScores[ counter ],
                 toolScore = tool.score,
                 rank = 0,
                 helpText = tool.what_it_does,
                 nameDesc = tool.name_description,
-                showHelpText = ( helpText.length > maxShowStringLen && !isHeader ) ? helpText.substring(0, maxShowStringLen) + "..." : helpText;
+                showHelpText = ( helpText.length > maxShowStringLen && !isHeader ) ? helpText.substring( 0, maxShowStringLen ) + "..." : helpText;
 
-            rank = ( prevScore === toolScore ) ? prevRank : parseInt( counter_ts + 1 );
+            rank = ( prevScore === toolScore ) ? prevRank : parseInt( counter + 1 );
             template += "<tr>";
-            template += "<td>" + parseInt( counter_ts + 1 ) + "</td>";
+            template += "<td>" + parseInt( counter + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
             if ( !isHeader ) {
                 template += "<td>" + tool.input_output_score + "</td>";
@@ -180,11 +177,12 @@ $(document).ready(function() {
     
     var plotCostVsIterations = function( toolScores, $elPlot, selectedToolId ) {
         var costIterations = toolScores.cost_iterations,
-            costUniformTools = toolScores.uniform_cost_tools,
             iterations = costIterations.length,
+            costUniformTools = [],
             x_axis = [];
         for( var i = 0; i < iterations; i++ ) {
             x_axis.push( i + 1 );
+            costUniformTools.push( toolScores.uniform_cost_tools );
         }
         
 	var trace1 = {
@@ -253,31 +251,6 @@ $(document).ready(function() {
 	    },
 	    title:'Scatter plot of optimal and average combination of similarity scores for tool: ' + selectedToolId
 	};
-	Plotly.newPlot( $elPlot, data, layout );
-    };
-    
-    var plotLearningRatesVsIterations = function( toolScores, $elPlot, selectedToolId ) {
-        var lrIterations = toolScores.learning_rates_iterations,
-            iterations = lrIterations.length,
-            x_axis = [];
-        for( var i = 0; i < iterations; i++ ) {
-            x_axis.push( i + 1 );
-        }
-	var data = [{
-	    x: x_axis,
-	    y: lrIterations,
-	    type: 'scatter'
-	}];
-	
-	var layout = {
-            title:'Learning rates vs Iterations for the tool: ' + selectedToolId,
-            xaxis: {
-                title: 'Iterations'
-            },
-            yaxis: {
-                title: 'Learning rate / Step size'
-            }
-        };
 	Plotly.newPlot( $elPlot, data, layout );
     };
 });

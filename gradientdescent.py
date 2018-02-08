@@ -3,7 +3,6 @@ Performs optimization to find optimal importance weights for the sources
 of tokens using Gradient Descent
 """
 import numpy as np
-import random
 
 
 class GradientDescentOptimizer:
@@ -11,7 +10,7 @@ class GradientDescentOptimizer:
     @classmethod
     def __init__( self, number_iterations ):
         self.number_iterations = number_iterations
-        self.sources = [ 'input_output', 'name_desc_edam', "help_text" ]
+        self.sources = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.best_similarity_score = 1.0
 
     @classmethod
@@ -33,14 +32,14 @@ class GradientDescentOptimizer:
         for source in weights:
             weights[ source ] = weights[ source ] / float( sum_weights )
         return weights
-        
+
     @classmethod
     def compute_combined_cost( self, cost ):
         """
         Compute combined gradient for the sources
         """
         return np.sqrt( np.sum( [ item for item in cost ] ) )
-            
+
     @classmethod
     def check_optimality_cost( self, cost, previous_cost=None ):
         """
@@ -103,7 +102,7 @@ class GradientDescentOptimizer:
         return loss, uniform_loss
 
     @classmethod
-    def gradient_descent( self, similarity_matrix_prob, similarity_matrix_original, tools_list ):
+    def gradient_descent( self, similarity_matrix, tools_list ):
         """
         Apply gradient descent optimizer to find the weights for the sources of annotations of tools
         """
@@ -135,9 +134,9 @@ class GradientDescentOptimizer:
                 uniform_cost_sources = list()
                 tool_similarity_scores = dict()
                 # compute gradient, loss and update weight for each source
-                for source in similarity_matrix_prob:
+                for source in similarity_matrix:
                     weight = weights[ source ]
-                    tools_score_source = similarity_matrix_prob[ source ][ tool_index ]
+                    tools_score_source = similarity_matrix[ source ][ tool_index ]
                     tool_similarity_scores[ source ] = tools_score_source
                     # compute maximum possible scores that a weighted probability can reach
                     # in order to calculate the losses
@@ -154,11 +153,6 @@ class GradientDescentOptimizer:
                     gradient = np.dot( tools_score_source, loss )
                     # gather gradient for a source
                     sources_gradient[ source ] = gradient
-                # define a point when to stop learning
-                is_optimal = self.check_optimality_cost( cost_sources, previous_cost )
-                if is_optimal is True:
-                    print "optimal weights learned in %d iterations" % iteration
-                    break
                 mean_cost = np.mean( cost_sources )
                 # compute learning rate using line search
                 learning_rate = self.backtracking_line_search( weights, sources_gradient, tool_similarity_scores, num_all_tools, ideal_score_sources )
@@ -172,6 +166,11 @@ class GradientDescentOptimizer:
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
                 # update weights
                 weights = self.update_weights( weights, sources_gradient, learning_rate )
+                # define a point when to stop learning
+                is_optimal = self.check_optimality_cost( cost_sources, previous_cost )
+                if is_optimal is True:
+                    print "optimal weights learned in %d iterations" % iteration
+                    break
                 previous_cost = cost_sources
             # optimal weights learned
             print weights
@@ -179,6 +178,6 @@ class GradientDescentOptimizer:
             tools_optimal_weights[ tool_id ] = weights
             learning_rates[ tool_id ] = lr_iteration
             cost_tools[ tool_id ] = cost_iteration
-            uniform_cost_tools[ tool_id ] = uniform_cost_iteration
+            uniform_cost_tools[ tool_id ] = uniform_cost_iteration[ 0 ]
             gradients[ tool_id ] = { self.sources[ 0 ]: gradient_io_iteration, self.sources[ 1 ]: gradient_nd_iteration, self.sources[ 2 ]: gradient_ht_iteration }
         return tools_optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients
