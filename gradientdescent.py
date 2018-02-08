@@ -10,7 +10,7 @@ class GradientDescentOptimizer:
     @classmethod
     def __init__( self, number_iterations ):
         self.number_iterations = number_iterations
-        self.sources = [ 'input_output', 'name_desc_edam', "help_text" ]
+        self.sources = [ 'input_output', 'name_desc_edam' ]
         self.best_similarity_score = 1.0
 
     @classmethod
@@ -162,7 +162,7 @@ class GradientDescentOptimizer:
                 # gather gradients
                 gradient_io_iteration.append( sources_gradient[ self.sources[ 0 ] ] )
                 gradient_nd_iteration.append( sources_gradient[ self.sources[ 1 ] ] )
-                gradient_ht_iteration.append( sources_gradient[ self.sources[ 2 ] ] )
+                #gradient_ht_iteration.append( sources_gradient[ self.sources[ 2 ] ] )
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
                 # update weights
                 weights = self.update_weights( weights, sources_gradient, learning_rate )
@@ -179,5 +179,5 @@ class GradientDescentOptimizer:
             learning_rates[ tool_id ] = lr_iteration
             cost_tools[ tool_id ] = cost_iteration
             uniform_cost_tools[ tool_id ] = uniform_cost_iteration[ 0 ]
-            gradients[ tool_id ] = { self.sources[ 0 ]: gradient_io_iteration, self.sources[ 1 ]: gradient_nd_iteration, self.sources[ 2 ]: gradient_ht_iteration }
+            gradients[ tool_id ] = { self.sources[ 0 ]: gradient_io_iteration, self.sources[ 1 ]: gradient_nd_iteration }
         return tools_optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients
