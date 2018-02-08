@@ -1,6 +1,6 @@
 # Predict similar tools for Galaxy tools
 
-This work aims at finding similar tools for the Galaxy tools using a combination of data mining and mathematical approaches. The program analyses the information about a tool and extracts keywords (annotations or tokens) which represent that tool. This information is divided into two sources - input and output file types and name, description and help text. The keywords are cleaned for stop words in English, special characters and numbers. This pre-processing is necessary because in order to construct a set of keywords that are a better representative of a tool.
+This work aims at finding similar tools for the Galaxy tools using a combination of approaches from the field of data mining and machine learning. The script analyses the attributes (like name, description, file types and so on) of tools and extracts keywords (annotations or tokens) which represent the tools. This information is divided into two/three sources - input and output file types and name, description and help text. The keywords are cleaned for stop words in English, special characters and numbers. This pre-processing is necessary because in order to construct a set of keywords that are a better representative of a tool. Since these sources do not carry equal weights (they are not equally important in classifying tools) in representing tools, we need to learn weights on these sources of annotations and compute a weighted similarity score for each tool against all tools. This weighting is achieved using an optimizer (Gradient Descent).
 
 ## Term frequency and inverted document frequency
 
@@ -44,7 +44,6 @@ Please see this approach working at this [website](https://rawgit.com/anuprulez/
 ## Text similarity using deep learning
 
 Rather than using cosine angle similarity for documents, deep learning approaches can be used to find similarity between documents. It learns a vector representation of a document (word embeddings). It is based on the [work](https://cs.stanford.edu/~quocle/paragraph_vector.pdf). A widely used implementation of this approach can be found [here](https://github.com/RaRe-Technologies/gensim ). Using this approach to find similarity between documents and optimizing the similarity scores among multiple sources of annotations, this [site](https://rawgit.com/anuprulez/similar_galaxy_tools/doc2vec/viz/similarity_viz.html) displays the similar tools. This approach performs better than LSI approach because more number of similar tools are reported closer.
-
 
 
 
