@@ -68,8 +68,8 @@ class PredictToolSimilarity:
             tokens = utils._restore_space( utils._get_text( row, "name" ) ) + ' '
             tokens += utils._restore_space( utils._get_text( row, "description" ) ) + ' '
             tokens += utils._get_text( row, "edam_topics" )
-        elif source == 'help_text':
-            tokens += utils._get_text( row, "help" )
+        elif source == "help_text":
+            tokens = utils._get_text( row, "help" )
         return utils._remove_special_chars( tokens )
 
     @classmethod
@@ -303,13 +303,14 @@ class PredictToolSimilarity:
             scores = list()
             root_tool = {}
             tool_id = tools_list[ index ]
-            # row of similarity scores for a tool against all tools
+            # row of similarity scores for a tool against all tools for all sources
             row_input_output = original_matrix[ self.data_source[ 0 ] ][ index ]
             row_name_desc = original_matrix[ self.data_source[ 1 ] ][ index ]
             row_help_text = original_matrix[ self.data_source[ 2 ] ][ index ]
             # sum the scores from multiple sources
             average_normalized_scores = [ ( x + y + z ) / len_datasources for x, y, z in zip( row_input_output, row_name_desc, row_help_text ) ]
             optimal_normalized_scores = item.tolist()
+            # gradients for all the sources
             tool_gradients = gradients[ tool_id ]
             io_gradient = tool_gradients[ self.data_source[ 0 ] ]
             nd_gradient = tool_gradients[ self.data_source[ 1 ] ]
@@ -322,8 +323,7 @@ class PredictToolSimilarity:
                 input_output_score = row_input_output[ tool_index ]
                 # similarity score with name, desc etc attributes
                 name_desc_edam_score = row_name_desc[ tool_index ]
-                # similarity score with help text
-                helptext_score = row_help_text[ tool_index ]
+                help_text_score = row_help_text[ tool_index ]
                 record = {
                    "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
                    "id": rowj[ "id" ],
@@ -334,7 +334,7 @@ class PredictToolSimilarity:
                    "score": score,
                    "input_output_score": input_output_score,
                    "name_desc_edam_score": name_desc_edam_score,
-                   "help_text_score": helptext_score
+                   "help_text_score": help_text_score
                 }
                 if rowj[ "id" ] == tool_id:
                     root_tool = record

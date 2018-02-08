@@ -10,7 +10,7 @@ class GradientDescentOptimizer:
     @classmethod
     def __init__( self, number_iterations ):
         self.number_iterations = number_iterations
-        self.sources = [ 'input_output', 'name_desc_edam', "help_text" ]
+        self.sources = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.best_similarity_score = 1.0
 
     @classmethod
@@ -150,7 +150,7 @@ class GradientDescentOptimizer:
                     cost_sources.append( squared_loss )
                     uniform_cost_sources.append( squared_uniform_loss )
                     # compute average gradient
-                    gradient = np.dot( tools_score_source, loss ) / num_all_tools
+                    gradient = np.dot( tools_score_source, loss )
                     # gather gradient for a source
                     sources_gradient[ source ] = gradient
                 mean_cost = np.mean( cost_sources )

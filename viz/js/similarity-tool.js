@@ -1,8 +1,7 @@
 $(document).ready(function() {
     var similarityData = null,
         list_tool_names = null,
-        path = "data/similarity_matrix.json";
-        // https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json
+        path = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json";
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
@@ -76,16 +75,16 @@ $(document).ready(function() {
         var template = "";
         for( var item in weights ) {
             if( item === "input_output" ) {
-                template += "<div>" + "Input and output file types ( weight_1 ): <b>" + toPrecisionNumber( weights[ item ] ) + "</b></div>";
+                template += "<div>" + "Input and output file types ( weight1 ): <b>" + toPrecisionNumber( weights[ item ] ) + "</b></div>";
             }
             else if( item === "name_desc_edam" ) {
-                template += "<div>" + "Name, description and EDAM ( weight_2 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+                template += "<div>" + "Name, description and EDAM ( weight2 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
             else if( item === "help_text" ) {
-                template += "<div>" + "Help text ( weight_3 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
+                template += "<div>" + "Help text ( weight3 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
         }
-        template += "<p>Score = weight_1 * similarity_input_output + weight_2 * similarity_name_desc_edam + weight_3 * similarity_help_text </p>";
+        template += "<p>Score = weight1 * similarity_input_output + weight2 * similarity_name_desc_edam + weight3 * similarity_help_text </p>";
         template += "</div>";
         return template;
     };
@@ -105,7 +104,7 @@ $(document).ready(function() {
         if ( !isHeader ) {
             template += "<th> Input and Output </th>";
             template += "<th> Name, Desc. and EDAM  </th>";
-            template += "<th> Help text </th>";
+            template += "<th> Help text  </th>";
             template += "<th> " + scoreHeaderText + "</th>";
             template += "<th> Rank </th>";
         }
@@ -116,17 +115,17 @@ $(document).ready(function() {
         template += "<th> EDAM </th>";
         template += "</thead><tbody>";
         
-        for( var counter_ts = 0, len_ts = toolScores.length; counter_ts < len_ts; counter_ts++ ) {
-            var tool = toolScores[ counter_ts ],
+        for( var counter = 0, len = toolScores.length; counter < len; counter++ ) {
+            var tool = toolScores[ counter ],
                 toolScore = tool.score,
                 rank = 0,
                 helpText = tool.what_it_does,
                 nameDesc = tool.name_description,
-                showHelpText = ( helpText.length > maxShowStringLen && !isHeader ) ? helpText.substring(0, maxShowStringLen) + "..." : helpText;
+                showHelpText = ( helpText.length > maxShowStringLen && !isHeader ) ? helpText.substring( 0, maxShowStringLen ) + "..." : helpText;
 
-            rank = ( prevScore === toolScore ) ? prevRank : parseInt( counter_ts + 1 );
+            rank = ( prevScore === toolScore ) ? prevRank : parseInt( counter + 1 );
             template += "<tr>";
-            template += "<td>" + parseInt( counter_ts + 1 ) + "</td>";
+            template += "<td>" + parseInt( counter + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
             if ( !isHeader ) {
                 template += "<td>" + tool.input_output_score + "</td>";
