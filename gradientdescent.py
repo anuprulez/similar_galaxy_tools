@@ -10,7 +10,7 @@ class GradientDescentOptimizer:
     @classmethod
     def __init__( self, number_iterations ):
         self.number_iterations = number_iterations
-        self.sources = [ 'input_output', 'name_desc_edam', "help_text" ]
+        self.sources = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.best_similarity_score = 1.0
 
     @classmethod

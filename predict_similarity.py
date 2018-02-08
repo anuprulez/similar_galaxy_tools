@@ -21,7 +21,7 @@ class PredictToolSimilarity:
 
     @classmethod
     def __init__( self, tools_data_path ):
-        self.data_source = [ 'input_output', 'name_desc_edam', "help_text" ]
+        self.data_source = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.tools_data_path = tools_data_path
         self.tools_show = 20
 
@@ -208,7 +208,7 @@ class PredictToolSimilarity:
         """
         training_epochs = 20
         len_tools = len( tools_list )
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=200, negative=5, min_count=1, iter=400, window=15, alpha=1e-1, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=200, negative=5, min_count=1, iter=400, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
         for epoch in range( training_epochs ):
             print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
@@ -305,8 +305,7 @@ class PredictToolSimilarity:
                 input_output_score = row_input_output[ tool_index ]
                 # similarity score with name, desc etc attributes
                 name_desc_edam_score = row_name_desc[ tool_index ]
-                # similarity score with help text
-                helptext_score = row_help_text[ tool_index ]
+                help_text_score = row_help_text[ tool_index ]
                 record = {
                    "name_description": rowj[ "name" ] + " " + ( utils._get_text( rowj, "description" ) ),
                    "id": rowj[ "id" ],
@@ -317,7 +316,7 @@ class PredictToolSimilarity:
                    "score": score,
                    "input_output_score": input_output_score,
                    "name_desc_edam_score": name_desc_edam_score,
-                   "help_text_score": helptext_score
+                   "help_text_score": help_text_score
                 }
                 if rowj[ "id" ] == tool_id:
                     root_tool = record
@@ -377,8 +376,8 @@ if __name__ == "__main__":
 
     distance_dict = dict()
     distance_dict[ "name_desc_edam" ] = learned_simiarity_matrix_nd
-    distance_dict[ "input_output" ] = input_output_distance_matrix
     distance_dict[ "help_text" ] = learned_simiarity_matrix_ht
+    distance_dict[ "input_output" ] = input_output_distance_matrix
 
     print "Converting similarity as similarity distributions..."
     similarity_as_list = tool_similarity.convert_similarity_as_list( distance_dict, tools_list )
