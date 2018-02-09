@@ -64,7 +64,7 @@ class GradientDescentOptimizer:
         Find the optimal step size/learning rate for gradient descent
         """
         eta = 1
-        beta = 0.3
+        beta = 0.7
         alpha = 0.1
         while True:
             eta = beta * eta
@@ -102,7 +102,7 @@ class GradientDescentOptimizer:
         return loss, uniform_loss
 
     @classmethod
-    def gradient_descent( self, similarity_matrix, tools_list ):
+    def gradient_descent( self, similarity_matrix, similarity_matrix_original, tools_list ):
         """
         Apply gradient descent optimizer to find the weights for the sources of annotations of tools
         """
@@ -138,9 +138,12 @@ class GradientDescentOptimizer:
                     weight = weights[ source ]
                     tools_score_source = similarity_matrix[ source ][ tool_index ]
                     tool_similarity_scores[ source ] = tools_score_source
+                    tools_score_original = similarity_matrix_original[ source ][ tool_index ]
+                    row_sum = np.sum( tools_score_original )
+                    row_sum = float( row_sum ) if row_sum > 0.0 else 1.0
                     # compute maximum possible scores that a weighted probability can reach
                     # in order to calculate the losses
-                    ideal_tool_score = np.repeat( self.best_similarity_score, num_all_tools )
+                    ideal_tool_score = np.repeat( self.best_similarity_score / row_sum, num_all_tools )
                     ideal_score_sources[ source ] = ideal_tool_score
                     # compute losses
                     loss, uniform_loss = self.compute_loss( weight, uniform_weight, tools_score_source, ideal_tool_score )

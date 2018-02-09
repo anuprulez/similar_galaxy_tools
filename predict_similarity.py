@@ -77,10 +77,11 @@ class PredictToolSimilarity:
         """
         Reject tokens which have low TF-IDF scores i.e. outliers
         """
+        times_std = 2
         scores = [ score for ( token, score ) in tokens_list ]
         standard_deviation = np.std( scores )
         mean = np.mean( scores )
-        shortened_tokens_list = [ ( token, score ) for ( token, score ) in tokens_list if ( abs( score - mean ) < 2 * standard_deviation ) ]
+        shortened_tokens_list = [ ( token, score ) for ( token, score ) in tokens_list if ( abs( score - mean ) < times_std * standard_deviation ) ]
         return shortened_tokens_list
 
     @classmethod
@@ -245,12 +246,15 @@ class PredictToolSimilarity:
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
                 tool_scores = sim_scores[ index_x ]
+                # frequencies should be taken as positive or 0
+                item_x_positive = item_x.clip( min=0 )
                 for index_y, item_y in enumerate( sim_mat ):
+                    item_y_positive = item_y.clip( min=0 )
                     # compute similarity scores between two vectors
                     if source == "input_output":
-                        pair_score = utils._jaccard_score( item_x, item_y )
+                        pair_score = utils._jaccard_score( item_x_positive, item_y_positive )
                     else:
-                        pair_score = utils._cosine_angle_score( item_x, item_y )
+                        pair_score = utils._cosine_angle_score( item_x_positive, item_y_positive )
                     tool_scores[ index_y ] = pair_score
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
@@ -267,8 +271,10 @@ class PredictToolSimilarity:
             similarity_matrix = similarity_matrix_sources[ source ]
             for index in range( all_tools_len ):
                 row = similarity_matrix[ index ]
+                row_sum = np.sum( row )
+                row_sum = float( row_sum ) if row_sum > 0.0 else 1.0
                 # take only positive values
-                similarity_matrix_prob_dist[ index ][ : ] = [ item if item > 0.0 else 0.0 for item in row ]
+                similarity_matrix_prob_dist[ index ][ : ] = [ item / row_sum for item in row ]
             similarity_matrix_prob_dist_sources[ source ] = similarity_matrix_prob_dist
         return similarity_matrix_prob_dist_sources
 
@@ -394,7 +400,7 @@ if __name__ == "__main__":
 
     print "Learning optimal weights..."
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
-    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_as_list, files_list )
+    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_as_list, tools_distance_matrix, files_list )
 
     print "Assign importance to tools similarity matrix..."
     similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_as_list, files_list, optimal_weights )
