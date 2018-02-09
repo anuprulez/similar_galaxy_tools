@@ -174,10 +174,11 @@ class PredictToolSimilarity:
         """
         Reject tokens which have low TF-IDF scores i.e. outliers
         """
+        times_std = 2
         scores = [ score for ( token, score ) in tokens_list ]
         standard_deviation = np.std( scores )
         mean = np.mean( scores )
-        shortened_tokens_list = [ token for ( token, score ) in tokens_list if ( abs( score - mean ) < 2 * standard_deviation ) ]
+        shortened_tokens_list = [ token for ( token, score ) in tokens_list if ( abs( score - mean ) < times_std * standard_deviation ) ]
         return shortened_tokens_list
 
     @classmethod

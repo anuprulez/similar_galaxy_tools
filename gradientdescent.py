@@ -162,7 +162,6 @@ class GradientDescentOptimizer:
                 # gather gradients
                 gradient_io_iteration.append( sources_gradient[ self.sources[ 0 ] ] )
                 gradient_nd_iteration.append( sources_gradient[ self.sources[ 1 ] ] )
-                #gradient_ht_iteration.append( sources_gradient[ self.sources[ 2 ] ] )
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
                 # update weights
                 weights = self.update_weights( weights, sources_gradient, learning_rate )
