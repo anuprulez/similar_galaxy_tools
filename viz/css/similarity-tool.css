@@ -18,3 +18,12 @@
     margin-top: 2%;
     width: 100%;
 }
+
+.loading-msg {
+    font-weight: bold;
+    margin-left: 38%;
+}
+
+.loading-image {
+    margin-left: 43%;
+}

@@ -3,14 +3,16 @@ $(document).ready(function() {
         list_tool_names = null,
         pathLocal = "data/similarity_matrix.json",
         pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json",
-        path = pathOnline;
+        path = pathOnline,
+        $elLoader = $( ".loader-place" );
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
     }
-
+    $elLoader.show();
     $.getJSON( path, function( data ) {
         var toolIdsTemplate = "";
+        $elLoader.hide();
         list_tool_names = data[ data.length - 1 ];
         slicedData = data.slice( 0, data.length - 1 );
         // sort the tools in ascending order of their ids
