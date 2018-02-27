@@ -41,9 +41,9 @@ Now, we have two similarity distributions - there is a question of their optimal
 - [Gradient descent](http://ruder.io/optimizing-gradient-descent/)
 - [Combining similarity distributions](https://faculty.fuqua.duke.edu/~clemen/bio/Published%20Papers/28.CombiningDistributions-Clemen&Winkler-RA-99.pdf)
 
-## Text similarity using neural network
+## Text similarity using neural network (document embeddings)
 
-Rather than using cosine angle similarity for documents, neural network approaches can be used to find similarity among documents. They learn vector representations of documents (document embeddings). One of these approaches is [doc2vec](https://cs.stanford.edu/~quocle/paragraph_vector.pdf) and its [review](https://arxiv.org/pdf/1607.05368.pdf). A widely used implementation of this approach is [here](https://github.com/RaRe-Technologies/gensim ). This approach is used to find similarity among documents and these similarity scores are combined using an optimizer. 
+Rather than using cosine angle similarity for documents, a learning-based approach known as [doc2vec](https://cs.stanford.edu/~quocle/paragraph_vector.pdf) is used to compute fixed length vector representations (document embeddings) for each document. These vector representations (one for each document) can be used to find its proximity to all other document using popular vector distance metrics. The basic principle of this work is to maximize the conditional probability of a word given a set of words chosen randomly using a window. There is a [review](https://arxiv.org/pdf/1607.05368.pdf) work of the original work which gives useful insights into the results achieved by the original work. A widely used implementation of this approach is [here](https://github.com/RaRe-Technologies/gensim ). We use this approach to find similarity scores among documents and these similarity scores (from multiple sources) are combined using an optimizer for each document.
 
 ## Results online!
 
