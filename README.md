@@ -49,3 +49,20 @@ Rather than using cosine angle similarity for documents, a learning-based approa
 
 The results following this approach is [here](https://rawgit.com/anuprulez/similar_galaxy_tools/master/viz/similarity_viz.html). Another approach which uses latent semantic indexing to find document embedding is [here](https://rawgit.com/anuprulez/similar_galaxy_tools/lsi/viz/similarity_viz.html). Please open these links and wait for a few seconds as they load (a big JSON file) a list of tools. Select your favourite tool and browse through the similar tools which are listed in the descending order of their respective similarity scores ('Weighted similarity score' column in the table). Moreover, there are a couple of plots showing the idea of computing optimal combination works better than the average approach. Moreover, they display plots for loss and gradient drop while optimizing the weights.
 
+## Citations:
+
+@inproceedings{rehurek_lrec,
+      title = {{Software Framework for Topic Modelling with Large Corpora}},
+      author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},
+      booktitle = {{Proceedings of the LREC 2010 Workshop on New
+           Challenges for NLP Frameworks}},
+      pages = {45--50},
+      year = 2010,
+      month = May,
+      day = 22,
+      publisher = {ELRA},
+      address = {Valletta, Malta},
+      note={\url{http://is.muni.cz/publication/884893/en}},
+      language={English}
+}
+
