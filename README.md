@@ -36,6 +36,7 @@ After having these tools-keywords matrices, we compute distances between a pair 
 Now, we have two similarity distributions - there is a question of their optimal combination (a mixture of similarities). A naive way would be to take an average of the similarities. Another (and better) approach is to use an optimizer to learn the optimal weights on these two matrices. It is achieved using Gradient Descent optimizer. The learning rate is computed using Backtracking Line Search. For each tool, two scalar weights are learned for its corresponding vectors in two matrices.
 
 ![Optimal similarity combination](https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/plots/argmax.png)
+![Minimize](https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/plots/minimize.png)
 
 - [Gradient descent wiki](https://en.wikipedia.org/wiki/Gradient_descent)
 - [Gradient descent](http://ruder.io/optimizing-gradient-descent/)
