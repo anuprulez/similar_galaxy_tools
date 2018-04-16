@@ -1,6 +1,6 @@
 # Predict similar tools for Galaxy tools
 
-This work aims at finding similar tools for the Galaxy tools using a combination of approaches from the field of data mining and machine learning. The script analyses the attributes (like name, description, file types and so on) of tools and extracts keywords (annotations or tokens) which represent the tools. This information is divided into two/three sources - input and output file types and name, description and help text. The keywords are cleaned for stop words in English, special characters and numbers. This pre-processing is necessary because in order to construct a set of keywords to better represent a tool. Since these sources do not carry equal weights (they are not equally important in classifying tools) in representing tools, we need to learn weights on these sources of annotations and compute a weighted similarity score for each tool against all tools. This weighting is achieved using an optimizer (Gradient Descent).
+This work aims at finding similar tools for the Galaxy tools using a combination of approaches from the field of data mining and machine learning. The script analyses the attributes (like name, description, file types and so on) of tools and extracts keywords (annotations or tokens) which represent the tools. This information is divided into two/three sources - input and output file types and name, description and help text. The keywords are cleaned for stop words in English, special characters and numbers. This pre-processing is necessary in order to construct a set of keywords to better represent a tool. Since these sources do not carry equal weights (they are not equally important in classifying tools) in representing tools, we need to learn weights on these sources of annotations and compute a weighted similarity score for each tool against all tools. This weighting is achieved using an optimizer (Gradient Descent).
 
 ## The major steps in finding similar tools:
 - Extract tools' data from GitHub (Galaxy tools).
@@ -36,16 +36,34 @@ After having these tools-keywords matrices, we compute distances between a pair 
 Now, we have two similarity distributions - there is a question of their optimal combination (a mixture of similarities). A naive way would be to take an average of the similarities. Another (and better) approach is to use an optimizer to learn the optimal weights on these two matrices. It is achieved using Gradient Descent optimizer. The learning rate is computed using Backtracking Line Search. For each tool, two scalar weights are learned for its corresponding vectors in two matrices.
 
 ![Optimal similarity combination](https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/plots/argmax.png)
+![Minimize](https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/plots/minimize.png)
 
 - [Gradient descent wiki](https://en.wikipedia.org/wiki/Gradient_descent)
 - [Gradient descent](http://ruder.io/optimizing-gradient-descent/)
 - [Combining similarity distributions](https://faculty.fuqua.duke.edu/~clemen/bio/Published%20Papers/28.CombiningDistributions-Clemen&Winkler-RA-99.pdf)
 
-## Text similarity using neural network
+## Text similarity using neural network (document embeddings)
 
-Rather than using cosine angle similarity for documents, neural network approaches can be used to find similarity among documents. They learn vector representations of documents (document embeddings). One of these approaches is [doc2vec](https://cs.stanford.edu/~quocle/paragraph_vector.pdf) and its [review](https://arxiv.org/pdf/1607.05368.pdf). A widely used implementation of this approach is [here](https://github.com/RaRe-Technologies/gensim ). This approach is used to find similarity among documents and these similarity scores are combined using an optimizer. 
+Rather than using cosine angle similarity for documents, a learning-based approach known as [doc2vec](https://cs.stanford.edu/~quocle/paragraph_vector.pdf) is used to compute fixed length vector representations (document embeddings) for each document. These vector representations (one for each document) can be used to find its proximity to all other documents using popular vector distance metrics. The basic principle of this work is to predict a word given a set of words. There is a [review](https://arxiv.org/pdf/1607.05368.pdf) work of the original work which gives useful insights into the results achieved by the original work. A widely used implementation of this approach is [here](https://github.com/RaRe-Technologies/gensim ). We use this approach to find similarity scores among documents and these similarity scores (from multiple sources) are combined using an optimizer for each document.
 
 ## Results online!
 
 The results following this approach is [here](https://rawgit.com/anuprulez/similar_galaxy_tools/master/viz/similarity_viz.html). Another approach which uses latent semantic indexing to find document embedding is [here](https://rawgit.com/anuprulez/similar_galaxy_tools/lsi/viz/similarity_viz.html). Please open these links and wait for a few seconds as they load (a big JSON file) a list of tools. Select your favourite tool and browse through the similar tools which are listed in the descending order of their respective similarity scores ('Weighted similarity score' column in the table). Moreover, there are a couple of plots showing the idea of computing optimal combination works better than the average approach. Moreover, they display plots for loss and gradient drop while optimizing the weights.
+
+## Citations:
+
+@inproceedings{rehurek_lrec,
+      title = {{Software Framework for Topic Modelling with Large Corpora}},
+      author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},
+      booktitle = {{Proceedings of the LREC 2010 Workshop on New
+           Challenges for NLP Frameworks}},
+      pages = {45--50},
+      year = 2010,
+      month = May,
+      day = 22,
+      publisher = {ELRA},
+      address = {Valletta, Malta},
+      note={\url{http://is.muni.cz/publication/884893/en}},
+      language={English}
+}
 

@@ -3,14 +3,16 @@ $(document).ready(function() {
         list_tool_names = null,
         pathLocal = "data/similarity_matrix.json",
         pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json",
-        path = pathOnline;
+        path = pathOnline,
+        $elLoader = $( ".loader-place" );
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
     }
-
+    $elLoader.show();
     $.getJSON( path, function( data ) {
         var toolIdsTemplate = "";
+        $elLoader.hide();
         list_tool_names = data[ data.length - 1 ];
         slicedData = data.slice( 0, data.length - 1 );
         // sort the tools in ascending order of their ids
@@ -48,7 +50,7 @@ $(document).ready(function() {
                 // make html for the selected tool
                 $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );
                 // show optimal weights
-                $el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
+                // $el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
                 
                 // make html for similar tools found by optimizing similarity scores using Gradient Descent
                 $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of similarity scores from multiple sources</h4>", "Weighted similarity score", false ) );
@@ -104,9 +106,9 @@ $(document).ready(function() {
         template += "<th>S.No.</th>";
         template += "<th>Id</th>";
         if ( !isHeader ) {
-            template += "<th> Input and Output </th>";
-            template += "<th> Name, Desc. and EDAM  </th>";
-            template += "<th> Help text  </th>";
+            //template += "<th> Input and Output </th>";
+            //template += "<th> Name, Desc. and EDAM  </th>";
+            //template += "<th> Help text  </th>";
             template += "<th> " + scoreHeaderText + "</th>";
             template += "<th> Rank </th>";
         }
@@ -130,9 +132,9 @@ $(document).ready(function() {
             template += "<td>" + parseInt( counter + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
             if ( !isHeader ) {
-                template += "<td>" + tool.input_output_score + "</td>";
-                template += "<td>" + tool.name_desc_edam_score + "</td>";
-                template += "<td>" + tool.help_text_score + "</td>";
+                //template += "<td>" + tool.input_output_score + "</td>";
+                //template += "<td>" + tool.name_desc_edam_score + "</td>";
+                //template += "<td>" + tool.help_text_score + "</td>";
                 template += "<td>" + toolScore + "</td>";
                 template += "<td>" + rank + "</td>";
             }

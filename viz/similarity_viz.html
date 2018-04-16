@@ -12,7 +12,8 @@
         <form>
             <h3>Find similar Galaxy tools by learning optimal similarity mixtures of multiple sources of annotations. </h3>
             <h5>
-                The text similarity is computed using a Deep learning approach called as Doc2Vec. These similarity scores are combined using an optimizer (Gradient Descent).
+                The text similarity is computed using a neural network approach called as Doc2Vec. It learns a dense vector for each document.
+                The similarity scores are combined using an optimizer (Gradient Descent).
             </h5>
             Sources of annotations:
             <ul>
@@ -25,6 +26,10 @@
                 <select class="tool-ids">
                     <option value="-1">--choose a tool--</option>
                 </select>
+                <div class="loader-place">
+                    <div class="loading-msg">The loading may take a few minutes. Please wait...</div>
+                    <div class="loading-image"><img src="images/rolling-image.gif"></div>
+                </div>
            </div>
           <div class="tool-results">
           </div>
