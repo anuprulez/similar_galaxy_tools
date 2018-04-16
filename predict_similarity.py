@@ -207,9 +207,9 @@ class PredictToolSimilarity:
         """
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
-        training_epochs = 20
+        training_epochs = 5
         len_tools = len( tools_list )
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=200, negative=5, min_count=1, iter=400, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=200, negative=5, min_count=1, iter=100, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
         for epoch in range( training_epochs ):
             print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
@@ -252,7 +252,7 @@ class PredictToolSimilarity:
             tool_scores = sim_scores[ index_x ]
             for index_y, item_y in enumerate( sim_mat ):
                 # compute similarity scores between two vectors
-                tool_scores[ index_y ] = 0.0 if index_y == index_x else utils._jaccard_score( item_x, item_y )
+                tool_scores[ index_y ] = 1.0 if index_y == index_x else utils._jaccard_score( item_x, item_y )
         return sim_scores
 
     @classmethod
@@ -271,8 +271,8 @@ class PredictToolSimilarity:
             similarity_matrix_learned.append( sim_mat_tool_learned )
         return similarity_matrix_learned
 
-    @classmethod
-    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, original_matrix, learning_rates, uniform_cost_tools, gradients ):
+    @classmethod #similarity_matrix_learned, dataframe, tools_list, optimal_weights, cost_tools, similarity_as_list, gradients
+    def associate_similarity( self, similarity_matrix, dataframe, tools_list, optimal_weights, cost_tools, original_matrix, gradients ):
         """
         Get similar tools for each tool
         """
@@ -330,7 +330,7 @@ class PredictToolSimilarity:
             tool_similarity[ "cost_iterations" ] = cost_tools[ tool_id ]
             tool_similarity[ "optimal_similar_scores" ] = optimal_normalized_scores
             tool_similarity[ "average_similar_scores" ] = average_normalized_scores
-            tool_similarity[ "uniform_cost_tools" ] = uniform_cost_tools[ tool_id ]
+            #tool_similarity[ "uniform_cost_tools" ] = uniform_cost_tools[ tool_id ]
             tool_similarity[ "combined_gradients" ] = [ np.sqrt( x ** 2 + y ** 2 + z ** 2 ) for x, y, z in zip( io_gradient, nd_gradient, ht_gradient ) ]
             similarity.append( tool_similarity )
         all_tools = dict()
@@ -385,12 +385,12 @@ if __name__ == "__main__":
 
     print "Learning optimal weights..."
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ) )
-    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_as_list, tools_list )
+    optimal_weights, cost_tools, gradients = gd.gradient_descent( similarity_as_list, tools_list )
 
     print "Assign importance to tools similarity matrix..."
     similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_as_list, tools_list, optimal_weights )
 
     print "Writing results to a JSON file..."
-    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, tools_list, optimal_weights, cost_tools, similarity_as_list, learning_rates, uniform_cost_tools, gradients )
+    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, tools_list, optimal_weights, cost_tools, similarity_as_list, gradients )
     end_time = time.time()
     print "Program finished in %d seconds" % int( end_time - start_time )
