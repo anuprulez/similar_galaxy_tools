@@ -72,9 +72,9 @@ class GradientDescentOptimizer:
                 loss_0 = weights[ source ] * similarity[ source ] - ideal_score[ source ]
                 weights[ source ] = weights[ source ] - eta * gradient[ source ]
                 loss_1 = weights[ source ] * similarity[ source ] - ideal_score[ source ]
-                #f_w1 = np.dot( loss_1, loss_1 )
-                #f_w0 = np.dot( loss_0, loss_0 )
-                update = loss_1 - loss_0 + alpha * eta * ( gradient[ source ] ** 2 )
+                f_w1 = np.dot( loss_1, loss_1 )
+                f_w0 = np.dot( loss_0, loss_0 )
+                update = f_w1 - f_w0 + alpha * eta * ( gradient[ source ] ** 2 )
                 step_update.append( update )
             is_optimal = all( n <= 0 for n in step_update )
             if is_optimal is True:
