@@ -59,29 +59,27 @@ class GradientDescentOptimizer:
             return False
 
     @classmethod
-    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score ):
+    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score, eta=1, beta=0.7, alpha=0.01 ):
         """
         Find the optimal step size/learning rate for gradient descent
+        http://users.ece.utexas.edu/~cmcaram/EE381V_2012F/Lecture_4_Scribe_Notes.final.pdf
         """
-        eta = 1
-        beta = 0.3
-        alpha = 0.1
         while True:
             eta = beta * eta
             step_update = list()
             is_optimal = False
             for source in weights:
-                w_1 = weights[ source ] - eta * gradient[ source ]
                 loss_0 = weights[ source ] * similarity[ source ] - ideal_score[ source ]
-                loss_1 = w_1 * similarity[ source ] - ideal_score[ source ]
-                f_w1 = np.dot( loss_1, loss_1 )
-                f_w0 = np.dot( loss_0, loss_0 )
-                update = f_w1 - f_w0 + alpha * eta * ( gradient[ source ] ** 2 )
+                weights[ source ] = weights[ source ] - eta * gradient[ source ]
+                loss_1 = weights[ source ] * similarity[ source ] - ideal_score[ source ]
+                #f_w1 = np.dot( loss_1, loss_1 )
+                #f_w0 = np.dot( loss_0, loss_0 )
+                update = loss_1 - loss_0 + alpha * eta * ( gradient[ source ] ** 2 )
                 step_update.append( update )
             is_optimal = all( n <= 0 for n in step_update )
             if is_optimal is True:
                 break
-        return eta
+        return eta, weights
 
     @classmethod
     def update_weights( self, weights, gradient, learning_rate ):
@@ -125,7 +123,6 @@ class GradientDescentOptimizer:
             gradient_ht_iteration = list()
             uniform_cost_iteration = list()
             lr_iteration = list()
-            previous_cost = None
             # find optimal weights through these iterations
             for iteration in range( self.number_iterations ):
                 sources_gradient = dict()
@@ -144,18 +141,19 @@ class GradientDescentOptimizer:
                     ideal_score_sources[ source ] = ideal_tool_score
                     # compute losses
                     loss, uniform_loss = self.compute_loss( weight, uniform_weight, tools_score_source, ideal_tool_score )
+                    # compute average gradient
+                    gradient = np.dot( tools_score_source, loss ) / num_all_tools
+                    # gather gradient for a source
+                    sources_gradient[ source ] = gradient
                     squared_loss = np.sum( loss ** 2 )
                     squared_uniform_loss = np.sum( uniform_loss ** 2 )
                     # add cost for a tool's source
                     cost_sources.append( squared_loss )
                     uniform_cost_sources.append( squared_uniform_loss )
-                    # compute average gradient
-                    gradient = np.dot( tools_score_source, loss ) / num_all_tools
-                    # gather gradient for a source
-                    sources_gradient[ source ] = gradient
+                    
                 mean_cost = np.mean( cost_sources )
                 # compute learning rate using line search
-                learning_rate = self.backtracking_line_search( weights, sources_gradient, tool_similarity_scores, num_all_tools, ideal_score_sources )
+                learning_rate, weights = self.backtracking_line_search( weights, sources_gradient, tool_similarity_scores, num_all_tools, ideal_score_sources )
                 lr_iteration.append( learning_rate )
                 # gather cost for each iteration
                 cost_iteration.append( mean_cost )
@@ -166,12 +164,6 @@ class GradientDescentOptimizer:
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
                 # update weights
                 weights = self.update_weights( weights, sources_gradient, learning_rate )
-                # define a point when to stop learning
-                is_optimal = self.check_optimality_cost( cost_sources, previous_cost )
-                if is_optimal is True:
-                    print "optimal weights learned in %d iterations" % iteration
-                    break
-                previous_cost = cost_sources
             # optimal weights learned
             print weights
             print "=================================================="
