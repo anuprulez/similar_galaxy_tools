@@ -207,9 +207,9 @@ class PredictToolSimilarity:
         """
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
-        training_epochs = 20
+        training_epochs = 10
         len_tools = len( tools_list )
-        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=300, negative=5, min_count=1, iter=400, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
+        model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=400, negative=5, min_count=1, iter=400, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
         for epoch in range( training_epochs ):
             print ( 'Training epoch %s' % epoch )
             shuffle( tagged_documents )
@@ -221,7 +221,9 @@ class PredictToolSimilarity:
             sim_scores = sorted( sim_scores, key=operator.itemgetter( ( 0 ) ), reverse=False )
             sim_scores.insert( index, ( index, 0.0 ) )
             # set the negative similarity to 0, take only positive ones
-            sim_scores = [ score if score > 0.0 else 0.0 for ( item_id, score ) in sim_scores ]
+            sim_scores = [ score for ( item_id, score ) in sim_scores ]
+            median = np.median( sim_scores )
+            sim_scores = [ score if score >= median else 0.0 for score in sim_scores ]
             tools_similarity.append( sim_scores )
         return tools_similarity
 

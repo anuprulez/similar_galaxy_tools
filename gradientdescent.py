@@ -79,7 +79,7 @@ class GradientDescentOptimizer:
             is_optimal = all( n <= 0 for n in step_update )
             if is_optimal is True:
                 break
-        return eta, weights
+        return eta, self.normalize_weights( weights )
 
     @classmethod
     def update_weights( self, weights, gradient, learning_rate ):
@@ -163,7 +163,7 @@ class GradientDescentOptimizer:
                 gradient_ht_iteration.append( sources_gradient[ self.sources[ 2 ] ] )
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
                 # update weights
-                weights = self.update_weights( weights, sources_gradient, learning_rate )
+                #weights = self.update_weights( weights, sources_gradient, learning_rate )
             # optimal weights learned
             print weights
             print "=================================================="
