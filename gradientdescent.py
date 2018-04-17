@@ -14,7 +14,7 @@ class GradientDescentOptimizer:
         self.best_similarity_score = 1.0
 
     @classmethod
-    def get_uniform_weights( self ):
+    def get_random_weights( self ):
         """
         Initialize the uniform weight matrices
         """
@@ -36,32 +36,7 @@ class GradientDescentOptimizer:
         return weights
 
     @classmethod
-    def compute_combined_cost( self, cost ):
-        """
-        Compute combined gradient for the sources
-        """
-        return np.sqrt( np.sum( [ item for item in cost ] ) )
-
-    @classmethod
-    def check_optimality_cost( self, cost, previous_cost=None ):
-        """
-        Check if the learning in the weights has become stable
-        """
-        epsilon = 1e-12
-        combined_cost = self.compute_combined_cost( cost )
-        if combined_cost < epsilon:
-            return True
-        elif previous_cost:
-            prev_combined_cost = self.compute_combined_cost( previous_cost )
-            if ( prev_combined_cost - combined_cost ) < epsilon:
-                return True
-            else:
-                return False
-        else:
-            return False
-
-    @classmethod
-    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score, eta=1, beta=0.7, alpha=0.01 ):
+    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score, eta=1, beta=0.3, alpha=0.01 ):
         """
         Find the optimal step size/learning rate for gradient descent
         http://users.ece.utexas.edu/~cmcaram/EE381V_2012F/Lecture_4_Scribe_Notes.final.pdf
@@ -82,15 +57,6 @@ class GradientDescentOptimizer:
             if is_optimal is True:
                 break
         return eta, self.normalize_weights( weights )
-
-    @classmethod
-    def update_weights( self, weights, gradient, learning_rate ):
-        """
-        Update the weights for each source using the learning rate and gradient and then normalize
-        """
-        for source in weights:
-            weights[ source ] = weights[ source ] - learning_rate * gradient[ source ]
-        return self.normalize_weights( weights )
 
     @classmethod
     def compute_loss( self, weight, uniform_weight, tool_scores, ideal_tool_score ):
@@ -117,7 +83,7 @@ class GradientDescentOptimizer:
             tool_id = tools_list[ tool_index ]
             print "Tool index: %d and tool name: %s" % ( tool_index, tool_id )
             # uniform weights to start with for each tool
-            weights = self.get_uniform_weights()
+            weights = self.get_random_weights()
             print weights
             cost_iteration = list()
             gradient_io_iteration = list()
@@ -163,8 +129,6 @@ class GradientDescentOptimizer:
                 gradient_nd_iteration.append( sources_gradient[ self.sources[ 1 ] ] )
                 gradient_ht_iteration.append( sources_gradient[ self.sources[ 2 ] ] )
                 uniform_cost_iteration.append( np.mean( uniform_cost_sources ) )
-                # update weights
-                #weights = self.update_weights( weights, sources_gradient, learning_rate )
             # optimal weights learned
             print weights
             print "=================================================="

@@ -2,7 +2,7 @@ $(document).ready(function() {
     var similarityData = null,
         list_tool_names = null,
         pathLocal = "data/similarity_matrix.json",
-        pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/master/viz/data/similarity_matrix.json",
+        pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json",
         path = pathLocal,
         $elLoader = $( ".loader-place" );
     if ( path === "" ) {
@@ -69,6 +69,15 @@ $(document).ready(function() {
                 $el_tools.append( "<div id='learning-rate-iterations'></div>" );
                 plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
 
+                $el_tools.append( "<div id='mutual-similarity-io-nd'></div>" );
+                $el_tools.append( "<div id='mutual-similarity-nd-ht'></div>" );
+                $el_tools.append( "<div id='mutual-similarity-io-ht'></div>" );
+                plotMutualSimilarity( toolScores, "mutual-similarity-io-nd", "mutual-similarity-nd-ht", "mutual-similarity-io-ht" );
+
+                $el_tools.append( "<div id='io-nd-scores'></div>" );
+                $el_tools.append( "<div id='nd-ht-scores'></div>" );
+                $el_tools.append( "<div id='io-ht-scores'></div>" );
+                getMutualScores( toolResults, "io-nd-scores", "nd-ht-scores", "io-ht-scores", selectedToolId );
                 availableSimilarTool = true;
                 break;
             }
@@ -220,6 +229,114 @@ $(document).ready(function() {
             }
         };
 	Plotly.newPlot( $elPlot, data, layout );
+    };
+
+    var plotMutualSimilarity = function( scores, $el1, $el2, $el3 ) {
+        var ioScores = [],
+            ndScores = [],
+            htScores = [];
+        for( var counter = 0, len = scores.length; counter < len; counter++ ) {
+            var tool = scores[ counter ];
+            ioScores.push( tool.input_output_score );
+            ndScores.push( tool.name_desc_edam_score );
+            htScores.push( tool.help_text_score );
+        }
+
+        // Input/output and name desc.
+        var trace1 = {
+	    x: ioScores,
+	    y: ndScores,
+	    mode: 'markers',
+	    type: 'scatter'
+	};
+
+	var layout1 = {
+	    xaxis: {
+	        title: "Input/output similarity scores"
+	    },
+	    yaxis: {
+	        title: "Name/desc similarity scores"
+	    },
+	    title: "Scatter plot for input/output and name/desc similarity scores"
+	};
+	Plotly.newPlot( $el1,[ trace1 ], layout1 );
+
+
+        // Name desc and help text
+        var trace2 = {
+	    x: ndScores,
+	    y: htScores,
+	    mode: 'markers',
+	    type: 'scatter'
+	};
+
+	var layout2 = {
+	    xaxis: {
+	        title: "Name/desc similarity scores"
+	    },
+	    yaxis: {
+	        title: "Help text similarity scores"
+	    },
+	    title: "Scatter plot for name/desc and help text similarity scores"
+	};
+	Plotly.newPlot( $el2,[ trace2 ], layout2 );
+
+
+        // IO and helptext
+        var trace3 = {
+	    x: ioScores,
+	    y: htScores,
+	    mode: 'markers',
+	    type: 'scatter'
+	};
+
+	var layout3 = {
+	    xaxis: {
+	        title: "Input/output similarity scores"
+	    },
+	    yaxis: {
+	        title: "Help text similarity scores"
+	    },
+	    title: "Scatter plot for input/output and help text similarity scores"
+	};
+	Plotly.newPlot( $el3,[ trace3 ], layout3 );
+    };
+
+    
+
+    var getMutualScores = function( scores, $elIOND, $elNDHT, $elIOHT, selectedToolId ) {
+        let ioScores = [],
+            ndScores = [],
+            htScores = [],
+            xAxis = [];
+        for( var counter = 0, len = scores.io_ht_corr.length; counter < len; counter++ ) {
+            xAxis.push( counter + 1 );
+        }
+
+        plotMutualScatterPlot( scores.io_nd_corr, $elIOND, "Correlation between input/output and name/desc similarities", xAxis );
+        plotMutualScatterPlot( scores.nd_ht_corr, $elNDHT, "Correlation between name/desc and help text similarities", xAxis );
+        plotMutualScatterPlot( scores.io_ht_corr, $elIOHT, "Correlation between input/output and help text similarities", xAxis );
+    };
+
+    var plotMutualScatterPlot = function( scores, $el, legend, xAxis ) {
+        var trace1 = {
+	    x: xAxis,
+	    y: scores,
+	    mode: 'markers',
+	    type: 'scatter'
+	};
+
+	var data = [ trace1 ];
+	var layout = {
+	    xaxis: {
+	        title: "Tools"
+	    },
+	    yaxis: {
+	        title: "Correlation scores"
+	    },
+	    title: legend
+	};
+	Plotly.newPlot( $el, data, layout );
     };
     
     var plotScatterOptimalAverageScores = function( scores, $elPlot, selectedToolId ) {

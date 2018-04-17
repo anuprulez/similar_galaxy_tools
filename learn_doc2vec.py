@@ -39,8 +39,8 @@ class Learn_Doc2Vec_Similarity:
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
         training_epochs = 5
-        iterations = 800
-        n_dim = 300
+        iterations = 1000
+        n_dim = 400
         len_tools = len( tools_list )
         model = gensim.models.Doc2Vec( tagged_documents, dm=0, size=n_dim, negative=5, min_count=1, iter=iterations, window=15, alpha=1e-2, min_alpha=1e-4, dbow_words=1, sample=1e-5 )
         for epoch in range( training_epochs ):
