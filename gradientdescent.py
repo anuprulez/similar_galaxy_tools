@@ -36,26 +36,27 @@ class GradientDescentOptimizer:
         return weights
 
     @classmethod
-    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score, eta=1, beta=0.3, alpha=0.01 ):
+    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score, eta=1, beta=0.8, alpha=0.05, epsilon=1e-4 ):
         """
         Find the optimal step size/learning rate for gradient descent
         http://users.ece.utexas.edu/~cmcaram/EE381V_2012F/Lecture_4_Scribe_Notes.final.pdf
         """
         while True:
-            eta = beta * eta
             step_update = list()
             is_optimal = False
             for source in weights:
                 loss_0 = weights[ source ] * similarity[ source ] - ideal_score[ source ]
-                weights[ source ] = weights[ source ] - eta * gradient[ source ]
-                loss_1 = weights[ source ] * similarity[ source ] - ideal_score[ source ]
-                f_w1 = np.dot( loss_1, loss_1 )
-                f_w0 = np.dot( loss_0, loss_0 )
-                update = f_w1 - f_w0 + alpha * eta * ( gradient[ source ] ** 2 )
+                gradient = np.dot( similarity[ source ], loss_0 ) / num_all_tools
+                weights[ source ] = weights[ source ] - eta * gradient
+                loss_1 = ( weights[ source ] * similarity[ source ] ) - ideal_score[ source ]
+                f_w1 = np.mean( loss_1 )
+                f_w0 = np.mean( loss_0 )
+                update = f_w1 - f_w0 + alpha * eta * ( gradient ** 2 )
                 step_update.append( update )
-            is_optimal = all( n <= 0 for n in step_update )
+            is_optimal = all( n <= epsilon for n in step_update )
             if is_optimal is True:
                 break
+            eta = beta * eta
         return eta, self.normalize_weights( weights )
 
     @classmethod
