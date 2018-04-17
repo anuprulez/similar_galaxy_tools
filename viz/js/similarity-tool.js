@@ -144,10 +144,10 @@ $(document).ready(function() {
             template += "<td>" + parseInt( counter + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
             if ( !isHeader ) {
-                template += "<td>" + tool.input_output_score + "</td>";
-                template += "<td>" + tool.name_desc_edam_score + "</td>";
-                template += "<td>" + tool.help_text_score + "</td>";
-                template += "<td>" + toolScore + "</td>";
+                template += "<td>" + toPrecisionNumber( tool.input_output_score ) + "</td>";
+                template += "<td>" + toPrecisionNumber( tool.name_desc_edam_score ) + "</td>";
+                template += "<td>" + toPrecisionNumber( tool.help_text_score ) + "</td>";
+                template += "<td>" + toPrecisionNumber( toolScore ) + "</td>";
                 template += "<td>" + rank + "</td>";
             }
             template += "<td>" + nameDesc + "</td>";
