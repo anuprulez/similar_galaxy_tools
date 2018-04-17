@@ -66,6 +66,9 @@ $(document).ready(function() {
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
 
+                $el_tools.append( "<div id='learning-rate-iterations'></div>" );
+                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
+
                 availableSimilarTool = true;
                 break;
             }
@@ -255,6 +258,31 @@ $(document).ready(function() {
 	    },
 	    title:'Scatter plot of optimal and average combination of similarity scores for tool: ' + selectedToolId
 	};
+	Plotly.newPlot( $elPlot, data, layout );
+    };
+
+    var plotLearningRatesVsIterations = function( toolScores, $elPlot, selectedToolId ) {
+        var lrIterations = toolScores.learning_rates_iterations,
+            iterations = lrIterations.length,
+            x_axis = [];
+        for( var i = 0; i < iterations; i++ ) {
+            x_axis.push( i + 1 );
+        }
+	var data = [{
+	    x: x_axis,
+	    y: lrIterations,
+	    type: 'scatter'
+	}];
+	
+	var layout = {
+            title:'Learning rates vs Iterations for the tool: ' + selectedToolId,
+            xaxis: {
+                title: 'Iterations'
+            },
+            yaxis: {
+                title: 'Learning rate / Step size'
+            }
+        };
 	Plotly.newPlot( $elPlot, data, layout );
     };
 });

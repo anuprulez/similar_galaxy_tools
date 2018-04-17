@@ -8,9 +8,9 @@ import numpy as np
 class GradientDescentOptimizer:
 
     @classmethod
-    def __init__( self, number_iterations ):
+    def __init__( self, number_iterations, data_sources ):
         self.number_iterations = number_iterations
-        self.sources = [ 'input_output', 'name_desc_edam', 'help_text' ]
+        self.sources = data_sources
         self.best_similarity_score = 1.0
 
     @classmethod
@@ -19,8 +19,10 @@ class GradientDescentOptimizer:
         Initialize the uniform weight matrices
         """
         weights = dict()
-        for item in self.sources:
-            weights[ item ] = 1.0 / len( self.sources )
+        random_weights = np.random.rand( len( self.sources ), 1 )
+        random_weights = [ float( item ) / np.sum( random_weights ) for item in random_weights ]
+        for index, item in enumerate( self.sources ):
+            weights[ item ] = random_weights[ index ]
         return weights
 
     @classmethod
@@ -150,7 +152,6 @@ class GradientDescentOptimizer:
                     # add cost for a tool's source
                     cost_sources.append( squared_loss )
                     uniform_cost_sources.append( squared_uniform_loss )
-                    
                 mean_cost = np.mean( cost_sources )
                 # compute learning rate using line search
                 learning_rate, weights = self.backtracking_line_search( weights, sources_gradient, tool_similarity_scores, num_all_tools, ideal_score_sources )
