@@ -27,7 +27,6 @@ class Learn_Doc2Vec_Similarity:
             if tool not in tools_list:
                 tools_list.append( tool )
             tokens = self.doc_tokens[ tool ]
-            # reject tokens if there are more than 0
             tokens = [ token for ( token, score ) in tokens ]
             td = TaggedDocument( gensim.utils.to_unicode(' '.join( tokens ) ).split(), [ tool_counter ] )
             tagged_documents.append( td )
