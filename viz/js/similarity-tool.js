@@ -3,7 +3,7 @@ $(document).ready(function() {
         list_tool_names = null,
         pathLocal = "data/similarity_matrix.json",
         pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json",
-        path = pathLocal,
+        path = pathOnline,
         $elLoader = $( ".loader-place" );
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );

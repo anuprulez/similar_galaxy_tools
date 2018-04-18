@@ -36,25 +36,32 @@ class GradientDescentOptimizer:
         return weights
 
     @classmethod
-    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score, eta=1, beta=0.8, alpha=0.05, epsilon=1e-4 ):
+    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score, eta=1, beta=0.8, alpha=0.1, epsilon=1e-4 ):
         """
         Find the optimal step size/learning rate for gradient descent
         http://users.ece.utexas.edu/~cmcaram/EE381V_2012F/Lecture_4_Scribe_Notes.final.pdf
         """
+        prev_gradient_update = None
         while True:
             step_update = list()
-            is_optimal = False
+            gradient_update = 0
+            is_optimal_step = False
+            is_optimal_gradient = False
             for source in weights:
                 loss_0 = weights[ source ] * similarity[ source ] - ideal_score[ source ]
-                gradient = np.dot( similarity[ source ], loss_0 ) / num_all_tools
-                weights[ source ] = weights[ source ] - eta * gradient
+                grad = np.dot( similarity[ source ], loss_0 ) / num_all_tools
+                weights[ source ] = weights[ source ] - eta * grad
                 loss_1 = ( weights[ source ] * similarity[ source ] ) - ideal_score[ source ]
-                f_w1 = np.mean( loss_1 )
-                f_w0 = np.mean( loss_0 )
-                update = f_w1 - f_w0 + alpha * eta * ( gradient ** 2 )
+                f_w1 = np.sum( loss_1 ) / num_all_tools
+                f_w0 = np.sum( loss_0 ) / num_all_tools
+                update = f_w1 - f_w0 + alpha * eta * ( grad ** 2 )
                 step_update.append( update )
-            is_optimal = all( n <= epsilon for n in step_update )
-            if is_optimal is True:
+                gradient_update += ( np.abs( grad ) )
+            if prev_gradient_update is not None:
+                is_optimal_gradient = ( ( prev_gradient_update - gradient_update ) <= epsilon )
+            prev_gradient_update = gradient_update
+            is_optimal_step = all( n <= 0 for n in step_update )
+            if is_optimal_gradient or is_optimal_step is True:
                 break
             eta = beta * eta
         return eta, self.normalize_weights( weights )
