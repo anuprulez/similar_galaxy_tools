@@ -106,6 +106,7 @@ def _jaccard_score( vector1, vector2 ):
     else:
         return dot_product / float( jaccard_denominator )
 
+
 def _plot_singular_values_rank( rank_list, sum_singular_values_list ):
     """
     Generate plot of reduction in singular values with matrix's rank
