@@ -22,7 +22,7 @@ class ComputeToolSimilarity:
     def __init__( self, tools_data_path ):
         self.data_source = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.tools_data_path = tools_data_path
-        self.tools_show = 30
+        self.tools_show = 20
 
     def create_io_tokens_matrix( self, doc_tokens ):
         """
@@ -43,7 +43,7 @@ class ComputeToolSimilarity:
         for tool_item in doc_tokens:
             for word_score in doc_tokens[ tool_item ]:
                 word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                document_tokens_matrix[ counter ][ word_index ] = 1.0
+                document_tokens_matrix[ counter ][ word_index ] = 1.0 # set flag at a word's index
             counter += 1
         return document_tokens_matrix
 
@@ -52,6 +52,7 @@ class ComputeToolSimilarity:
         """
         Find similarity distance between vectors for input/output tokens
         """
+        own_similarity_score = 1.0
         mat_size = len( tools_list )
         sim_scores = np.zeros( [ mat_size, mat_size ] )
         sim_mat = input_output_tokens_matrix
@@ -59,7 +60,7 @@ class ComputeToolSimilarity:
             tool_scores = sim_scores[ index_x ]
             for index_y, item_y in enumerate( sim_mat ):
                 # compute similarity scores between two vectors
-                tool_scores[ index_y ] = utils._jaccard_score( item_x, item_y )
+                tool_scores[ index_y ] = own_similarity_score if index_x == index_y else utils._jaccard_score( item_x, item_y )
         return sim_scores
 
     @classmethod
@@ -84,13 +85,22 @@ class ComputeToolSimilarity:
         """
         similarity_matrix_learned = list()
         all_tools = len( tools_list )
+        similarity_tools = dict()
+        similarity_scores_path = "data/similarity_scores_sources_optimal.json"
         for tool_index, tool in enumerate( tools_list ):
+            tool_name = tools_list[ tool_index ] 
+            similarity_tools[ tools_list[ tool_index ] ] = dict()
             sim_mat_tool_learned = np.zeros( all_tools )
             for source in similarity_matrix_sources:
                 optimal_weight_source = optimal_weights[ tools_list[ tool_index ] ][ source ]
+                tool_source_scores = similarity_matrix_sources[ source ][ tool_index ]
+                similarity_tools[ tool_name ][ source ] = [ item for item in tool_source_scores ]
                 # add up the similarity scores from each source weighted by importance factors learned by machine leanring algorithm
-                sim_mat_tool_learned += optimal_weight_source * similarity_matrix_sources[ source ][ tool_index ]
+                sim_mat_tool_learned += optimal_weight_source * tool_source_scores
+            similarity_tools[ tool_name ][ "optimal" ] = [ item for item in sim_mat_tool_learned ]
             similarity_matrix_learned.append( sim_mat_tool_learned )
+        with open( similarity_scores_path, 'w' ) as file:
+            file.write( json.dumps( similarity_tools ) )
         return similarity_matrix_learned
 
     @classmethod
