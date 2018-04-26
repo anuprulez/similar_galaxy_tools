@@ -386,8 +386,27 @@ if __name__ == "__main__":
     document_tokens_matrix, files_list = tool_similarity.create_document_tokens_matrix( refined_tokens )
     print "Created tools tokens matrix"
 
+    doc_plot_src = dict()
+    
+    for item in document_tokens_matrix:
+        doc_plot_src[ item ] = list()
+        for index, rs in enumerate( document_tokens_matrix[ item ] ):
+           doc_plot_src[ item ].append( [ a for a in document_tokens_matrix[ item ][ index ] ] )
+
+    with open( "data/similarity_source_orig.json", "w" ) as orig_file:
+        orig_file.write( json.dumps( doc_plot_src ) )
+
     document_tokens_matrix_factored = tool_similarity.factor_matrices( document_tokens_matrix )
     print "Matrices factored"
+ 
+    doc_low_plot_src = dict()
+    for item in document_tokens_matrix_factored:
+        doc_low_plot_src[ item ] = list()
+        for index, rs in enumerate( document_tokens_matrix_factored[ item ] ):
+           doc_low_plot_src[ item ].append( [ a for a in document_tokens_matrix_factored[ item ][ index ] ] )
+
+    with open( "data/similarity_source_low_rank.json", "w" ) as low_rank_file:
+        low_rank_file.write( json.dumps( doc_low_plot_src ) )
 
     print "Computing similarity..."
     start_time_similarity_comp = time.time()
