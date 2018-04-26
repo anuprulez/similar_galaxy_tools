@@ -3,14 +3,16 @@ $(document).ready(function() {
         list_tool_names = null,
         pathLocal = "data/similarity_matrix.json",
         pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/lsi/viz/data/similarity_matrix.json",
-        path = pathOnline;
+        path = pathOnline,
+        $elLoader = $( ".loader-place" );
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
     }
-
-    $.getJSON( path, function( data ) {
+    $elLoader.show();
+    $.getJSON( pathOnline, function( data ) {
         var toolIdsTemplate = "";
+        $elLoader.hide();
         list_tool_names = data[ data.length - 1 ];
         slicedData = data.slice( 0, data.length - 1 );
         // sort the tools in ascending order of their ids
@@ -50,8 +52,8 @@ $(document).ready(function() {
                 // show optimal weights
                 $el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
                 
-                // make html for similar tools found by optimizing similarity scores using Gradient Descent
-                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of similarity scores from multiple sources</h4>", "Weighted similarity score", false ) );
+                // make html for similar tools found by optimizing probability scores using Gradient Descent
+                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of probability scores from multiple sources</h4>", "Weighted probability score", false ) );
                 
                 // plot optimal vs average scores
                 $el_tools.append( "<div id='scatter-optimal-average'></div>" );
@@ -86,7 +88,7 @@ $(document).ready(function() {
                 template += "<div>" + "Help text ( weight3 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
         }
-        template += "<p>Score = weight1 * similarity_input_output + weight2 * similarity_name_desc_edam + weight3 * similarity_help_text </p>";
+        template += "<p>Score = weight1 * probability_input_output + weight2 * probability_name_desc_edam + weight3 * probability_help_text </p>";
         template += "</div>";
         return template;
     };
@@ -230,7 +232,7 @@ $(document).ready(function() {
 	    y: optimal_scores,
 	    mode: 'markers',
 	    type: 'scatter',
-	    name: 'Optimal similarity scores',
+	    name: 'Optimal probability scores',
 	    text: list_tool_names.list_tools
 	};
 
@@ -239,7 +241,7 @@ $(document).ready(function() {
 	    y: average_scores,
 	    mode: 'markers',
 	    type: 'scatter',
-	    name: 'Average similarity scores',
+	    name: 'Average probability scores',
 	    text: list_tool_names.list_tools
 	};
 
@@ -249,9 +251,9 @@ $(document).ready(function() {
 	        title: "Tools"
 	    },
 	    yaxis: {
-	        title: "Similarity score"
+	        title: "Probability score"
 	    },
-	    title:'Scatter plot of optimal and average combination of similarity scores for tool: ' + selectedToolId
+	    title:'Scatter plot of optimal and average combination of probability scores for tool: ' + selectedToolId
 	};
 	Plotly.newPlot( $elPlot, data, layout );
     };
