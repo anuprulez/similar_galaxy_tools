@@ -107,13 +107,17 @@ def _jaccard_score( vector1, vector2 ):
         return dot_product / float( jaccard_denominator )
 
 
-def _plot_singular_values_rank( rank_list, sum_singular_values_list ):
+def _plot_singular_values_rank( rank_list, sum_singular_values_list, source ):
     """
     Generate plot of reduction in singular values with matrix's rank
     """
+    plt.rcParams[ "font.serif" ] = "Times, Palatino, New Century Schoolbook, Bookman, Computer Modern Roman"
+    plt.rcParams[ "font.size" ] = 26
+    font = { 'family' : 'sans serif' }
+    plt.rc( 'font', **font )
     plt.plot( rank_list, sum_singular_values_list )
-    plt.xlabel( 'Matrix rank' )
-    plt.ylabel( '% sum of singular values taken' )
-    plt.title( 'Variation of sum of singular values with matrix rank' )
+    plt.xlabel( 'Rank of the matrix' )
+    plt.ylabel( 'Percentage sum of eigen values' )
+    plt.title( 'Variation of sum of eigen values with the rank of matrix for %s' % source )
     plt.grid()
     plt.show()

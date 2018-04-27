@@ -1,6 +1,9 @@
 import numpy as np
 from numpy.linalg import matrix_rank
 from numpy.linalg import svd
+import json
+
+import utils
 
 
 class LatentSemanticIndexing:
@@ -22,17 +25,22 @@ class LatentSemanticIndexing:
         return [ u_approx.dot( s_approx ).dot( v_approx ), sum_taken_percent ]
 
     @classmethod
-    def _find_optimal_low_rank_matrix( self, orig_similarity_matrix, orig_rank, u, s, v ):
+    def _find_optimal_low_rank_matrix( self, orig_similarity_matrix, orig_rank, u, s, v, source ):
         """
         Find the rank which captures most of the information from the original full rank matrix
         """
         '''rank_list = list()
         sum_singular_values = list()
-        for rank in range( 0, orig_rank ):
-            compute_result = self.compute_low_rank_matrix( u, s, v, rank + 1 )
-            rank_list.append( ( rank + 1 ) / float( orig_rank ) )
+        vary_rank_eigen = list()
+        for rank in range( 1, orig_rank ):
+            compute_result = self._compute_low_rank_matrix( u, s, v, rank )
+            rank_list.append( rank / float( orig_rank ) )
             sum_singular_values.append( compute_result[ 1 ] )
-        utils._plot_singular_values_rank( rank_list, sum_singular_values )'''
+        vary_rank_eigen.append( rank_list )
+        vary_rank_eigen.append( sum_singular_values )
+        with open( "data/" + source + "_vary_eigen_rank.json", "w" ) as vary_rank:
+            vary_rank.write( json.dumps( vary_rank_eigen ) )
+        #utils._plot_singular_values_rank( rank_list, sum_singular_values, source )'''
         return self._compute_low_rank_matrix( u, s, v, int( self.rank_reduction * orig_rank ) )
 
     @classmethod
@@ -50,6 +58,6 @@ class LatentSemanticIndexing:
             u, s, v = svd( similarity_matrix )
             # sort the singular values in descending order. Top ones most important
             s = sorted( s, reverse=True )
-            compute_result = self._find_optimal_low_rank_matrix( similarity_matrix, mat_rnk, u, s, v )
+            compute_result = self._find_optimal_low_rank_matrix( similarity_matrix, mat_rnk, u, s, v, source )
             approx_similarity_matrices[ source ] = compute_result[ 0 ]
         return approx_similarity_matrices
