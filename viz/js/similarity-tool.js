@@ -2,15 +2,15 @@ $(document).ready(function() {
     var similarityData = null,
         list_tool_names = null,
         pathLocal = "data/similarity_matrix.json",
-        pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/lsi/viz/data/similarity_matrix.json",
-        path = pathOnline,
+        pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json",
+        path = pathLocal,
         $elLoader = $( ".loader-place" );
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
         return;
     }
     $elLoader.show();
-    $.getJSON( pathOnline, function( data ) {
+    $.getJSON( path, function( data ) {
         var toolIdsTemplate = "";
         $elLoader.hide();
         list_tool_names = data[ data.length - 1 ];
@@ -52,8 +52,8 @@ $(document).ready(function() {
                 // show optimal weights
                 $el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
                 
-                // make html for similar tools found by optimizing probability scores using Gradient Descent
-                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of probability scores from multiple sources</h4>", "Weighted probability score", false ) );
+                // make html for similar tools found by optimizing similarity scores using Gradient Descent
+                $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of similarity scores from multiple sources</h4>", "Weighted similarity score", false ) );
                 
                 // plot optimal vs average scores
                 $el_tools.append( "<div id='scatter-optimal-average'></div>" );
@@ -66,6 +66,18 @@ $(document).ready(function() {
                 $el_tools.append( "<div id='tool-cost-iterations'></div>" );
                 plotCostVsIterations( toolResults, "tool-cost-iterations", selectedToolId );
 
+                $el_tools.append( "<div id='learning-rate-iterations'></div>" );
+                plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
+
+                $el_tools.append( "<div id='mutual-similarity-io-nd'></div>" );
+                $el_tools.append( "<div id='mutual-similarity-nd-ht'></div>" );
+                $el_tools.append( "<div id='mutual-similarity-io-ht'></div>" );
+                plotMutualSimilarity( toolScores, "mutual-similarity-io-nd", "mutual-similarity-nd-ht", "mutual-similarity-io-ht" );
+
+                $el_tools.append( "<div id='io-nd-scores'></div>" );
+                $el_tools.append( "<div id='nd-ht-scores'></div>" );
+                $el_tools.append( "<div id='io-ht-scores'></div>" );
+                getMutualScores( toolResults, "io-nd-scores", "nd-ht-scores", "io-ht-scores", selectedToolId );
                 availableSimilarTool = true;
                 break;
             }
@@ -88,7 +100,7 @@ $(document).ready(function() {
                 template += "<div>" + "Help text ( weight3 ): <b>" + toPrecisionNumber( weights[ item ] )  + "</b></div>";
             }
         }
-        template += "<p>Score = weight1 * probability_input_output + weight2 * probability_name_desc_edam + weight3 * probability_help_text </p>";
+        template += "<p>Score = weight1 * similarity_input_output + weight2 * similarity_name_desc_edam + weight3 * similarity_help_text </p>";
         template += "</div>";
         return template;
     };
@@ -132,10 +144,10 @@ $(document).ready(function() {
             template += "<td>" + parseInt( counter + 1 ) + "</td>";
             template += "<td>" + tool.id + "</td>";
             if ( !isHeader ) {
-                template += "<td>" + tool.input_output_score + "</td>";
-                template += "<td>" + tool.name_desc_edam_score + "</td>";
-                template += "<td>" + tool.help_text_score + "</td>";
-                template += "<td>" + toolScore + "</td>";
+                template += "<td>" + toPrecisionNumber( tool.input_output_score ) + "</td>";
+                template += "<td>" + toPrecisionNumber( tool.name_desc_edam_score ) + "</td>";
+                template += "<td>" + toPrecisionNumber( tool.help_text_score ) + "</td>";
+                template += "<td>" + toPrecisionNumber( toolScore ) + "</td>";
                 template += "<td>" + rank + "</td>";
             }
             template += "<td>" + nameDesc + "</td>";
@@ -218,6 +230,114 @@ $(document).ready(function() {
         };
 	Plotly.newPlot( $elPlot, data, layout );
     };
+
+    var plotMutualSimilarity = function( scores, $el1, $el2, $el3 ) {
+        var ioScores = [],
+            ndScores = [],
+            htScores = [];
+        for( var counter = 0, len = scores.length; counter < len; counter++ ) {
+            var tool = scores[ counter ];
+            ioScores.push( tool.input_output_score );
+            ndScores.push( tool.name_desc_edam_score );
+            htScores.push( tool.help_text_score );
+        }
+
+        // Input/output and name desc.
+        var trace1 = {
+	    x: ioScores,
+	    y: ndScores,
+	    mode: 'markers',
+	    type: 'scatter'
+	};
+
+	var layout1 = {
+	    xaxis: {
+	        title: "Input/output similarity scores"
+	    },
+	    yaxis: {
+	        title: "Name/desc similarity scores"
+	    },
+	    title: "Scatter plot for input/output and name/desc similarity scores"
+	};
+	Plotly.newPlot( $el1,[ trace1 ], layout1 );
+
+
+        // Name desc and help text
+        var trace2 = {
+	    x: ndScores,
+	    y: htScores,
+	    mode: 'markers',
+	    type: 'scatter'
+	};
+
+	var layout2 = {
+	    xaxis: {
+	        title: "Name/desc similarity scores"
+	    },
+	    yaxis: {
+	        title: "Help text similarity scores"
+	    },
+	    title: "Scatter plot for name/desc and help text similarity scores"
+	};
+	Plotly.newPlot( $el2,[ trace2 ], layout2 );
+
+
+        // IO and helptext
+        var trace3 = {
+	    x: ioScores,
+	    y: htScores,
+	    mode: 'markers',
+	    type: 'scatter'
+	};
+
+	var layout3 = {
+	    xaxis: {
+	        title: "Input/output similarity scores"
+	    },
+	    yaxis: {
+	        title: "Help text similarity scores"
+	    },
+	    title: "Scatter plot for input/output and help text similarity scores"
+	};
+	Plotly.newPlot( $el3,[ trace3 ], layout3 );
+    };
+
+    
+
+    var getMutualScores = function( scores, $elIOND, $elNDHT, $elIOHT, selectedToolId ) {
+        let ioScores = [],
+            ndScores = [],
+            htScores = [],
+            xAxis = [];
+        for( var counter = 0, len = scores.io_ht_corr.length; counter < len; counter++ ) {
+            xAxis.push( counter + 1 );
+        }
+
+        plotMutualScatterPlot( scores.io_nd_corr, $elIOND, "Correlation between input/output and name/desc similarities", xAxis );
+        plotMutualScatterPlot( scores.nd_ht_corr, $elNDHT, "Correlation between name/desc and help text similarities", xAxis );
+        plotMutualScatterPlot( scores.io_ht_corr, $elIOHT, "Correlation between input/output and help text similarities", xAxis );
+    };
+
+    var plotMutualScatterPlot = function( scores, $el, legend, xAxis ) {
+        var trace1 = {
+	    x: xAxis,
+	    y: scores,
+	    mode: 'markers',
+	    type: 'scatter'
+	};
+
+	var data = [ trace1 ];
+	var layout = {
+	    xaxis: {
+	        title: "Tools"
+	    },
+	    yaxis: {
+	        title: "Correlation scores"
+	    },
+	    title: legend
+	};
+	Plotly.newPlot( $el, data, layout );
+    };
     
     var plotScatterOptimalAverageScores = function( scores, $elPlot, selectedToolId ) {
         var optimal_scores = scores.optimal_similar_scores,
@@ -232,7 +352,7 @@ $(document).ready(function() {
 	    y: optimal_scores,
 	    mode: 'markers',
 	    type: 'scatter',
-	    name: 'Optimal probability scores',
+	    name: 'Optimal similarity scores',
 	    text: list_tool_names.list_tools
 	};
 
@@ -241,7 +361,7 @@ $(document).ready(function() {
 	    y: average_scores,
 	    mode: 'markers',
 	    type: 'scatter',
-	    name: 'Average probability scores',
+	    name: 'Average similarity scores',
 	    text: list_tool_names.list_tools
 	};
 
@@ -251,10 +371,35 @@ $(document).ready(function() {
 	        title: "Tools"
 	    },
 	    yaxis: {
-	        title: "Probability score"
+	        title: "Similarity score"
 	    },
-	    title:'Scatter plot of optimal and average combination of probability scores for tool: ' + selectedToolId
+	    title:'Scatter plot of optimal and average combination of similarity scores for tool: ' + selectedToolId
 	};
+	Plotly.newPlot( $elPlot, data, layout );
+    };
+
+    var plotLearningRatesVsIterations = function( toolScores, $elPlot, selectedToolId ) {
+        var lrIterations = toolScores.learning_rates_iterations,
+            iterations = lrIterations.length,
+            x_axis = [];
+        for( var i = 0; i < iterations; i++ ) {
+            x_axis.push( i + 1 );
+        }
+	var data = [{
+	    x: x_axis,
+	    y: lrIterations,
+	    type: 'scatter'
+	}];
+	
+	var layout = {
+            title:'Learning rates vs Iterations for the tool: ' + selectedToolId,
+            xaxis: {
+                title: 'Iterations'
+            },
+            yaxis: {
+                title: 'Learning rate / Step size'
+            }
+        };
 	Plotly.newPlot( $elPlot, data, layout );
     };
 });

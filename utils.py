@@ -9,10 +9,6 @@ nltk.download( 'averaged_perceptron_tagger' )
 nltk.download( 'stopwords' )
 port_stemmer = PorterStemmer()
 
-# accept tokens that fall in these category
-#token_category_list = [ 'JJ', 'NNS', 'NN', 'NNP', 'NNPS' ] # 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ'
-#non_informative_words = [ "data", "file", "files", "option", "number", "numbers", "input", "output", "dataset", "datasets", "program", "programs", "tool", "tools", "format", "sequences", "sequence", "example", "examples", "sample", "samples", "multiple", "type", "types" ]
-
 stopwords = set( stopwords.words( 'english' ) )
 
 
@@ -49,15 +45,7 @@ def _clean_tokens( text_list, stop_words ):
     tokens = [ item for item in tokens if item not in stop_words ]
     # remove stop words in NLTK library
     tokens = [ word for word in tokens if word not in stopwords ]
-    # remove non informative words in context to the tools
-    #tokens = [ word for word in tokens if word not in non_informative_words ] 
-    # differentiate words based on their types as nouns, verbs etc
-    # tokens = nltk.pos_tag( tokens )
-    #print tokens1
-    # accept words that fall in the category mentioned (verbs, nouns)
-    #tokens = [ port_stemmer.stem( item ) for ( item, tag ) in tokens if tag in token_category_list ]
-    tokens = [ port_stemmer.stem( item ) for item in tokens ]
-    return tokens
+    return [ port_stemmer.stem( item ) for item in tokens ]
 
 
 def _restore_space( text ):
@@ -117,6 +105,7 @@ def _jaccard_score( vector1, vector2 ):
         return 0
     else:
         return dot_product / float( jaccard_denominator )
+
 
 def _plot_singular_values_rank( rank_list, sum_singular_values_list ):
     """
