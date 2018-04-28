@@ -21,8 +21,6 @@ def plot_doc_tokens_mat():
     for row, axis in enumerate( axes ):
         doc_token_mat = read_files( "data/similarity_source_orig.json" )
         doc_token_mat = doc_token_mat[ sources[ row ] ]
-        doc_token_mat_low = read_files( "data/similarity_source_low_rank.json" )
-        doc_token_mat_low = doc_token_mat_low[ sources[ row ] ]
         heatmap = axis.imshow( doc_token_mat, cmap=plt.cm.Blues ) 
         axis.set_title( titles_fullrank[ row ], fontsize = FONT_SIZE )
         for tick in axis.xaxis.get_major_ticks():
@@ -110,9 +108,54 @@ def plot_rank_eigen_variation():
     plt.legend( [ "Input and output", "Name and description", "Help text" ] )
     plt.grid( True )
     plt.show()
+    
+def plot_frobenius_error():
+    plt.rcParams[ "font.serif" ] = "Times, Palatino, New Century Schoolbook, Bookman, Computer Modern Roman"
+    plt.rcParams[ "font.size" ] = FONT_SIZE
+    font = { 'family' : 'sans serif' }
+    plt.rc( 'font', **font )
+    error_sources = read_files( "data/frobenius_error.json" )
+    for item in error_sources:
+        error_src = error_sources[ item ]
+        ranks = list()
+        error = list()
+        full_rank = len( error_src )
+        for item in error_src:
+            ranks.append( item[ 0 ] / float( full_rank ) )
+            error.append( item[ 1 ] )
+        plot( ranks, error )
+    plt.ylabel( 'Frobenius norm error' )
+    plt.xlabel( 'Percentage rank' )
+    plt.title( 'Frobenius error variation with the percentage rank' )
+    plt.legend( [ "Help text", "Name and description", "Input and output" ] )
+    plt.grid( True )
+    plt.show()
+    
+def plot_rank_singular_variation():
+    plt.rcParams[ "font.serif" ] = "Times, Palatino, New Century Schoolbook, Bookman, Computer Modern Roman"
+    plt.rcParams[ "font.size" ] = FONT_SIZE
+    font = { 'family' : 'sans serif' }
+    plt.rc( 'font', **font )
+    error_sources = read_files( "data/frobenius_error.json" )
+    for item in error_sources:
+        error_src = error_sources[ item ]
+        ranks = list()
+        sum_singular_perc = list()
+        full_rank = len( error_src )
+        for item in error_src:
+            ranks.append( item[ 0 ] / float( full_rank ) )
+            sum_singular_perc.append( item[ 2 ] )
+        plot( ranks, sum_singular_perc )
+    plt.ylabel( 'Fraction of the sum of singular values' )
+    plt.xlabel( 'Percentage rank of the matrix' )
+    plt.title( 'Variation of sum of singular values with rank' )
+    plt.legend( [ "Help text", "Name and description", "Input and output" ] )
+    plt.grid( True )
+    plt.show()     
 
 
 #plot_tokens_size()
-#plot_doc_tokens_mat( )
-#plot_doc_tokens_mat_low_rank()
-plot_rank_eigen_variation()
+plot_doc_tokens_mat( )
+plot_doc_tokens_mat_low_rank()
+#plot_rank_singular_variation()
+#plot_frobenius_error()

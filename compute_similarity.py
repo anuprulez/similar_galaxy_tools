@@ -16,6 +16,7 @@ import latent_semantic_analysis
 import gradientdescent
 from numpy.linalg import matrix_rank
 from numpy.linalg import svd
+from numpy.linalg import norm
 
 
 class ComputeToolSimilarity:
@@ -25,7 +26,7 @@ class ComputeToolSimilarity:
         self.data_source = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.tools_data_path = tools_data_path
         self.tools_show = 20
-        self.rank_reduction = 0.4
+        self.rank_reduction = 0.5
 
     @classmethod
     def find_tools_cos_distance_matrix( self, document_token_matrix_sources, mat_size ):
@@ -175,24 +176,26 @@ if __name__ == "__main__":
     low_dim_doc_tokens_matrix = low_rank_svd.factor_matrices( documents_tokens_matrix )
     print "Matrices factored"
 
-    error_accrue = dict()
-    # find optimal k
+    '''error_accrued = dict()
     for source in documents_tokens_matrix:
         docs_tokens_mat = documents_tokens_matrix[ source ]
         mat_rank = matrix_rank( docs_tokens_mat )
+        print "Source: %s and matrix rank: %d" % ( source, mat_rank )
         u, s, v = svd( docs_tokens_mat )
-        error_accrue[ source ] = list()
+        error_accrued[ source ] = list()
         for rnk in range( 1, mat_rank ):
             u_approx = u[ :, :rnk ]
             s_approx = s[ :rnk ]
             s_approx = np.diag( np.array( s_approx ) )
             v_approx = v[ :rnk, : ]
-            approx_x = u_approx.dot( s_approx ).dot( v_approx )
-            error = np.mean( docs_tokens_mat - approx_x )
-            error_accrue[ source ].append( ( rnk, error ) )
+            #approx_x = u_approx.dot( s_approx ).dot( v_approx )
+            approx_x = np.dot( u_approx, np.dot( s_approx, v_approx ) )
+            error = np.sqrt( np.sum( np.square( docs_tokens_mat - approx_x ) ) ) # Frobenius norm
+            sum_singular = np.sum( s_approx ) / float( np.sum( s ) )
+            error_accrued[ source ].append( ( rnk, error, sum_singular ) )
 
     with open( "data/frobenius_error.json", "w" ) as fro_error:
-        fro_error.write( json.dumps( error_accrue ) )
+        fro_error.write( json.dumps( error_accrued ) )'''
     
     # write documents tokens matrices to file
     doc_plot_src = dict()
