@@ -48,7 +48,7 @@ class LatentSemanticIndexing:
         """
         Latent semantic indexing
         """
-        print "Computing lower rank representations of similarity matrices..."
+        print "Computing lower rank representations of documents tokens matrices..."
         approx_similarity_matrices = dict()
         # it is number determined heuristically which helps capturing most of the
         # information in the original similarity matrices
