@@ -52,7 +52,6 @@ class ComputeToolSimilarity:
         """
         Find similarity distance between vectors for input/output tokens
         """
-        own_similarity_score = 1.0
         mat_size = len( tools_list )
         sim_scores = np.zeros( [ mat_size, mat_size ] )
         sim_mat = input_output_tokens_matrix
@@ -60,7 +59,7 @@ class ComputeToolSimilarity:
             tool_scores = sim_scores[ index_x ]
             for index_y, item_y in enumerate( sim_mat ):
                 # compute similarity scores between two vectors
-                tool_scores[ index_y ] = own_similarity_score if index_x == index_y else utils._jaccard_score( item_x, item_y )
+                tool_scores[ index_y ] = 1.0 if index_x == index_y else utils._jaccard_score( item_x, item_y )
         return sim_scores
 
     @classmethod
@@ -88,7 +87,7 @@ class ComputeToolSimilarity:
         similarity_tools = dict()
         similarity_scores_path = "data/similarity_scores_sources_optimal.json"
         for tool_index, tool in enumerate( tools_list ):
-            tool_name = tools_list[ tool_index ] 
+            tool_name = tools_list[ tool_index ]
             similarity_tools[ tools_list[ tool_index ] ] = dict()
             sim_mat_tool_learned = np.zeros( all_tools )
             for source in similarity_matrix_sources:
@@ -208,9 +207,9 @@ if __name__ == "__main__":
     tokens = extract_tokens.ExtractTokens( sys.argv[ 1 ] )
     dataframe, refined_tokens = tokens.get_tokens( tool_similarity.data_source )
     nd_similarity = learn_doc2vec.Learn_Doc2Vec_Similarity( refined_tokens[ tool_similarity.data_source[ 1 ] ] )
-    nd_similarity_matrix, tools_list = nd_similarity.learn_doc_similarity()
+    nd_similarity_matrix, tools_list = nd_similarity.learn_doc_similarity( 5, 50 )
     ht_similarity = learn_doc2vec.Learn_Doc2Vec_Similarity( refined_tokens[ tool_similarity.data_source[ 2 ] ] )
-    ht_similarity_matrix, tools_list = ht_similarity.learn_doc_similarity()
+    ht_similarity_matrix, tools_list = ht_similarity.learn_doc_similarity( 15, 300 )
 
     io_doc_tokens = tool_similarity.create_io_tokens_matrix( refined_tokens[ tool_similarity.data_source[ 0 ] ] )
     io_similarity_matrix = tool_similarity.find_io_similarity( io_doc_tokens, tools_list )
