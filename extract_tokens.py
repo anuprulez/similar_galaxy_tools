@@ -146,4 +146,4 @@ class ExtractTokens:
         print( "Extracting tokens..." )
         dataframe = self._read_file()
         tokens = self._extract_tokens( dataframe, data_source )
-        return dataframe, self._refine_tokens( tokens )       
+        return dataframe, self._refine_tokens( tokens )      
