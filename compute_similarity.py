@@ -26,7 +26,7 @@ class ComputeToolSimilarity:
         self.data_source = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.tools_data_path = tools_data_path
         self.tools_show = 20
-        self.rank_reduction = 0.5
+        self.rank_reduction = 0.3
 
     @classmethod
     def find_io_similarity( self, input_output_tokens_matrix, tools_list ):
@@ -54,11 +54,7 @@ class ComputeToolSimilarity:
             sim_mat = document_token_matrix_sources[ source ]
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
-                # frequencies should be taken as positive or 0
-                #item_x_positive = item_x.clip( min=0 )
                 for index_y, item_y in enumerate( sim_mat ):
-                    #item_y_positive = item_y.clip( min=0 )
-                    # compute similarity scores between two vectors
                     sim_scr = 1.0 if index_x == index_y else utils._cosine_angle_score( item_x, item_y )
                     sim_scores[ index_x ][ index_y ] = sim_scr if sim_scr >= 0.0 else 0.0
             similarity_matrix_sources[ source ] = sim_scores
