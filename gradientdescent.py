@@ -9,10 +9,11 @@ import json
 class GradientDescentOptimizer:
 
     @classmethod
-    def __init__( self, number_iterations, data_sources ):
+    def __init__( self, number_iterations, data_sources, seed=2 ):
         self.number_iterations = number_iterations
         self.sources = data_sources
         self.best_similarity_score = 1.0
+        np.random.seed( seed )
 
     @classmethod
     def get_random_weights( self ):
@@ -37,7 +38,7 @@ class GradientDescentOptimizer:
         return weights
 
     @classmethod
-    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, eta=1, beta=0.8, alpha=0.5 ):
+    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, eta=1, beta=0.8, alpha=0.5, epsilon=1e-4 ):
         """
         Find the optimal step size/learning rate for gradient descent
         http://users.ece.utexas.edu/~cmcaram/EE381V_2012F/Lecture_4_Scribe_Notes.final.pdf
@@ -45,12 +46,17 @@ class GradientDescentOptimizer:
         """
         prev_gradient_update = None
         learning_rates = list()
+        ideal_score = np.repeat( self.best_similarity_score, num_all_tools )
         while True:
             step_update = list()
             learning_rates.append( eta )
+            gradient_update = 0
+            is_optimal_gradient = False
             for source in weights:
-                loss_0 = weights[ source ] * similarity[ source ] - np.ones( [ num_all_tools ] )
-                loss_1 = ( weights[ source ] - eta * gradient[ source ] * similarity[ source ] ) - np.ones( [ num_all_tools ] )
+                loss_0 = weights[ source ] * similarity[ source ] - ideal_score
+                weight_1 = weights[ source ] - eta * gradient[ source ]
+                loss_1 = weight_1 * similarity[ source ] - ideal_score
+                grad = 2 * np.mean( np.dot( similarity[ source ], loss_1 ) )
                 f_w1 = np.mean( loss_1 ** 2 )
                 f_w0 = np.mean( loss_0 ** 2 )
                 f_w0 = f_w0 - alpha * eta * ( gradient[ source ] ** 2 )
@@ -58,8 +64,13 @@ class GradientDescentOptimizer:
                     step_update.append( True )
                 else:
                     step_update.append( False )
-            if all( n == False for n in step_update ) is True:
-                weights[ source ] = weights[ source ] - eta * ( gradient[ source ] )
+                gradient_update += ( np.abs( grad ) )
+            if prev_gradient_update is not None:
+                is_optimal_gradient = ( ( prev_gradient_update - gradient_update ) <= epsilon )
+            prev_gradient_update = gradient_update
+            if is_optimal_gradient or all( n == False for n in step_update ) is True:
+                for source in weights:
+                    weights[ source ] = weights[ source ] - eta * ( gradient[ source ] )
                 break
             eta = beta * eta
         return eta, self.normalize_weights( weights ), learning_rates

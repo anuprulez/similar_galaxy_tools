@@ -29,6 +29,21 @@ class ComputeToolSimilarity:
         self.rank_reduction = 0.5
 
     @classmethod
+    def find_io_similarity( self, input_output_tokens_matrix, tools_list ):
+        """
+        Find similarity distance between vectors for input/output tokens
+        """
+        mat_size = len( tools_list )
+        sim_scores = np.zeros( [ mat_size, mat_size ] )
+        sim_mat = input_output_tokens_matrix
+        for index_x, item_x in enumerate( sim_mat ):
+            tool_scores = sim_scores[ index_x ]
+            for index_y, item_y in enumerate( sim_mat ):
+                # compute similarity scores between two vectors
+                tool_scores[ index_y ] = 1.0 if index_x == index_y else utils._jaccard_score( item_x, item_y )
+        return sim_scores
+
+    @classmethod
     def find_tools_cos_distance_matrix( self, document_token_matrix_sources, mat_size ):
         """
         Find similarity distance using cosine distance among tools
@@ -39,13 +54,13 @@ class ComputeToolSimilarity:
             sim_mat = document_token_matrix_sources[ source ]
             sim_scores = np.zeros( ( mat_size, mat_size ) )
             for index_x, item_x in enumerate( sim_mat ):
-                tool_scores = sim_scores[ index_x ]
                 # frequencies should be taken as positive or 0
-                item_x_positive = item_x.clip( min=0 )
+                #item_x_positive = item_x.clip( min=0 )
                 for index_y, item_y in enumerate( sim_mat ):
-                    item_y_positive = item_y.clip( min=0 )
+                    #item_y_positive = item_y.clip( min=0 )
                     # compute similarity scores between two vectors
-                    tool_scores[ index_y ] = utils._cosine_angle_score( item_x_positive, item_y_positive )
+                    sim_scr = 1.0 if index_x == index_y else utils._cosine_angle_score( item_x, item_y )
+                    sim_scores[ index_x ][ index_y ] = sim_scr if sim_scr >= 0.0 else 0.0
             similarity_matrix_sources[ source ] = sim_scores
         return similarity_matrix_sources
 
@@ -220,10 +235,12 @@ if __name__ == "__main__":
     cos_similarity_matrix = tool_similarity.find_tools_cos_distance_matrix( low_dim_doc_tokens_matrix, len( tools_list ) )
     print( "Computed similarity matrices for all the sources" )
 
+    io_jaccard_similarity = tool_similarity.find_io_similarity( documents_tokens_matrix[ tool_similarity.data_source[ 0 ] ], tools_list )
+
     distance_dict = dict()
     distance_dict[ tool_similarity.data_source[ 1 ] ] = cos_similarity_matrix[ tool_similarity.data_source[ 1 ] ]
     distance_dict[ tool_similarity.data_source[ 2 ] ] = cos_similarity_matrix[ tool_similarity.data_source[ 2 ] ]
-    distance_dict[ tool_similarity.data_source[ 0 ] ] = cos_similarity_matrix[ tool_similarity.data_source[ 0 ] ]
+    distance_dict[ tool_similarity.data_source[ 0 ] ] = io_jaccard_similarity #cos_similarity_matrix[ tool_similarity.data_source[ 0 ] ]
 
     print( "Converting similarity as similarity distributions..." )
     similarity_as_list = tool_similarity.convert_similarity_as_list( distance_dict, tools_list )

@@ -154,8 +154,9 @@ def plot_rank_singular_variation():
     plt.show()     
 
 
-#plot_tokens_size()
+plot_rank_eigen_variation()
+'''plot_tokens_size()
 plot_doc_tokens_mat( )
 plot_doc_tokens_mat_low_rank()
-#plot_rank_singular_variation()
-#plot_frobenius_error()
+plot_rank_singular_variation()
+plot_frobenius_error()'''
