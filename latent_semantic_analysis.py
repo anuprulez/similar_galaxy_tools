@@ -52,6 +52,7 @@ class LatentSemanticIndexing:
         approx_similarity_matrices = dict()
         # it is number determined heuristically which helps capturing most of the
         # information in the original similarity matrices
+        singular_values_sources = dict()
         for source in document_tokens_matrix_sources:
             similarity_matrix = document_tokens_matrix_sources[ source ]
             mat_rnk = matrix_rank( similarity_matrix )
@@ -60,4 +61,7 @@ class LatentSemanticIndexing:
             s = sorted( s, reverse=True )
             compute_result = self._find_optimal_low_rank_matrix( similarity_matrix, mat_rnk, u, s, v, source )
             approx_similarity_matrices[ source ] = compute_result[ 0 ]
+            singular_values_sources[ source ] = s
+        with open( "data/singular_values_" + source + ".json", "w" ) as sin_val:
+            sin_val.write( json.dumps( singular_values_sources ) )
         return approx_similarity_matrices

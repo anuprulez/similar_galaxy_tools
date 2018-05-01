@@ -139,7 +139,7 @@ class ExtractTokens:
         return refined_tokens_sources
 
     @classmethod
-    def create_document_tokens_matrix( self, documents_tokens ):
+    def create_document_tokens_matrix( self, documents_tokens, data_source ):
         """
         Create document tokens matrix
         """
@@ -162,10 +162,10 @@ class ExtractTokens:
             for tool_item in doc_tokens:
                 for word_score in doc_tokens[ tool_item ]:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
-                    if source == "input_output":
-                        document_tokens_matrix[ counter ][ word_index ] = 1.0
+                    if source == data_source[ 0 ]:
+                        document_tokens_matrix[ counter ][ word_index ] = 1.0 # set the flag for the corresponding token's position
                     else:
-                        document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
+                        document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ] # set the flag using bm25 score
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -178,5 +178,5 @@ class ExtractTokens:
         print( "Extracting tokens..." )
         dataframe = self._read_file()
         tokens = self._extract_tokens( dataframe, data_source )
-        documents_tokens_matrix, tools_list = self.create_document_tokens_matrix( self._refine_tokens( tokens ) )
+        documents_tokens_matrix, tools_list = self.create_document_tokens_matrix( self._refine_tokens( tokens ), data_source )
         return dataframe, documents_tokens_matrix, tools_list 

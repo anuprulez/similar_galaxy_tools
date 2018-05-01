@@ -38,7 +38,7 @@ class GradientDescentOptimizer:
         return weights
 
     @classmethod
-    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score, eta=1, beta=0.8, alpha=0.5, epsilon=1e-4 ):
+    def backtracking_line_search( self, weights, gradient, similarity, num_all_tools, ideal_score, eta=1, beta=0.8, alpha=0.5, epsilon=1e-2 ):
         """
         Find the optimal step size/learning rate for gradient descent
         http://users.ece.utexas.edu/~cmcaram/EE381V_2012F/Lecture_4_Scribe_Notes.final.pdf

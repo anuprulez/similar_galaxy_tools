@@ -26,7 +26,7 @@ class ComputeToolSimilarity:
         self.data_source = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.tools_data_path = tools_data_path
         self.tools_show = 20
-        self.rank_reduction = 0.3
+        self.rank_reduction = 0.1
 
     @classmethod
     def find_io_similarity( self, input_output_tokens_matrix, tools_list ):
@@ -185,6 +185,7 @@ if __name__ == "__main__":
     tokens = extract_tokens.ExtractTokens( sys.argv[ 1 ] )
     dataframe, documents_tokens_matrix, tools_list = tokens.get_tokens( tool_similarity.data_source )
     low_dim_doc_tokens_matrix = low_rank_svd.factor_matrices( documents_tokens_matrix )
+    low_dim_doc_tokens_matrix[ "input_output" ] = documents_tokens_matrix[ "input_output" ]
     print "Matrices factored"
 
     '''error_accrued = dict()
@@ -234,9 +235,9 @@ if __name__ == "__main__":
     io_jaccard_similarity = tool_similarity.find_io_similarity( documents_tokens_matrix[ tool_similarity.data_source[ 0 ] ], tools_list )
 
     distance_dict = dict()
+    distance_dict[ tool_similarity.data_source[ 0 ] ] = io_jaccard_similarity # take jaccard index similarity for input/output source
     distance_dict[ tool_similarity.data_source[ 1 ] ] = cos_similarity_matrix[ tool_similarity.data_source[ 1 ] ]
     distance_dict[ tool_similarity.data_source[ 2 ] ] = cos_similarity_matrix[ tool_similarity.data_source[ 2 ] ]
-    distance_dict[ tool_similarity.data_source[ 0 ] ] = io_jaccard_similarity #cos_similarity_matrix[ tool_similarity.data_source[ 0 ] ]
 
     print( "Converting similarity as similarity distributions..." )
     similarity_as_list = tool_similarity.convert_similarity_as_list( distance_dict, tools_list )
