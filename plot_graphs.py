@@ -29,7 +29,7 @@ def plot_doc_tokens_mat():
     sources = [ 'name_desc_edam', 'help_text' ]
     titles_fullrank = [ "Name and description", "Help text" ]
     for row, axis in enumerate( axes ):
-        doc_token_mat = read_files( "data/similarity_source_orig.json" )
+        doc_token_mat = read_files( "data/0.1/similarity_source_orig.json" )
         doc_token_mat = doc_token_mat[ sources[ row ] ]
         heatmap = axis.imshow( doc_token_mat, cmap=plt.cm.Blues ) 
         axis.set_title( titles_fullrank[ row ], fontsize = new_fs )
@@ -55,7 +55,7 @@ def plot_doc_tokens_mat_low_rank():
     sources = [ 'name_desc_edam', 'help_text' ]
     titles_fullrank = [ "Name and description", "Help text" ]
     for row, axis in enumerate( axes ):
-        doc_token_mat_low = read_files( "data/similarity_source_low_rank.json" )
+        doc_token_mat_low = read_files( "data/0.1/similarity_source_low_rank.json" )
         doc_token_mat_low = doc_token_mat_low[ sources[ row ] ]
         heatmap = axis.imshow( doc_token_mat_low, cmap=plt.cm.Blues )
         axis.set_title( titles_fullrank[ row ], fontsize = new_fs )
@@ -173,12 +173,142 @@ def plot_singular_values():
     axes[2].grid(True)
     plt.suptitle("Singular values for tools documents-tokens matrices")
     plt.show()
-        
+      
 
+def compute_cost( similarity_data, iterations ):
+    cost_iterations = np.zeros( [ len( similarity_data ) - 1, iterations ] )
+    for index, tool in enumerate( similarity_data ):
+        if "cost_iterations" in tool:
+            cost_iterations[ index ][ : ] = tool[ "cost_iterations" ][ :iterations ]
+    # compute mean cost occurred for each tool across iterations
+    return np.mean( cost_iterations, axis=0 )
+    
+
+def plot_average_cost_low_rank():
+    max_iter = 10
+    data_1_0 = read_files( "data/1.0/similarity_matrix.json" )
+    data_0_7 = read_files( "data/0.7/similarity_matrix.json" )
+    data_0_5 = read_files( "data/0.5/similarity_matrix.json" )
+    data_0_3 = read_files( "data/0.3/similarity_matrix.json" )
+    data_0_1 = read_files( "data/0.1/similarity_matrix.json" )
+    data_0_0_5 = read_files( "data/0.05/similarity_matrix.json" )
+
+    cost_1_0 = compute_cost( data_1_0, max_iter )
+    cost_0_7 = compute_cost( data_0_7, max_iter )
+    cost_0_5 = compute_cost( data_0_5, max_iter )
+    cost_0_3 = compute_cost( data_0_3, max_iter )
+    cost_0_1 = compute_cost( data_0_1, max_iter )
+    cost_0_0_5 = compute_cost( data_0_0_5, max_iter )
+    
+    plt.plot( cost_1_0, marker='o' )
+    plt.plot( cost_0_7, marker='8' )
+    plt.plot( cost_0_5, marker='s' )
+    plt.plot( cost_0_3, marker='+')
+    plt.plot( cost_0_1,marker='x' )
+    plt.plot( cost_0_0_5,marker='<' )
+    plt.ylabel( 'Mean squared error' )
+    plt.xlabel( 'Gradient descent iterations' )
+    plt.title( 'Mean squared error for multiple low-rank matrix estimations' )
+    plt.legend( [ "Full-rank", "70\% of full-rank", "50\% of full-rank", "30\% of full-rank", "10\% of full-rank", "5\% of full-rank" ], loc=1 )
+    plt.grid( True )
+    plt.show()
+    
+
+def plot_lr_drop():
+    data_0_1 = read_files( "data/0.1/learning_rates.json" )
+    max_len = 0
+    lr_drop = list()
+    for item in data_0_1:
+        for gd_iter in data_0_1[ item ]:
+            lr_steps = len( gd_iter )
+            if len( gd_iter ) > max_len:
+                max_len = len( gd_iter )
+                lr_drop = gd_iter
+    plt.plot( lr_drop )
+    plt.ylabel( 'Gradient descent learning rate' )
+    plt.xlabel( 'Iterations' )
+    plt.title( 'Learning rates using backtracking line search' )
+    plt.grid( True )
+    plt.show()
+
+
+def plot_correlation( similarity_matrices, title ):
+    # plot correlation matrix
+    NEW_FONT_SIZE = 22
+    fig, axes = plt.subplots( nrows=2, ncols=2 )
+    sources = [ "input_output", 'name_desc_edam', 'help_text', "optimal" ]
+    titles_fullrank = [ "Input \& output", "Name \& description", "Help text", "Optimal" ]
+    row_lst = [ [ 0, 1 ], [ 2, 3 ] ]
+    for row, axis in enumerate( axes ):
+        mat1 = similarity_matrices[ row_lst[ row ][ 0 ] ]
+        mat2 = similarity_matrices[ row_lst[ row ][ 1 ] ]
+        heatmap = axis[ 0 ].imshow( mat1, cmap=plt.cm.Blues ) 
+        heatmap = axis[ 1 ].imshow( mat2, cmap=plt.cm.Blues ) 
+        axis[ 0 ].set_title( titles_fullrank[ row_lst[ row ][ 0 ] ], fontsize = NEW_FONT_SIZE )
+        axis[ 1 ].set_title( titles_fullrank[ row_lst[ row ][ 1 ] ], fontsize = NEW_FONT_SIZE )
+        
+        for tick in axis[ 0 ].xaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axis[ 1 ].xaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        
+        for tick in axis[ 0 ].yaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axis[ 1 ].yaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        
+        if row == 1:
+            axis[ 0 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
+            axis[ 1 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
+            
+        axis[ 0 ].set_ylabel( "Tools", fontsize = NEW_FONT_SIZE )
+        axis[ 1 ].set_ylabel( "Tools", fontsize = NEW_FONT_SIZE )
+
+    fig.subplots_adjust( right = 0.75 )
+    cbar_ax = fig.add_axes( [ 0.8, 0.15, 0.02, 0.7 ] )
+    fig.colorbar( heatmap, cax=cbar_ax )
+    plt.suptitle( title )
+    plt.show()
+
+
+def extract_correlation( file_path, title ):
+    # extract correlation matrices from multiple sources
+    with open( file_path, 'r' ) as similarity_data:
+        sim_data = json.loads( similarity_data.read() )
+    mat_size = len( sim_data )
+    sim_score_ht = np.zeros( [ mat_size, mat_size ] )
+    sim_score_nd = np.zeros( [ mat_size, mat_size ] )
+    sim_score_io = np.zeros( [ mat_size, mat_size ] )
+    sim_score_op = np.zeros( [ mat_size, mat_size ] )
+    tools = list()
+    similarity_matrices = list()
+    for index, item in enumerate( sim_data ):
+        tools.append( item )
+        sources_sim = sim_data[ item ]
+        sim_score_ht[ index ][ : ] = sources_sim[ "help_text" ]
+        sim_score_nd[ index ][ : ] = sources_sim[ "name_desc_edam" ]
+        sim_score_io[ index ][ : ] = sources_sim[ "input_output" ]
+        sim_score_op[ index ][ : ] = sources_sim[ "optimal" ]
+    
+    similarity_matrices.append( sim_score_io )
+    similarity_matrices.append( sim_score_nd )
+    similarity_matrices.append( sim_score_ht )
+    similarity_matrices.append( sim_score_op )
+    plot_correlation( similarity_matrices, title )
+
+
+extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices computed with 5\% of full-rank" )
+extract_correlation( "data/0.1/similarity_scores_sources_optimal.json", "Similarity matrices computed with 10\% of full-rank" )
+extract_correlation( "data/0.3/similarity_scores_sources_optimal.json", "Similarity matrices computed with 30\% of full-rank" )
+extract_correlation( "data/0.5/similarity_scores_sources_optimal.json", "Similarity matrices computed with 50\% of full-rank" )
+extract_correlation( "data/0.7/similarity_scores_sources_optimal.json", "Similarity matrices computed with 70\% of full-rank" )
+extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices computed with 100\% of full-rank" )
+#plot_lr_drop()
+#plot_average_cost_low_rank()
 #plot_tokens_size()
 #plot_singular_values()
 #plot_rank_singular_variation()
-plot_doc_tokens_mat()
-plot_doc_tokens_mat_low_rank()
+#plot_doc_tokens_mat()
+#plot_doc_tokens_mat_low_rank()
 #plot_rank_singular_variation()
 #plot_frobenius_error()'''

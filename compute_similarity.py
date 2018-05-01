@@ -26,7 +26,7 @@ class ComputeToolSimilarity:
         self.data_source = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.tools_data_path = tools_data_path
         self.tools_show = 20
-        self.rank_reduction = 0.1
+        self.rank_reduction = 0.01
 
     @classmethod
     def find_io_similarity( self, input_output_tokens_matrix, tools_list ):
@@ -61,21 +61,6 @@ class ComputeToolSimilarity:
         return similarity_matrix_sources
 
     @classmethod
-    def convert_similarity_as_list( self, similarity_matrix_sources, all_tools ):
-        """
-        Convert the similarity scores to list
-        """
-        all_tools_len = len( all_tools )
-        similarity_matrix_similarity_sources = dict()
-        for source in similarity_matrix_sources:
-            similarity_matrix_dist = np.zeros( [ all_tools_len, all_tools_len] )
-            similarity_matrix_src = similarity_matrix_sources[ source ]
-            for index in range( all_tools_len ):
-                similarity_matrix_dist[ index ][ : ] = similarity_matrix_src[ index ]
-            similarity_matrix_similarity_sources[ source ] = similarity_matrix_dist
-        return similarity_matrix_similarity_sources
-
-    @classmethod
     def assign_similarity_importance( self, similarity_matrix_sources, tools_list, optimal_weights ):
         """
         Assign importance to the similarity scores coming for different sources
@@ -89,7 +74,7 @@ class ComputeToolSimilarity:
             similarity_tools[ tools_list[ tool_index ] ] = dict()
             sim_mat_tool_learned = np.zeros( all_tools )
             for source in similarity_matrix_sources:
-                optimal_weight_source = optimal_weights[ tools_list[ tool_index ] ][ source ]
+                optimal_weight_source = optimal_weights[ tool_name ][ source ]
                 tool_source_scores = similarity_matrix_sources[ source ][ tool_index ]
                 similarity_tools[ tool_name ][ source ] = [ item for item in tool_source_scores ]
                 # add up the similarity scores from each source weighted by importance factors learned by machine leanring algorithm
@@ -187,27 +172,6 @@ if __name__ == "__main__":
     low_dim_doc_tokens_matrix = low_rank_svd.factor_matrices( documents_tokens_matrix )
     low_dim_doc_tokens_matrix[ "input_output" ] = documents_tokens_matrix[ "input_output" ]
     print "Matrices factored"
-
-    '''error_accrued = dict()
-    for source in documents_tokens_matrix:
-        docs_tokens_mat = documents_tokens_matrix[ source ]
-        mat_rank = matrix_rank( docs_tokens_mat )
-        print "Source: %s and matrix rank: %d" % ( source, mat_rank )
-        u, s, v = svd( docs_tokens_mat )
-        error_accrued[ source ] = list()
-        for rnk in range( 1, mat_rank ):
-            u_approx = u[ :, :rnk ]
-            s_approx = s[ :rnk ]
-            s_approx = np.diag( np.array( s_approx ) )
-            v_approx = v[ :rnk, : ]
-            #approx_x = u_approx.dot( s_approx ).dot( v_approx )
-            approx_x = np.dot( u_approx, np.dot( s_approx, v_approx ) )
-            error = np.sqrt( np.sum( np.square( docs_tokens_mat - approx_x ) ) ) # Frobenius norm
-            sum_singular = np.sum( s_approx ) / float( np.sum( s ) )
-            error_accrued[ source ].append( ( rnk, error, sum_singular ) )
-
-    with open( "data/frobenius_error.json", "w" ) as fro_error:
-        fro_error.write( json.dumps( error_accrued ) )'''
     
     # write documents tokens matrices to file
     doc_plot_src = dict()
@@ -229,27 +193,23 @@ if __name__ == "__main__":
     with open( "data/similarity_source_low_rank.json", "w" ) as low_rank_file:
         low_rank_file.write( json.dumps( doc_low_plot_src ) )
 
+    io_jaccard_similarity = tool_similarity.find_io_similarity( documents_tokens_matrix[ tool_similarity.data_source[ 0 ] ], tools_list )
     cos_similarity_matrix = tool_similarity.find_tools_cos_distance_matrix( low_dim_doc_tokens_matrix, len( tools_list ) )
     print( "Computed similarity matrices for all the sources" )
 
-    io_jaccard_similarity = tool_similarity.find_io_similarity( documents_tokens_matrix[ tool_similarity.data_source[ 0 ] ], tools_list )
-
-    distance_dict = dict()
-    distance_dict[ tool_similarity.data_source[ 0 ] ] = io_jaccard_similarity # take jaccard index similarity for input/output source
-    distance_dict[ tool_similarity.data_source[ 1 ] ] = cos_similarity_matrix[ tool_similarity.data_source[ 1 ] ]
-    distance_dict[ tool_similarity.data_source[ 2 ] ] = cos_similarity_matrix[ tool_similarity.data_source[ 2 ] ]
-
-    print( "Converting similarity as similarity distributions..." )
-    similarity_as_list = tool_similarity.convert_similarity_as_list( distance_dict, tools_list )
+    similarity_by_sources = dict()
+    similarity_by_sources[ tool_similarity.data_source[ 0 ] ] = io_jaccard_similarity # take jaccard index similarity for input/output source
+    similarity_by_sources[ tool_similarity.data_source[ 1 ] ] = cos_similarity_matrix[ tool_similarity.data_source[ 1 ] ]
+    similarity_by_sources[ tool_similarity.data_source[ 2 ] ] = cos_similarity_matrix[ tool_similarity.data_source[ 2 ] ]
 
     print( "Learning optimal weights..." )
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ), tool_similarity.data_source )
-    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_as_list, tools_list )
+    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_by_sources.copy(), tools_list )
 
     print( "Assign importance to tools similarity matrix..." )
-    similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_as_list, tools_list, optimal_weights )
+    similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_by_sources.copy(), tools_list, optimal_weights )
 
     print( "Writing results to a JSON file..." )
-    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, tools_list, optimal_weights, cost_tools, similarity_as_list, learning_rates, uniform_cost_tools, gradients )
+    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, tools_list, optimal_weights, cost_tools, similarity_by_sources.copy(), learning_rates, uniform_cost_tools, gradients )
     end_time = time.time()
     print( "Program finished in %d seconds" % int( end_time - start_time ) )
