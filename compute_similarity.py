@@ -14,9 +14,6 @@ import utils
 import extract_tokens
 import latent_semantic_analysis
 import gradientdescent
-from numpy.linalg import matrix_rank
-from numpy.linalg import svd
-from numpy.linalg import norm
 
 
 class ComputeToolSimilarity:
@@ -26,7 +23,7 @@ class ComputeToolSimilarity:
         self.data_source = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.tools_data_path = tools_data_path
         self.tools_show = 20
-        self.rank_reduction = 0.01
+        self.rank_reduction = 1.0
 
     @classmethod
     def find_io_similarity( self, input_output_tokens_matrix, tools_list ):
@@ -169,6 +166,10 @@ if __name__ == "__main__":
     low_rank_svd = latent_semantic_analysis.LatentSemanticIndexing( tool_similarity.rank_reduction )
     tokens = extract_tokens.ExtractTokens( sys.argv[ 1 ] )
     dataframe, documents_tokens_matrix, tools_list = tokens.get_tokens( tool_similarity.data_source )
+
+    with open( "data/tools_list.json", "w" ) as tools_lst:
+        tools_lst.write( json.dumps( tools_list ) )
+
     low_dim_doc_tokens_matrix = low_rank_svd.factor_matrices( documents_tokens_matrix )
     low_dim_doc_tokens_matrix[ "input_output" ] = documents_tokens_matrix[ "input_output" ]
     print "Matrices factored"
@@ -205,6 +206,8 @@ if __name__ == "__main__":
     print( "Learning optimal weights..." )
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ), tool_similarity.data_source )
     optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_by_sources.copy(), tools_list )
+    with open( "data/optimal_weights.json", "w" ) as opt_wt:
+        opt_wt.write( json.dumps( optimal_weights ) )
 
     print( "Assign importance to tools similarity matrix..." )
     similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_by_sources.copy(), tools_list, optimal_weights )

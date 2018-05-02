@@ -1,7 +1,7 @@
 $(document).ready(function() {
     var similarityData = null,
         list_tool_names = null,
-        pathLocal = "data/similarity_matrix_0.4.json",
+        pathLocal = "data/similarity_matrix.json",
         //pathLocal = "data/similarity_matrix.json",
         pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json",
         path = pathLocal,

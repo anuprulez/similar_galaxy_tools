@@ -22,14 +22,14 @@ def read_files( file_path ):
         return json.loads( similarity_data.read() )
 
 
-def plot_doc_tokens_mat():
+def plot_doc_tokens_mat( file_path ):
     # plot documents tokens matrix
     new_fs = FONT_SIZE - 2
     fig, axes = plt.subplots( nrows=1, ncols=2 )
     sources = [ 'name_desc_edam', 'help_text' ]
     titles_fullrank = [ "Name and description", "Help text" ]
     for row, axis in enumerate( axes ):
-        doc_token_mat = read_files( "data/0.1/similarity_source_orig.json" )
+        doc_token_mat = read_files( file_path )
         doc_token_mat = doc_token_mat[ sources[ row ] ]
         heatmap = axis.imshow( doc_token_mat, cmap=plt.cm.Blues ) 
         axis.set_title( titles_fullrank[ row ], fontsize = new_fs )
@@ -48,15 +48,16 @@ def plot_doc_tokens_mat():
     plt.show()
 
 
-def plot_doc_tokens_mat_low_rank():
+def plot_doc_tokens_mat_low_rank( file_path ):
     # plot documents tokens matrix  
     new_fs = FONT_SIZE - 2
     fig, axes = plt.subplots( nrows=1, ncols=2 )
     sources = [ 'name_desc_edam', 'help_text' ]
     titles_fullrank = [ "Name and description", "Help text" ]
     for row, axis in enumerate( axes ):
-        doc_token_mat_low = read_files( "data/0.1/similarity_source_low_rank.json" )
+        doc_token_mat_low = read_files( file_path )
         doc_token_mat_low = doc_token_mat_low[ sources[ row ] ]
+        doc_token_mat_low = 100 * doc_token_mat_low
         heatmap = axis.imshow( doc_token_mat_low, cmap=plt.cm.Blues )
         axis.set_title( titles_fullrank[ row ], fontsize = new_fs )
         for tick in axis.xaxis.get_major_ticks():
@@ -79,7 +80,9 @@ def plot_tokens_size():
     io_tokens = list()
     nd_tokens = list()
     ht_tokens = list()
-    
+    NEW_FONT_SIZE = FONT_SIZE
+    fig, axes = plt.subplots( nrows=1, ncols=3 )
+    sub_titles = [ "Input \& output", "Name \& description", "Help text" ]
     io_tools_tokens = read_files( "data/tokens_input_output.txt" )
     nd_tools_tokens = read_files( "data/tokens_name_desc_edam.txt" )
     ht_tools_tokens = read_files( "data/tokens_help_text.txt" )
@@ -87,14 +90,35 @@ def plot_tokens_size():
         io_tokens.append( len( io_tools_tokens[ item ] ) )
         nd_tokens.append( len( nd_tools_tokens[ item ] ) )
         ht_tokens.append( len( ht_tools_tokens[ item ] ) )
-    plt.plot( io_tokens )
-    plt.plot( nd_tokens )
-    plt.plot( ht_tokens )
-    plt.ylabel( 'Number of tokens' )
-    plt.xlabel( 'Number of tools' )
-    plt.title( 'Distribution of tokens for the attributes of tools' )
-    plt.legend( [ "Input and output", "Name and description", "Help text" ] )
-    plt.grid( True )
+
+    for row, axis in enumerate( axes ):
+        axes[ 0 ].plot( io_tokens, color = colors_dict[ "input_output" ] )
+        axes[ 1 ].plot( nd_tokens, color = colors_dict[ "name_desc_edam" ] )
+        axes[ 2 ].plot( ht_tokens, color = colors_dict[ "help_text" ] )
+
+        axes[ 0 ].set_title( sub_titles[ 0 ], fontsize = NEW_FONT_SIZE )
+        axes[ 1 ].set_title( sub_titles[ 1 ], fontsize = NEW_FONT_SIZE )
+        axes[ 2 ].set_title( sub_titles[ 2 ], fontsize = NEW_FONT_SIZE )
+        
+        for tick in axes[ 0 ].xaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axes[ 1 ].xaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axes[ 2 ].xaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        
+        for tick in axes[ 0 ].yaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axes[ 1 ].yaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axes[ 2 ].yaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        
+        axes[ 0 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
+        axes[ 1 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
+        axes[ 2 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )   
+        axes[ 0 ].set_ylabel( "Number of tokens", fontsize = NEW_FONT_SIZE )
+    plt.suptitle( "Distribution of tokens for multiple attributes of tools" )
     plt.show()
 
 
@@ -214,8 +238,8 @@ def plot_average_cost_low_rank():
     plt.show()
     
 
-def plot_lr_drop():
-    data_0_1 = read_files( "data/0.1/learning_rates.json" )
+def plot_lr_drop( file_path ):
+    data_0_1 = read_files( file_path )
     max_len = 0
     lr_drop = list()
     for item in data_0_1:
@@ -224,7 +248,7 @@ def plot_lr_drop():
             if len( gd_iter ) > max_len:
                 max_len = len( gd_iter )
                 lr_drop = gd_iter
-    plt.plot( lr_drop )
+    plt.plot( lr_drop, marker="*" )
     plt.ylabel( 'Gradient descent learning rate' )
     plt.xlabel( 'Iterations' )
     plt.title( 'Learning rates using backtracking line search' )
@@ -242,8 +266,8 @@ def plot_correlation( similarity_matrices, title ):
     for row, axis in enumerate( axes ):
         mat1 = similarity_matrices[ row_lst[ row ][ 0 ] ]
         mat2 = similarity_matrices[ row_lst[ row ][ 1 ] ]
-        heatmap = axis[ 0 ].imshow( mat1, cmap=plt.cm.Blues ) 
-        heatmap = axis[ 1 ].imshow( mat2, cmap=plt.cm.Blues ) 
+        heatmap = axis[ 0 ].imshow( mat1, cmap=plt.cm.Reds ) 
+        heatmap = axis[ 1 ].imshow( mat2, cmap=plt.cm.Reds ) 
         axis[ 0 ].set_title( titles_fullrank[ row_lst[ row ][ 0 ] ], fontsize = NEW_FONT_SIZE )
         axis[ 1 ].set_title( titles_fullrank[ row_lst[ row ][ 1 ] ], fontsize = NEW_FONT_SIZE )
         
@@ -273,23 +297,20 @@ def plot_correlation( similarity_matrices, title ):
 
 def extract_correlation( file_path, title ):
     # extract correlation matrices from multiple sources
-    with open( file_path, 'r' ) as similarity_data:
-        sim_data = json.loads( similarity_data.read() )
+    sim_data = read_files( file_path )
+    tools_list = read_files( "data/tools_list.json" )
     mat_size = len( sim_data )
     sim_score_ht = np.zeros( [ mat_size, mat_size ] )
     sim_score_nd = np.zeros( [ mat_size, mat_size ] )
     sim_score_io = np.zeros( [ mat_size, mat_size ] )
     sim_score_op = np.zeros( [ mat_size, mat_size ] )
-    tools = list()
     similarity_matrices = list()
-    for index, item in enumerate( sim_data ):
-        tools.append( item )
-        sources_sim = sim_data[ item ]
-        sim_score_ht[ index ][ : ] = sources_sim[ "help_text" ]
-        sim_score_nd[ index ][ : ] = sources_sim[ "name_desc_edam" ]
-        sim_score_io[ index ][ : ] = sources_sim[ "input_output" ]
-        sim_score_op[ index ][ : ] = sources_sim[ "optimal" ]
-    
+    for index, tool_name in enumerate( tools_list ):
+        sources_sim = sim_data[ tool_name ]
+        sim_score_ht[ index ] = sources_sim[ "help_text" ]
+        sim_score_nd[ index ] = sources_sim[ "name_desc_edam" ]
+        sim_score_io[ index ] = sources_sim[ "input_output" ]
+        sim_score_op[ index ] = sources_sim[ "optimal" ]
     similarity_matrices.append( sim_score_io )
     similarity_matrices.append( sim_score_nd )
     similarity_matrices.append( sim_score_ht )
@@ -297,18 +318,74 @@ def extract_correlation( file_path, title ):
     plot_correlation( similarity_matrices, title )
 
 
+def plot_weights_distribution( file_path, title ):
+    # plot weights distribution
+    NEW_FONT_SIZE = FONT_SIZE
+    weights_tools = read_files( file_path )
+    weights_io = list()
+    weights_nd = list()
+    weights_ht = list()
+    for item in weights_tools:
+        wts = weights_tools[ item ]
+        weights_io.append( wts[ "input_output" ] )
+        weights_nd.append( wts[ "name_desc_edam" ] )
+        weights_ht.append( wts[ "help_text" ] )
+
+    fig, axes = plt.subplots( nrows=1, ncols=3 )
+    sources = [ "input_output", 'name_desc_edam', 'help_text', "optimal" ]
+    sub_titles = [ "Input \& output", "Name \& description", "Help text", "Optimal" ]
+    for row, axis in enumerate( axes ):
+        axes[ 0 ].plot( weights_io, color = colors_dict[ "input_output" ] )
+        axes[ 1 ].plot( weights_nd, color = colors_dict[ "name_desc_edam" ] )
+        axes[ 2 ].plot( weights_ht, color = colors_dict[ "help_text" ] )
+
+        axes[ 0 ].set_title( sub_titles[ 0 ], fontsize = NEW_FONT_SIZE )
+        axes[ 1 ].set_title( sub_titles[ 1 ], fontsize = NEW_FONT_SIZE )
+        axes[ 2 ].set_title( sub_titles[ 2 ], fontsize = NEW_FONT_SIZE )
+        
+        for tick in axes[ 0 ].xaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axes[ 1 ].xaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axes[ 2 ].xaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        
+        for tick in axes[ 0 ].yaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axes[ 1 ].yaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        for tick in axes[ 2 ].yaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+        
+        axes[ 0 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
+        axes[ 1 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
+        axes[ 2 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )   
+        axes[ 0 ].set_ylabel( "Weights", fontsize = NEW_FONT_SIZE )
+    plt.suptitle( title )
+    plt.show()
+        
+
+
+'''plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights (5\% of full-rank)" )
+plot_weights_distribution( "data/0.1/optimal_weights.json", "Distribution of weights (10\% of full-rank)" )
+plot_weights_distribution( "data/0.3/optimal_weights.json", "Distribution of weights (30\% of full-rank)" )
+plot_weights_distribution( "data/0.5/optimal_weights.json", "Distribution of weights (50\% of full-rank)" )
+plot_weights_distribution( "data/0.7/optimal_weights.json", "Distribution of weights (70\% of full-rank)" )
+plot_weights_distribution( "data/1.0/optimal_weights.json", "Distribution of weights (100\% of full-rank)" )
+
 extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices computed with 5\% of full-rank" )
 extract_correlation( "data/0.1/similarity_scores_sources_optimal.json", "Similarity matrices computed with 10\% of full-rank" )
 extract_correlation( "data/0.3/similarity_scores_sources_optimal.json", "Similarity matrices computed with 30\% of full-rank" )
 extract_correlation( "data/0.5/similarity_scores_sources_optimal.json", "Similarity matrices computed with 50\% of full-rank" )
 extract_correlation( "data/0.7/similarity_scores_sources_optimal.json", "Similarity matrices computed with 70\% of full-rank" )
-extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices computed with 100\% of full-rank" )
-#plot_lr_drop()
+extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices computed with 100\% of full-rank" )'''
+
+#plot_lr_drop( "data/0.05/learning_rates.json" )
 #plot_average_cost_low_rank()
 #plot_tokens_size()
 #plot_singular_values()
 #plot_rank_singular_variation()
-#plot_doc_tokens_mat()
-#plot_doc_tokens_mat_low_rank()
+plot_doc_tokens_mat( "data/0.1/similarity_source_orig.json" )
+#plot_doc_tokens_mat_low_rank( "data/0.1/similarity_source_low_rank.json" )
 #plot_rank_singular_variation()
 #plot_frobenius_error()'''

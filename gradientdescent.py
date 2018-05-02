@@ -112,7 +112,7 @@ class GradientDescentOptimizer:
             lr_iteration = list()
             lr_rates = list()
             ideal_tool_score = np.repeat( self.best_similarity_score, num_all_tools )
-            ideal_tool_score[ tool_index ] = 1.0
+            ideal_tool_score[ tool_index ] = 0.0
             # find optimal weights through these iterations
             for iteration in range( self.number_iterations ):
                 sources_gradient = dict()
@@ -124,7 +124,7 @@ class GradientDescentOptimizer:
                     weight = weights[ source ]
                     tools_score_source = similarity_matrix[ source ][ tool_index ]
                     # adjust for the position of the tool itself so that it does not account for the loss computation
-                    tools_score_source[ tool_index ] = 1.0
+                    tools_score_source[ tool_index ] = 0.0
                     tool_similarity_scores[ source ] = tools_score_source
                     # compute losses
                     loss, uniform_loss = self.compute_loss( weight, uniform_weight, tools_score_source, ideal_tool_score )
