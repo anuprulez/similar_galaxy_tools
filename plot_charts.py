@@ -23,7 +23,7 @@ def read_files( file_path ):
 
 
 def plot_doc_tokens_mat( file_path_io, file_path_nd, file_path_ht ):
-    fig, axes = plt.subplots( nrows=1, ncols=2 )
+    fig, axes = plt.subplots( nrows=1, ncols=3 )
     sub_titles = [ "Input \& output", "Name \& description", "Help text" ]
     io_tools_tokens = read_files( file_path_io )
     nd_tools_tokens = read_files( file_path_nd )
@@ -49,36 +49,37 @@ def plot_doc_tokens_mat( file_path_io, file_path_nd, file_path_ht ):
         for x2 in item:
             a.append( float( x2 ) )
         ht_tokens.append( a )
+    for col, axis in enumerate( axes ):
+        heatmap1 = axes[ 0 ].imshow( io_tokens, cmap=plt.cm.Reds )
+        heatmap2 = axes[ 1 ].imshow( nd_tokens, cmap=plt.cm.Reds )
+        heatmap3 = axes[ 2 ].imshow( ht_tokens, cmap=plt.cm.Reds )
 
-    for row, axis in enumerate( axes ):
-        #heatmap1 = axes[ 0 ].imshow( io_tokens, cmap=plt.cm.Reds )
-        heatmap2 = axes[ 0 ].imshow( nd_tokens, cmap=plt.cm.Reds )
-        heatmap3 = axes[ 1 ].imshow( ht_tokens, cmap=plt.cm.Reds )
-
-        #axes[ 0 ].set_title( sub_titles[ 0 ], fontsize = NEW_FONT_SIZE )
-        axes[ 0 ].set_title( sub_titles[ 1 ], fontsize = NEW_FONT_SIZE )
-        axes[ 1 ].set_title( sub_titles[ 2 ], fontsize = NEW_FONT_SIZE )
+        axes[ 0 ].set_title( sub_titles[ 0 ], fontsize = NEW_FONT_SIZE )
+        axes[ 1 ].set_title( sub_titles[ 1 ], fontsize = NEW_FONT_SIZE )
+        axes[ 2 ].set_title( sub_titles[ 2 ], fontsize = NEW_FONT_SIZE )
         
         for tick in axes[ 0 ].xaxis.get_major_ticks():
             tick.label.set_fontsize( NEW_FONT_SIZE )
         for tick in axes[ 1 ].xaxis.get_major_ticks():
             tick.label.set_fontsize( NEW_FONT_SIZE )
-        '''for tick in axes[ 2 ].xaxis.get_major_ticks():
-            tick.label.set_fontsize( NEW_FONT_SIZE )'''
-        
+        for tick in axes[ 2 ].xaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+
         for tick in axes[ 0 ].yaxis.get_major_ticks():
             tick.label.set_fontsize( NEW_FONT_SIZE )
         for tick in axes[ 1 ].yaxis.get_major_ticks():
             tick.label.set_fontsize( NEW_FONT_SIZE )
-        '''for tick in axes[ 2 ].yaxis.get_major_ticks():
-            tick.label.set_fontsize( NEW_FONT_SIZE )'''
-        
-        #axes[ 0 ].set_xlabel( "Tokens", fontsize = NEW_FONT_SIZE )
-        axes[ 0 ].set_xlabel( "N-dimensions", fontsize = NEW_FONT_SIZE )
-        axes[ 1 ].set_xlabel( "M-dimensions", fontsize = NEW_FONT_SIZE )
+        for tick in axes[ 2 ].yaxis.get_major_ticks():
+            tick.label.set_fontsize( NEW_FONT_SIZE )
+
+        axes[ 0 ].set_xlabel( "Tokens", fontsize = NEW_FONT_SIZE )
+        axes[ 1 ].set_xlabel( "100-dimensions", fontsize = NEW_FONT_SIZE )
+        axes[ 2 ].set_xlabel( "200-dimensions", fontsize = NEW_FONT_SIZE )
  
         axes[ 0 ].set_ylabel( "Documents", fontsize = NEW_FONT_SIZE )
-    plt.suptitle( "Documents-tokens multi-dimensional vectors" )
+        axes[ 1 ].set_ylabel( "Documents", fontsize = NEW_FONT_SIZE )
+        axes[ 2 ].set_ylabel( "Documents", fontsize = NEW_FONT_SIZE )
+    plt.suptitle( "Documents-tokens multi-dimensional matrices" )
     fig.subplots_adjust( right = 0.75 )
     cbar_ax = fig.add_axes( [ 0.8, 0.15, 0.02, 0.7 ] )
     fig.colorbar( heatmap3, cax=cbar_ax )
@@ -213,11 +214,10 @@ def plot_weights_distribution( file_path, title ):
         
 
 
-'''plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights (5\% of full-rank)" )
-'''
+#plot_weights_distribution( "data/optimal_weights.json", "Distribution of weights for multiple tools attributes" )
 #plot_doc_tokens_mat( "data/doc_vecs_io.json", "data/doc_vecs_nd.json", "data/doc_vecs_ht.json" )
-extract_correlation( "data/similarity_scores_sources_optimal.json", "Similarity" )
-#plot_lr_drop( "data/0.05/learning_rates.json" )
+#extract_correlation( "data/similarity_scores_sources_optimal.json", "Similarity matrices for multiple tools attributes and an optimal one" )
+plot_lr_drop( "data/learning_rates.json" )
 #plot_average_cost_low_rank()
 #plot_tokens_size()
 #plot_singular_values()

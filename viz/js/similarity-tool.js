@@ -50,7 +50,7 @@ $(document).ready(function() {
                 // make html for the selected tool
                 $el_tools.append( createHTML( [ toolResults.root_tool ], selectedToolId, "Selected tool: <b>" +  selectedToolId + "</b>", "", true ) );
                 // show optimal weights
-                $el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
+                //$el_tools.append( showWeights( toolResults.optimal_weights, "" ) );
                 
                 // make html for similar tools found by optimizing similarity scores using Gradient Descent
                 $el_tools.append( createHTML( toolScores, selectedToolId, "Similar tools for the selected tool: <b>" +  selectedToolId + " </b>found by optimal combination (Gradient Descent) of similarity scores from multiple sources</h4>", "Weighted similarity score", false ) );
@@ -118,8 +118,8 @@ $(document).ready(function() {
         template += "<th>S.No.</th>";
         template += "<th>Id</th>";
         if ( !isHeader ) {
-            template += "<th> Input and Output </th>";
-            template += "<th> Name, Desc. and EDAM  </th>";
+            template += "<th> Input and output </th>";
+            template += "<th> Name and description  </th>";
             template += "<th> Help text  </th>";
             template += "<th> " + scoreHeaderText + "</th>";
             template += "<th> Rank </th>";
