@@ -5,6 +5,7 @@ Learn similarity among documents using neural networks (Doc2Vec)
 import numpy as np
 import operator
 import gensim
+import json
 from gensim.models.doc2vec import TaggedDocument
 from random import shuffle
 
@@ -34,7 +35,7 @@ class Learn_Doc2Vec_Similarity:
         return tagged_documents, tools_list
 
     @classmethod
-    def _find_document_similarity( self, tagged_documents, tools_list, window=15, n_dim=200, training_epochs=10, iterations=800 ):
+    def _find_document_similarity( self, tagged_documents, tools_list, src, window=15, n_dim=200, training_epochs=10, iterations=800 ):
         """
         Find the similarity among documents by training a neural network (Doc2Vec)
         """
@@ -45,6 +46,7 @@ class Learn_Doc2Vec_Similarity:
             shuffle( tagged_documents )
             model.train( tagged_documents, total_examples=model.corpus_count, epochs=model.iter )
         tools_similarity = list()
+        doc_vectors = list()
         for index in range( len_tools ):
             similarity = model.docvecs.most_similar( index, topn=len_tools )
             sim_scores = [ ( int( item_id ), score ) for ( item_id, score ) in similarity ]
@@ -55,14 +57,17 @@ class Learn_Doc2Vec_Similarity:
             # match up with the sudden drop of values to 0 in input/output similarity values
             sim_scores = [ score if score >= 0.0 else 0.0 for ( item_id, score ) in sim_scores ]
             tools_similarity.append( sim_scores )
+            doc_vectors.append( [ str( x ) for x in model.docvecs[ index ] ] )
+        with open( "data/doc_vecs_" + src + ".json", "w" ) as doc_vecs:
+            doc_vecs.write( json.dumps( doc_vectors ) )
         return tools_similarity
 
     @classmethod
-    def learn_doc_similarity( self, window, n_dim ):
+    def learn_doc_similarity( self, src, window, n_dim ):
         """
         Learn similarity among documents using neural network (doc2vec)
         """
         print( "Computing similarity..." )
         tagged_doc, tools_list = self._tag_document()
-        tools_similarity = self._find_document_similarity( tagged_doc, tools_list, window, n_dim )
+        tools_similarity = self._find_document_similarity( tagged_doc, tools_list, src, window, n_dim )
         return tools_similarity, tools_list
