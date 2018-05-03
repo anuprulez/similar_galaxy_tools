@@ -3,6 +3,8 @@ import numpy as np
 from pylab import *
 from matplotlib_venn import venn2
 import json
+import string
+
 
 # Font close to Times New Roman
 # https://mondaybynoon.com/linux-font-equivalents-to-popular-web-typefaces/
@@ -24,14 +26,14 @@ def read_files( file_path ):
 
 def plot_doc_tokens_mat( file_path ):
     # plot documents tokens matrix
-    new_fs = FONT_SIZE - 2
+    new_fs = FONT_SIZE
     fig, axes = plt.subplots( nrows=1, ncols=2 )
     sources = [ 'name_desc_edam', 'help_text' ]
-    titles_fullrank = [ "Name and description", "Help text" ]
+    titles_fullrank = [ "Name \& description (a)", "Help text (b)" ]
     for row, axis in enumerate( axes ):
         doc_token_mat = read_files( file_path )
         doc_token_mat = doc_token_mat[ sources[ row ] ]
-        heatmap = axis.imshow( doc_token_mat, cmap=plt.cm.Blues ) 
+        heatmap = axis.imshow( doc_token_mat, cmap=plt.cm.Reds ) 
         axis.set_title( titles_fullrank[ row ], fontsize = new_fs )
         for tick in axis.xaxis.get_major_ticks():
             tick.label.set_fontsize( new_fs )
@@ -39,7 +41,7 @@ def plot_doc_tokens_mat( file_path ):
             tick.label.set_fontsize( new_fs )
         axis.set_xlabel( "Tokens", fontsize = new_fs )
         if row == 0:
-            axis.set_ylabel( "Documents", fontsize = new_fs )
+            axis.set_ylabel( "Tools (documents)", fontsize = new_fs )
 
     fig.subplots_adjust(right=0.75)
     cbar_ax = fig.add_axes([0.8, 0.15, 0.02, 0.7])
@@ -53,12 +55,12 @@ def plot_doc_tokens_mat_low_rank( file_path ):
     new_fs = FONT_SIZE - 2
     fig, axes = plt.subplots( nrows=1, ncols=2 )
     sources = [ 'name_desc_edam', 'help_text' ]
-    titles_fullrank = [ "Name and description", "Help text" ]
+    titles_fullrank = [ "Name \& description (a)", "Help text (b)" ]
     for row, axis in enumerate( axes ):
         doc_token_mat_low = read_files( file_path )
         doc_token_mat_low = doc_token_mat_low[ sources[ row ] ]
-        doc_token_mat_low = 100 * doc_token_mat_low
-        heatmap = axis.imshow( doc_token_mat_low, cmap=plt.cm.Blues )
+        doc_token_mat_low = doc_token_mat_low
+        heatmap = axis.imshow( doc_token_mat_low, cmap=plt.cm.Reds )
         axis.set_title( titles_fullrank[ row ], fontsize = new_fs )
         for tick in axis.xaxis.get_major_ticks():
             tick.label.set_fontsize( new_fs )
@@ -66,12 +68,12 @@ def plot_doc_tokens_mat_low_rank( file_path ):
             tick.label.set_fontsize( new_fs )
         axis.set_xlabel( "Tokens", fontsize = new_fs )
         if row == 0:
-            axis.set_ylabel( "Documents", fontsize = new_fs )
+            axis.set_ylabel( "Tools (documents)", fontsize = new_fs )
 
     fig.subplots_adjust(right=0.75)
     cbar_ax = fig.add_axes([0.8, 0.15, 0.02, 0.7])
     fig.colorbar(heatmap, cax=cbar_ax)
-    plt.suptitle("Low rank representation of documents-tokens matrices")
+    plt.suptitle("Low-rank representation of documents-tokens matrices")
     plt.show()
 
 
@@ -114,9 +116,9 @@ def plot_tokens_size():
         for tick in axes[ 2 ].yaxis.get_major_ticks():
             tick.label.set_fontsize( NEW_FONT_SIZE )
         
-        axes[ 0 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
-        axes[ 1 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
-        axes[ 2 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )   
+        axes[ 0 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
+        axes[ 1 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
+        axes[ 2 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )   
         axes[ 0 ].set_ylabel( "Number of tokens", fontsize = NEW_FONT_SIZE )
     plt.suptitle( "Distribution of tokens for multiple attributes of tools" )
     plt.show()
@@ -127,12 +129,12 @@ def plot_rank_eigen_variation():
     help_rank = read_files( "data/help_text_vary_eigen_rank.json" )
     name_rank = read_files( "data/name_desc_edam_vary_eigen_rank.json" )
     io_rank = read_files( "data/input_output_vary_eigen_rank.json" )
-    plt.plot( io_rank[ 0 ], io_rank[ 1 ] )
-    plt.plot( name_rank[ 0 ], name_rank[ 1 ] )
-    plt.plot( help_rank[ 0 ], help_rank[ 1 ] )
-    plt.ylabel( 'Percentage of the sum of eigen values' )
+    plt.plot( io_rank[ 0 ], io_rank[ 1 ], color = colors_dict[ "input_output" ] )
+    plt.plot( name_rank[ 0 ], name_rank[ 1 ], color = colors_dict[ "name_desc_edam" ] )
+    plt.plot( help_rank[ 0 ], help_rank[ 1 ], color = colors_dict[ "help_text" ] )
+    plt.ylabel( 'Percentage of the sum of singular values' )
     plt.xlabel( 'Percentage of rank of the matrix' )
-    plt.title( 'Documents-tokens matrix rank variation with the sum of eigen values' )
+    plt.title( 'Documents-tokens matrix rank variation with the sum of singular values' )
     plt.legend( [ "Input and output", "Name and description", "Help text" ] )
     plt.grid( True )
     plt.show()
@@ -166,7 +168,7 @@ def plot_rank_singular_variation():
         full_rank = len( error_src )
         for rnk in error_src:
             ranks.append( rnk[ 0 ] / float( full_rank ) )
-            sum_singular_perc.append( rnk[ 2 ] )
+            sum_singular_perc.append( rnk[ 1 ] )
         plt.plot( ranks, sum_singular_perc, color=colors_dict[ item ] )
     plt.ylabel( 'Fraction of the sum of singular values' )
     plt.xlabel( 'Ranks of the documents-tokens matrices in percentage' )
@@ -177,7 +179,7 @@ def plot_rank_singular_variation():
 
 
 def plot_singular_values():
-    plt.rcParams[ "font.size" ] = FONT_SIZE - 2
+    plt.rcParams[ "font.size" ] = FONT_SIZE
     singular_values = read_files( "data/0.3/singular_values_input_output.json" )
     fig, axes = plt.subplots( nrows=1, ncols=3 )
     axes[0].plot( singular_values[ "input_output" ], color=colors_dict[ "input_output" ] )
@@ -209,31 +211,31 @@ def compute_cost( similarity_data, iterations ):
     
 
 def plot_average_cost_low_rank():
-    max_iter = 10
+    max_iter = 100
     data_1_0 = read_files( "data/1.0/similarity_matrix.json" )
     data_0_7 = read_files( "data/0.7/similarity_matrix.json" )
-    data_0_5 = read_files( "data/0.5/similarity_matrix.json" )
+    #data_0_5 = read_files( "data/0.5/similarity_matrix.json" )
     data_0_3 = read_files( "data/0.3/similarity_matrix.json" )
-    data_0_1 = read_files( "data/0.1/similarity_matrix.json" )
+    #data_0_1 = read_files( "data/0.1/similarity_matrix.json" )
     data_0_0_5 = read_files( "data/0.05/similarity_matrix.json" )
 
     cost_1_0 = compute_cost( data_1_0, max_iter )
     cost_0_7 = compute_cost( data_0_7, max_iter )
-    cost_0_5 = compute_cost( data_0_5, max_iter )
+    #cost_0_5 = compute_cost( data_0_5, max_iter )
     cost_0_3 = compute_cost( data_0_3, max_iter )
-    cost_0_1 = compute_cost( data_0_1, max_iter )
+    #cost_0_1 = compute_cost( data_0_1, max_iter )
     cost_0_0_5 = compute_cost( data_0_0_5, max_iter )
     
     plt.plot( cost_1_0, marker='o' )
     plt.plot( cost_0_7, marker='8' )
-    plt.plot( cost_0_5, marker='s' )
+    #plt.plot( cost_0_5, marker='s' )
     plt.plot( cost_0_3, marker='+')
-    plt.plot( cost_0_1,marker='x' )
+    #plt.plot( cost_0_1,marker='x' )
     plt.plot( cost_0_0_5,marker='<' )
     plt.ylabel( 'Mean squared error' )
-    plt.xlabel( 'Gradient descent iterations' )
+    plt.xlabel( 'Iterations' )
     plt.title( 'Mean squared error for multiple low-rank matrix estimations' )
-    plt.legend( [ "Full-rank", "70\% of full-rank", "50\% of full-rank", "30\% of full-rank", "10\% of full-rank", "5\% of full-rank" ], loc=1 )
+    plt.legend( [ "Full-rank", "70\% of full-rank", "30\% of full-rank", "5\% of full-rank" ], loc=1 )
     plt.grid( True )
     plt.show()
     
@@ -261,7 +263,7 @@ def plot_correlation( similarity_matrices, title ):
     NEW_FONT_SIZE = 22
     fig, axes = plt.subplots( nrows=2, ncols=2 )
     sources = [ "input_output", 'name_desc_edam', 'help_text', "optimal" ]
-    titles_fullrank = [ "Input \& output", "Name \& description", "Help text", "Optimal" ]
+    titles_fullrank = [ "Input \& output (a)", "Name \& description (b)", "Help text (c)", "Weighted average (d)" ]
     row_lst = [ [ 0, 1 ], [ 2, 3 ] ]
     for row, axis in enumerate( axes ):
         mat1 = similarity_matrices[ row_lst[ row ][ 0 ] ]
@@ -282,11 +284,11 @@ def plot_correlation( similarity_matrices, title ):
             tick.label.set_fontsize( NEW_FONT_SIZE )
         
         if row == 1:
-            axis[ 0 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
-            axis[ 1 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
+            axis[ 0 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
+            axis[ 1 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
             
-        axis[ 0 ].set_ylabel( "Tools", fontsize = NEW_FONT_SIZE )
-        axis[ 1 ].set_ylabel( "Tools", fontsize = NEW_FONT_SIZE )
+        axis[ 0 ].set_ylabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
+        axis[ 1 ].set_ylabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
 
     fig.subplots_adjust( right = 0.75 )
     cbar_ax = fig.add_axes( [ 0.8, 0.15, 0.02, 0.7 ] )
@@ -333,7 +335,7 @@ def plot_weights_distribution( file_path, title ):
 
     fig, axes = plt.subplots( nrows=1, ncols=3 )
     sources = [ "input_output", 'name_desc_edam', 'help_text', "optimal" ]
-    sub_titles = [ "Input \& output", "Name \& description", "Help text", "Optimal" ]
+    sub_titles = [ "Input \& output (a)", "Name \& description (b)", "Help text (c)" ]
     for row, axis in enumerate( axes ):
         axes[ 0 ].plot( weights_io, color = colors_dict[ "input_output" ] )
         axes[ 1 ].plot( weights_nd, color = colors_dict[ "name_desc_edam" ] )
@@ -357,14 +359,85 @@ def plot_weights_distribution( file_path, title ):
         for tick in axes[ 2 ].yaxis.get_major_ticks():
             tick.label.set_fontsize( NEW_FONT_SIZE )
         
-        axes[ 0 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
-        axes[ 1 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )
-        axes[ 2 ].set_xlabel( "Tools", fontsize = NEW_FONT_SIZE )   
+        axes[ 0 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
+        axes[ 1 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
+        axes[ 2 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )  
         axes[ 0 ].set_ylabel( "Weights", fontsize = NEW_FONT_SIZE )
     plt.suptitle( title )
     plt.show()
-        
 
+def verify_gradient( approx_gd_file_path, actual_gd_file_path ):
+    approx_gd = read_files( approx_gd_file_path )
+    tools_len = len( approx_gd )
+    iterations = 100
+    approx_io = np.zeros( [ tools_len, iterations ] )
+    approx_nd = np.zeros( [ tools_len, iterations ] )
+    approx_ht = np.zeros( [ tools_len, iterations ] )
+
+    actual_gd = read_files( actual_gd_file_path )
+    actual_io = np.zeros( [ tools_len, iterations ] )
+    actual_nd = np.zeros( [ tools_len, iterations ] )
+    actual_ht = np.zeros( [ tools_len, iterations ] )
+
+    for index_x, item_x in enumerate( approx_gd ):
+        for index_y, y in enumerate( approx_gd[ item_x ] ):
+            approx_io[ index_x ][ index_y ] = y[ "input_output" ]
+            approx_nd[ index_x ][ index_y ] = y[ "name_desc_edam" ]
+            approx_ht[ index_x ][ index_y ] = y[ "help_text" ]
+
+    for index_x, item_y in enumerate( actual_gd ):
+        for index_y, y in enumerate( actual_gd[ item_y ] ):
+            actual_io[ index_x ][ index_y ] = y[ "input_output" ]
+            actual_nd[ index_x ][ index_y ] = y[ "name_desc_edam" ]
+            actual_ht[ index_x ][ index_y ] = y[ "help_text" ]
+
+    error_io = np.mean( approx_io - actual_io, axis = 0)
+    error_nd = np.mean( approx_nd - actual_nd, axis = 0 )
+    error_ht = np.mean( approx_ht - actual_ht, axis = 0 )
+    plt.plot( error_io, marker='o', color='C0' )
+    plt.plot( error_nd, marker='8', color='C1' )
+    plt.plot( error_ht, marker='s', color='C2' )
+    plt.ylabel( 'Difference of gradients' )
+    plt.xlabel( 'Iterations' )
+    plt.title( 'Difference of actual and approximate gradients' )
+    plt.legend( [ "Input \& output", "Name \& description", "Help text" ], loc=1 )
+    plt.grid( True )
+    plt.show()
+
+def plot_gradient_drop( actual_gd_file_path ):
+    actual_gd = read_files( actual_gd_file_path )
+    tools_len = len( actual_gd )
+    iterations = 100
+
+    actual_io = np.zeros( [ tools_len, iterations ] )
+    actual_nd = np.zeros( [ tools_len, iterations ] )
+    actual_ht = np.zeros( [ tools_len, iterations ] )
+    cumulative_gradient = np.zeros( [ tools_len, iterations ] )
+
+    for index_x, item_y in enumerate( actual_gd ):
+        for index_y, y in enumerate( actual_gd[ item_y ] ):
+            actual_io[ index_x ][ index_y ] = y[ "input_output" ]
+            actual_nd[ index_x ][ index_y ] = y[ "name_desc_edam" ]
+            actual_ht[ index_x ][ index_y ] = y[ "help_text" ]
+
+    for tool_idx in range( tools_len ):
+        for iteration in range( iterations ):
+            cumulative_gradient[ tool_idx ][ iteration ] = np.sqrt( actual_io[ tool_idx ][ iteration ] ** 2 + actual_nd[ tool_idx ][ iteration ] ** 2 + actual_ht[ tool_idx ][ iteration ] ** 2 )
+
+    mean_cumulative_gradient = np.mean( cumulative_gradient, axis = 0 )
+    plt.plot( mean_cumulative_gradient, color='C0' )
+    plt.ylabel( 'Cumulative gradient' )
+    plt.xlabel( 'Iterations' )
+    plt.title( 'Cumulative gradient over iterations for all the tools attributes' )
+    plt.grid( True )
+    plt.show()
+    
+
+
+plot_gradient_drop( "data/1.0/actual_gd_tools.json" )  
+#verify_gradient( "data/1.0/actual_gd_tools.json", "data/1.0/approx_gd_tools.json" )
+#plot_weights_distribution( "data/1.0/optimal_weights.json", "Distribution of weights (100\% of full-rank)" )
+#extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices computed with 100\% of full-rank" )
 
 '''plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights (5\% of full-rank)" )
 plot_weights_distribution( "data/0.1/optimal_weights.json", "Distribution of weights (10\% of full-rank)" )
@@ -384,8 +457,9 @@ extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similar
 #plot_average_cost_low_rank()
 #plot_tokens_size()
 #plot_singular_values()
+#plot_rank_eigen_variation()
 #plot_rank_singular_variation()
-plot_doc_tokens_mat( "data/0.1/similarity_source_orig.json" )
-#plot_doc_tokens_mat_low_rank( "data/0.1/similarity_source_low_rank.json" )
+#plot_doc_tokens_mat( "data/0.05/similarity_source_orig.json" )
+#plot_doc_tokens_mat_low_rank( "data/0.05/similarity_source_low_rank.json" )
 #plot_rank_singular_variation()
 #plot_frobenius_error()'''
