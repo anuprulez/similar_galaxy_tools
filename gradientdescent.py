@@ -45,8 +45,8 @@ class GradientDescentOptimizer:
        """
        eta = eta / ( 1. + ( lr_decay * iteration ) )
        for source in weights:
-           new_update = gamma * prev_update[ source ] - eta * gradients[ source ]
-           weights[ source ] = weights[ source ] + new_update
+           new_update = gamma * prev_update[ source ] + eta * gradients[ source ]
+           weights[ source ] = weights[ source ] - new_update
            prev_update[ source ] = new_update
        return self.normalize_weights( weights ), prev_update, eta 
 
