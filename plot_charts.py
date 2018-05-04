@@ -260,10 +260,9 @@ def plot_average_cost():
 
 
 plot_average_cost()
-
-#plot_gradient_drop( "data/actual_gd_tools.json" ) 
+plot_gradient_drop( "data/actual_gd_tools.json" ) 
        
-'''plot_weights_distribution( "data/optimal_weights.json", "Distribution of weights for paragraph vectors approach" )
+plot_weights_distribution( "data/optimal_weights.json", "Distribution of weights for paragraph vectors approach" )
 plot_doc_tokens_mat( "data/doc_vecs_io.json", "data/doc_vecs_nd.json", "data/doc_vecs_ht.json" )
-extract_correlation( "data/similarity_scores_sources_optimal.json", "Similarity matrices for paragraph vectors approach" )'''
+extract_correlation( "data/similarity_scores_sources_optimal.json", "Similarity matrices for paragraph vectors approach" )
 plot_lr_drop( "data/learning_rates.json" )
