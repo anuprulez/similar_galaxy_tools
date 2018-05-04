@@ -183,21 +183,21 @@ def plot_singular_values():
     singular_values = read_files( "data/0.3/singular_values_input_output.json" )
     fig, axes = plt.subplots( nrows=1, ncols=3 )
     axes[0].plot( singular_values[ "input_output" ], color=colors_dict[ "input_output" ] )
-    axes[0].set_title( "Input & output" )
-    axes[0].set_xlabel( "Singular values count" )
-    axes[0].set_ylabel( "Singular values" )
+    axes[0].set_title( "Input \& output (a)" )
+    axes[0].set_xlabel( "Count of singular values" )
+    axes[0].set_ylabel( "Magnitude of singular values" )
     axes[0].grid(True)
     
     axes[1].plot( singular_values[ "name_desc_edam" ], color=colors_dict[ "name_desc_edam" ] )
-    axes[1].set_title( "Name & desc." )
-    axes[1].set_xlabel( "Singular values count" )
+    axes[1].set_title( "Name \& description (b)" )
+    axes[1].set_xlabel( "Count of singular values" )
     axes[1].grid(True)
     
     axes[2].plot( singular_values[ "help_text" ], color=colors_dict[ "help_text" ] )
-    axes[2].set_title( "Help text" )
-    axes[2].set_xlabel( "Singular values count" )
+    axes[2].set_title( "Help text (c)" )
+    axes[2].set_xlabel( "Count of singular values" )
     axes[2].grid(True)
-    plt.suptitle("Singular values for tools documents-tokens matrices")
+    plt.suptitle("Singular values for documents-tokens matrices")
     plt.show()
       
 
@@ -240,20 +240,31 @@ def plot_average_cost_low_rank():
     plt.show()
     
 
-def plot_lr_drop( file_path ):
-    data_0_1 = read_files( file_path )
-    max_len = 0
-    lr_drop = list()
-    for item in data_0_1:
-        for gd_iter in data_0_1[ item ]:
-            lr_steps = len( gd_iter )
-            if len( gd_iter ) > max_len:
-                max_len = len( gd_iter )
-                lr_drop = gd_iter
-    plt.plot( lr_drop, marker="*" )
-    plt.ylabel( 'Gradient descent learning rate' )
+def plot_gradient_drop( actual_gd_file_path ):
+    actual_gd = read_files( actual_gd_file_path )
+    tools_len = len( actual_gd )
+    iterations = 100
+
+    actual_io = np.zeros( [ tools_len, iterations ] )
+    actual_nd = np.zeros( [ tools_len, iterations ] )
+    actual_ht = np.zeros( [ tools_len, iterations ] )
+    cumulative_gradient = np.zeros( [ tools_len, iterations ] )
+
+    for index_x, item_y in enumerate( actual_gd ):
+        for index_y, y in enumerate( actual_gd[ item_y ] ):
+            actual_io[ index_x ][ index_y ] = y[ "input_output" ]
+            actual_nd[ index_x ][ index_y ] = y[ "name_desc_edam" ]
+            actual_ht[ index_x ][ index_y ] = y[ "help_text" ]
+
+    for tool_idx in range( tools_len ):
+        for iteration in range( iterations ):
+            cumulative_gradient[ tool_idx ][ iteration ] = np.sqrt( actual_io[ tool_idx ][ iteration ] ** 2 + actual_nd[ tool_idx ][ iteration ] ** 2 + actual_ht[ tool_idx ][ iteration ] ** 2 )
+
+    mean_cumulative_gradient = np.mean( cumulative_gradient, axis = 0 )
+    plt.plot( mean_cumulative_gradient, color='C0' )
+    plt.ylabel( 'Cumulative gradient' )
     plt.xlabel( 'Iterations' )
-    plt.title( 'Learning rates using backtracking line search' )
+    plt.title( 'Cumulative gradient over iterations for all the tools attributes' )
     plt.grid( True )
     plt.show()
 
@@ -394,9 +405,9 @@ def verify_gradient( approx_gd_file_path, actual_gd_file_path ):
     error_io = np.mean( approx_io - actual_io, axis = 0)
     error_nd = np.mean( approx_nd - actual_nd, axis = 0 )
     error_ht = np.mean( approx_ht - actual_ht, axis = 0 )
-    plt.plot( error_io, marker='o', color='C0' )
-    plt.plot( error_nd, marker='8', color='C1' )
-    plt.plot( error_ht, marker='s', color='C2' )
+    plt.plot( error_io, color='C0' )
+    plt.plot( error_nd, color='C1' )
+    plt.plot( error_ht, color='C2' )
     plt.ylabel( 'Difference of gradients' )
     plt.xlabel( 'Iterations' )
     plt.title( 'Difference of actual and approximate gradients' )
@@ -431,30 +442,27 @@ def plot_gradient_drop( actual_gd_file_path ):
     plt.title( 'Cumulative gradient over iterations for all the tools attributes' )
     plt.grid( True )
     plt.show()
-    
-
-
-plot_gradient_drop( "data/1.0/actual_gd_tools.json" )  
-#verify_gradient( "data/1.0/actual_gd_tools.json", "data/1.0/approx_gd_tools.json" )
-#plot_weights_distribution( "data/1.0/optimal_weights.json", "Distribution of weights (100\% of full-rank)" )
-#extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices computed with 100\% of full-rank" )
-
-'''plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights (5\% of full-rank)" )
-plot_weights_distribution( "data/0.1/optimal_weights.json", "Distribution of weights (10\% of full-rank)" )
+  
+plot_singular_values()
+plot_average_cost_low_rank()
+#plot_gradient_drop( "data/0.05/learning_rates.json" ) 
+verify_gradient( "data/0.05/actual_gd_tools.json", "data/0.05/approx_gd_tools.json" )
+plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights (5\% of full-rank)" )
+#plot_weights_distribution( "data/0.1/optimal_weights.json", "Distribution of weights (10\% of full-rank)" )
 plot_weights_distribution( "data/0.3/optimal_weights.json", "Distribution of weights (30\% of full-rank)" )
-plot_weights_distribution( "data/0.5/optimal_weights.json", "Distribution of weights (50\% of full-rank)" )
+#plot_weights_distribution( "data/0.5/optimal_weights.json", "Distribution of weights (50\% of full-rank)" )
 plot_weights_distribution( "data/0.7/optimal_weights.json", "Distribution of weights (70\% of full-rank)" )
 plot_weights_distribution( "data/1.0/optimal_weights.json", "Distribution of weights (100\% of full-rank)" )
 
 extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices computed with 5\% of full-rank" )
-extract_correlation( "data/0.1/similarity_scores_sources_optimal.json", "Similarity matrices computed with 10\% of full-rank" )
+#extract_correlation( "data/0.1/similarity_scores_sources_optimal.json", "Similarity matrices computed with 10\% of full-rank" )
 extract_correlation( "data/0.3/similarity_scores_sources_optimal.json", "Similarity matrices computed with 30\% of full-rank" )
-extract_correlation( "data/0.5/similarity_scores_sources_optimal.json", "Similarity matrices computed with 50\% of full-rank" )
+#extract_correlation( "data/0.5/similarity_scores_sources_optimal.json", "Similarity matrices computed with 50\% of full-rank" )
 extract_correlation( "data/0.7/similarity_scores_sources_optimal.json", "Similarity matrices computed with 70\% of full-rank" )
-extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices computed with 100\% of full-rank" )'''
+extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices computed with 100\% of full-rank" )
 
-#plot_lr_drop( "data/0.05/learning_rates.json" )
-#plot_average_cost_low_rank()
+#plot_gradient_drop( "data/0.05/learning_rates.json" )
+plot_average_cost_low_rank()
 #plot_tokens_size()
 #plot_singular_values()
 #plot_rank_eigen_variation()
