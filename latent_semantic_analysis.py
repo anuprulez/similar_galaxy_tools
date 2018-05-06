@@ -22,7 +22,7 @@ class LatentSemanticIndexing:
         sum_taken_percent = np.sum( s_approx ) / float( np.sum( s ) )
         s_approx = np.diag( np.array( s_approx ) )
         v_approx = v[ :rank, : ]
-        return [ u_approx.dot( s_approx ).dot( v_approx ), sum_taken_percent ]
+        return [ u_approx.dot( s_approx ).dot( v_approx ), sum_taken_percent, np.sum( s_approx ) ]
 
     @classmethod
     def _find_optimal_low_rank_matrix( self, orig_similarity_matrix, orig_rank, u, s, v, source ):
@@ -30,12 +30,18 @@ class LatentSemanticIndexing:
         Find the rank which captures most of the information from the original full rank matrix
         """
         '''rank_list = list()
+        rank_list_fraction = list()
+        sum_singular_values_fraction = list()
         sum_singular_values = list()
         vary_rank_eigen = list()
         for rank in range( 1, orig_rank ):
             compute_result = self._compute_low_rank_matrix( u, s, v, rank )
-            rank_list.append( rank / float( orig_rank ) )
-            sum_singular_values.append( compute_result[ 1 ] )
+            rank_list_fraction.append( rank / float( orig_rank ) )
+            sum_singular_values_fraction.append( compute_result[ 1 ] )
+            rank_list.append( rank )
+            sum_singular_values.append( compute_result[ 2 ] )
+        vary_rank_eigen.append( rank_list_fraction )
+        vary_rank_eigen.append( sum_singular_values_fraction )
         vary_rank_eigen.append( rank_list )
         vary_rank_eigen.append( sum_singular_values )
         with open( "data/" + source + "_vary_eigen_rank.json", "w" ) as vary_rank:

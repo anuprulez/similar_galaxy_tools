@@ -1,3 +1,7 @@
+body, .main-container {
+    font-family: Times New Roman, TimesNewRoman, Times, Baskerville, Georgia, serif;
+}
+
 .main-container {
     margin-left: 1%;
 }

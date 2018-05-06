@@ -124,7 +124,7 @@ def plot_tokens_size():
     plt.show()
 
 
-def plot_rank_eigen_variation():
+def plot_rank_eigen_variation_fraction():
     # plot how the sum of eigen values vary with the rank of the documents-tokens matrices
     help_rank = read_files( "data/help_text_vary_eigen_rank.json" )
     name_rank = read_files( "data/name_desc_edam_vary_eigen_rank.json" )
@@ -132,11 +132,53 @@ def plot_rank_eigen_variation():
     plt.plot( io_rank[ 0 ], io_rank[ 1 ], color = colors_dict[ "input_output" ] )
     plt.plot( name_rank[ 0 ], name_rank[ 1 ], color = colors_dict[ "name_desc_edam" ] )
     plt.plot( help_rank[ 0 ], help_rank[ 1 ], color = colors_dict[ "help_text" ] )
-    plt.ylabel( 'Percentage of the sum of singular values' )
-    plt.xlabel( 'Percentage of rank of the matrix' )
-    plt.title( 'Documents-tokens matrix rank variation with the sum of singular values' )
-    plt.legend( [ "Input and output", "Name and description", "Help text" ] )
+    plt.ylabel( 'Fraction of the sum of singular values' )
+    plt.xlabel( 'Fraction of the full-rank of a matrix' )
+    plt.title( 'Variation of sum of singular values with ranks of document-tokens matrices', fontsize=FONT_SIZE - 2 )
+    plt.legend( [ "Input \& output", "Name \& description", "Help text" ] )
     plt.grid( True )
+    plt.show()
+  
+    
+def plot_rank_eigen_variation():
+    # plot how the sum of eigen values vary with the rank of the documents-tokens matrices
+    NEW_FONT_SIZE_TIKCS = FONT_SIZE - 10
+    NEW_FONT_SIZE = FONT_SIZE - 4
+    help_rank = read_files( "data/help_text_vary_eigen_rank.json" )
+    io_rank = read_files( "data/input_output_vary_eigen_rank.json" )
+    name_rank = read_files( "data/name_desc_edam_vary_eigen_rank.json" )
+    fig, axes = plt.subplots( nrows=1, ncols=3 )
+    axes[0].plot( io_rank[ 2 ], io_rank[ 3 ], color=colors_dict[ "input_output" ] )
+    axes[0].set_title( "Input \& output (a)", fontsize = NEW_FONT_SIZE )
+    axes[0].set_xlabel( "Matrix rank", fontsize = NEW_FONT_SIZE )
+    axes[0].set_ylabel( "Sum of singular values", fontsize = NEW_FONT_SIZE )
+    axes[0].grid(True)
+    
+    axes[1].plot( name_rank[ 2 ], name_rank[ 3 ], color=colors_dict[ "name_desc_edam" ] )
+    axes[1].set_title( "Name \& description (b)", fontsize = NEW_FONT_SIZE )
+    axes[1].set_xlabel( "Matrix rank", fontsize = NEW_FONT_SIZE )
+    axes[1].grid(True)
+    
+    axes[2].plot( help_rank[ 2 ], help_rank[ 3 ], color=colors_dict[ "help_text" ] )
+    axes[2].set_title( "Help text (c)", fontsize = NEW_FONT_SIZE )
+    axes[2].set_xlabel( "Matrix rank", fontsize = NEW_FONT_SIZE )
+    axes[2].grid(True)
+    
+    for tick in axes[ 0 ].xaxis.get_major_ticks():
+        tick.label.set_fontsize( NEW_FONT_SIZE_TIKCS )
+    for tick in axes[ 1 ].xaxis.get_major_ticks():
+        tick.label.set_fontsize( NEW_FONT_SIZE_TIKCS )
+    for tick in axes[ 2 ].xaxis.get_major_ticks():
+        tick.label.set_fontsize( NEW_FONT_SIZE_TIKCS )
+        
+    for tick in axes[ 0 ].yaxis.get_major_ticks():
+        tick.label.set_fontsize( NEW_FONT_SIZE_TIKCS )
+    for tick in axes[ 1 ].yaxis.get_major_ticks():
+        tick.label.set_fontsize( NEW_FONT_SIZE_TIKCS )
+    for tick in axes[ 2 ].yaxis.get_major_ticks():
+        tick.label.set_fontsize( NEW_FONT_SIZE_TIKCS )
+  
+    plt.suptitle("Variation of sum of singular values with ranks of the matrices")
     plt.show()
 
  
@@ -171,8 +213,8 @@ def plot_rank_singular_variation():
             sum_singular_perc.append( rnk[ 1 ] )
         plt.plot( ranks, sum_singular_perc, color=colors_dict[ item ] )
     plt.ylabel( 'Fraction of the sum of singular values' )
-    plt.xlabel( 'Ranks of the documents-tokens matrices in percentage' )
-    plt.title( 'Variation of sum of singular values with ranks' )
+    plt.xlabel( 'Fraction of the ranks of documents-tokens matrices' )
+    plt.title( 'Variation of ranks with singular values ' )
     plt.legend( [ "Help text", "Name and description", "Input and output" ] )
     plt.grid( True )
     plt.show()
@@ -197,6 +239,7 @@ def plot_singular_values():
     axes[2].set_title( "Help text (c)" )
     axes[2].set_xlabel( "Count of singular values" )
     axes[2].grid(True)
+        
     plt.suptitle("Singular values for documents-tokens matrices")
     plt.show()
       
@@ -442,8 +485,30 @@ def plot_gradient_drop( actual_gd_file_path ):
     plt.title( 'Cumulative gradient over iterations for all the tools attributes' )
     plt.grid( True )
     plt.show()
-  
-plot_singular_values()
+    
+def plot_average_optimal_scores( file_path ):
+    similarity_data = read_files( file_path )
+    ave_scores = np.zeros( [ len( similarity_data ) - 1, len( similarity_data ) - 1 ] )
+    opt_scores = np.zeros( [ len( similarity_data ) - 1, len( similarity_data ) - 1 ] )
+    for index, tool in enumerate( similarity_data ):
+        if "average_similar_scores" in tool:
+            ave_scores[ index ] = tool[ "average_similar_scores" ]
+        if "optimal_similar_scores" in tool:
+            opt_scores[ index ] = tool[ "optimal_similar_scores" ]
+    plt.plot( np.mean( opt_scores, axis = 0 ) )
+    plt.plot( np.mean( ave_scores, axis = 0 ) )
+    plt.ylabel( 'Weighted average similarity scores' )
+    plt.xlabel( 'Tools' )
+    plt.title( 'Weighted similarity scores using uniform and optimal weights' )
+    plt.legend( [ "Weights learnt using optimization", "Uniform weights" ], loc=4 )
+    plt.grid( True )
+    plt.show()
+
+plot_average_optimal_scores( "data/0.05/similarity_matrix.json" )
+plot_average_optimal_scores( "data/1.0/similarity_matrix.json" )
+plot_rank_eigen_variation_fraction()
+plot_rank_eigen_variation()
+'''plot_singular_values()
 plot_average_cost_low_rank()
 #plot_gradient_drop( "data/0.05/learning_rates.json" ) 
 verify_gradient( "data/0.05/actual_gd_tools.json", "data/0.05/approx_gd_tools.json" )
