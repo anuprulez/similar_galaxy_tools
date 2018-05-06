@@ -11,6 +11,7 @@ $(document).ready(function() {
     }
     $elLoader.show();
     $.getJSON( path, function( data ) {
+        console.log(data);
         var toolIdsTemplate = "";
         $elLoader.hide();
         list_tool_names = data[ data.length - 1 ];
