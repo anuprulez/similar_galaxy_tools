@@ -1,8 +1,7 @@
 $(document).ready(function() {
     var similarityData = null,
         list_tool_names = null,
-        //pathLocal = "data/1.0/similarity_matrix.json",
-        //pathLocal = "data/similarity_matrix.json",
+        pathLocal = "data/similarity_matrix.json",
         pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/lsi/viz/data/similarity_matrix.json",
         path = pathOnline,
         $elLoader = $( ".loader-place" );
@@ -70,7 +69,7 @@ $(document).ready(function() {
                 $el_tools.append( "<div id='learning-rate-iterations'></div>" );
                 plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
 
-                $el_tools.append( "<div id='mutual-similarity-io-nd'></div>" );
+                /*$el_tools.append( "<div id='mutual-similarity-io-nd'></div>" );
                 $el_tools.append( "<div id='mutual-similarity-nd-ht'></div>" );
                 $el_tools.append( "<div id='mutual-similarity-io-ht'></div>" );
                 plotMutualSimilarity( toolScores, "mutual-similarity-io-nd", "mutual-similarity-nd-ht", "mutual-similarity-io-ht" );
@@ -78,7 +77,7 @@ $(document).ready(function() {
                 $el_tools.append( "<div id='io-nd-scores'></div>" );
                 $el_tools.append( "<div id='nd-ht-scores'></div>" );
                 $el_tools.append( "<div id='io-ht-scores'></div>" );
-                getMutualScores( toolResults, "io-nd-scores", "nd-ht-scores", "io-ht-scores", selectedToolId );
+                getMutualScores( toolResults, "io-nd-scores", "nd-ht-scores", "io-ht-scores", selectedToolId );*/
                 availableSimilarTool = true;
                 break;
             }
