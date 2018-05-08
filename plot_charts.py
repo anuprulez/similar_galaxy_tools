@@ -254,7 +254,7 @@ def plot_average_cost():
     plt.plot( cost )
     plt.ylabel( 'Mean squared error' )
     plt.xlabel( 'Iterations' )
-    plt.title( 'Mean squared error for all the tools over iterations' )
+    plt.title( 'Mean squared error over iterations for paragraph vectors approach' )
     plt.grid( True )
     plt.show()
 
@@ -272,8 +272,8 @@ def plot_average_optimal_scores():
     plt.plot( np.mean( ave_scores, axis = 0 ) )
     plt.ylabel( 'Weighted average similarity scores' )
     plt.xlabel( 'Tools' )
-    plt.title( 'Weighted similarity scores using uniform and optimal weights' )
-    plt.legend( [ "Weights learnt using optimization", "Uniform weights" ] )
+    plt.title( 'Weighted similarity scores using uniform and optimal weights using paragraph vectors', fontsize=26 )
+    plt.legend( [ "Weights learnt using optimization", "Uniform weights" ], loc=4 )
     plt.grid( True )
     plt.show()
     
