@@ -1,3 +1,8 @@
+"""
+Estimate low-rank approximations of documents-tokens
+matrices to learn hidden semantics among documents
+"""
+
 import numpy as np
 from numpy.linalg import matrix_rank
 from numpy.linalg import svd
@@ -52,7 +57,7 @@ class LatentSemanticIndexing:
     @classmethod
     def factor_matrices( self, document_tokens_matrix_sources ):
         """
-        Latent semantic indexing
+        Get low-rank approximation of documents-tokens matrices matrices
         """
         print "Computing lower rank representations of documents tokens matrices..."
         approx_similarity_matrices = dict()
