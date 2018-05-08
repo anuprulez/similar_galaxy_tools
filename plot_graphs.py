@@ -486,7 +486,7 @@ def plot_gradient_drop( actual_gd_file_path ):
     plt.grid( True )
     plt.show()
     
-def plot_average_optimal_scores( file_path ):
+def plot_average_optimal_scores( file_path, title ):
     similarity_data = read_files( file_path )
     ave_scores = np.zeros( [ len( similarity_data ) - 1, len( similarity_data ) - 1 ] )
     opt_scores = np.zeros( [ len( similarity_data ) - 1, len( similarity_data ) - 1 ] )
@@ -499,13 +499,13 @@ def plot_average_optimal_scores( file_path ):
     plt.plot( np.mean( ave_scores, axis = 0 ) )
     plt.ylabel( 'Weighted average similarity scores' )
     plt.xlabel( 'Tools' )
-    plt.title( 'Weighted similarity scores using uniform and optimal weights' )
+    plt.title( title, fontsize = 26 )
     plt.legend( [ "Weights learnt using optimization", "Uniform weights" ], loc=4 )
     plt.grid( True )
     plt.show()
 
-plot_average_optimal_scores( "data/0.05/similarity_matrix.json" )
-plot_average_optimal_scores( "data/1.0/similarity_matrix.json" )
+plot_average_optimal_scores( "data/0.05/similarity_matrix.json", 'Weighted similarity scores using uniform and optimal weights (5\% of full-rank)' )
+plot_average_optimal_scores( "data/1.0/similarity_matrix.json", 'Weighted similarity scores using uniform and optimal weights (full-rank)' )
 plot_rank_eigen_variation_fraction()
 plot_rank_eigen_variation()
 '''plot_singular_values()

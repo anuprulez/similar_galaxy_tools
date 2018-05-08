@@ -1,5 +1,7 @@
 """
-Extract useful tokens from multiple attributes of Galaxy tools
+Extract useful tokens from multiple attributes of Galaxy tools.
+These attributes include input and output file types, name and description
+and help text.
 """
 
 import os
@@ -163,9 +165,11 @@ class ExtractTokens:
                 for word_score in doc_tokens[ tool_item ]:
                     word_index = [ token_index for token_index, token in enumerate( all_tokens ) if token == word_score[ 0 ] ][ 0 ]
                     if source == data_source[ 0 ]:
-                        document_tokens_matrix[ counter ][ word_index ] = 1.0 # set the flag for the corresponding token's position
+                        # set the flag for the corresponding token's position
+                        document_tokens_matrix[ counter ][ word_index ] = 1.0
                     else:
-                        document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ] # set the flag using bm25 score
+                        # set the flag using bm25 score
+                        document_tokens_matrix[ counter ][ word_index ] = word_score[ 1 ]
                 counter += 1
             document_tokens_matrix_sources[ source ] = document_tokens_matrix
         return document_tokens_matrix_sources, tools_list
@@ -179,4 +183,4 @@ class ExtractTokens:
         dataframe = self._read_file()
         tokens = self._extract_tokens( dataframe, data_source )
         documents_tokens_matrix, tools_list = self.create_document_tokens_matrix( self._refine_tokens( tokens ), data_source )
-        return dataframe, documents_tokens_matrix, tools_list 
+        return dataframe, documents_tokens_matrix, tools_list

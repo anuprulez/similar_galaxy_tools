@@ -179,7 +179,7 @@ if __name__ == "__main__":
     for item in documents_tokens_matrix:
         doc_plot_src[ item ] = list()
         for index, rs in enumerate( documents_tokens_matrix[ item ] ):
-           doc_plot_src[ item ].append( rs.tolist() )
+            doc_plot_src[ item ].append( rs.tolist() )
 
     with open( "data/similarity_source_orig.json", "w" ) as orig_file:
         orig_file.write( json.dumps( doc_plot_src ) )
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     for item in low_dim_doc_tokens_matrix:
         doc_low_plot_src[ item ] = list()
         for index, rs in enumerate( low_dim_doc_tokens_matrix[ item ] ):
-           doc_low_plot_src[ item ].append( rs.tolist() )
+            doc_low_plot_src[ item ].append( rs.tolist() )
 
     with open( "data/similarity_source_low_rank.json", "w" ) as low_rank_file:
         low_rank_file.write( json.dumps( doc_low_plot_src ) )

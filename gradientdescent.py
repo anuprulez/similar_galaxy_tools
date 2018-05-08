@@ -1,7 +1,8 @@
 """
-Performs optimization to find optimal importance weights for the sources
-of tokens using Gradient Descent
+Perform minimization of error function to find optimal importance weights 
+for the sources of tokens using Gradient Descent
 """
+
 import numpy as np
 import json
 
@@ -29,7 +30,6 @@ class GradientDescentOptimizer:
 
     @classmethod
     def normalize_weights( self, weights ):
-
         """
         Normalize the weights
         """
@@ -40,34 +40,34 @@ class GradientDescentOptimizer:
 
     @classmethod
     def update_weights( self, weights, gradients, prev_update, iteration, eta, gamma=0.9, lr_decay=0.1 ):
-       """
-       Update weights with momentum and time-based decay of learning rate
-       """
-       eta = eta / ( 1. + ( lr_decay * iteration ) )
-       for source in weights:
-           new_update = gamma * prev_update[ source ] + eta * gradients[ source ]
-           weights[ source ] = weights[ source ] - new_update
-           prev_update[ source ] = new_update
-       return self.normalize_weights( weights ), prev_update, eta
-  
+        """
+        Update weights with momentum and time-based decay of learning rate
+        """
+        eta = eta / ( 1. + ( lr_decay * iteration ) )
+        for source in weights:
+            new_update = gamma * prev_update[ source ] + eta * gradients[ source ]
+            weights[ source ] = weights[ source ] - new_update
+            prev_update[ source ] = new_update
+        return self.normalize_weights( weights ), prev_update, eta
+
     @classmethod
     def update_weights_nag( self, weights, gradients, prev_update, iteration, eta, tool_index, similarity_matrix, n_tools, gamma=0.9, lr_decay=0.1 ):
-       """
-       Update weights with momentum and time-based decay of learning rate
-       """
-       eta = eta / ( 1. + ( lr_decay * iteration ) )
-       forward_weights = dict()
-       ideal_score = np.repeat( self.best_similarity_score, n_tools )
-       for source in weights:
-           forward_weights[ source ] = weights[ source ] + gamma * prev_update[ source ]
-       for source in weights:
-           tool_score = similarity_matrix[ source ][ tool_index ]
-           loss = forward_weights[ source ] * similarity_matrix[ source ][ tool_index ] - ideal_score
-           forward_gradient = 2 * np.dot( tool_score, loss ) / n_tools
-           new_update = gamma * prev_update[ source ] - eta * forward_gradient
-           weights[ source ] = weights[ source ] + new_update
-           prev_update[ source ] = new_update
-       return self.normalize_weights( weights ), prev_update, eta
+        """
+        Update weights with momentum and time-based decay of learning rate
+        """
+        eta = eta / ( 1. + ( lr_decay * iteration ) )
+        forward_weights = dict()
+        ideal_score = np.repeat( self.best_similarity_score, n_tools )
+        for source in weights:
+            forward_weights[ source ] = weights[ source ] + gamma * prev_update[ source ]
+        for source in weights:
+            tool_score = similarity_matrix[ source ][ tool_index ]
+            loss = forward_weights[ source ] * similarity_matrix[ source ][ tool_index ] - ideal_score
+            forward_gradient = 2 * np.dot( tool_score, loss ) / n_tools
+            new_update = gamma * prev_update[ source ] - eta * forward_gradient
+            weights[ source ] = weights[ source ] + new_update
+            prev_update[ source ] = new_update
+        return self.normalize_weights( weights ), prev_update, eta
 
     @classmethod
     def compute_loss( self, weight, uniform_weight, tool_scores, ideal_tool_score ):
@@ -105,7 +105,6 @@ class GradientDescentOptimizer:
         uniform_cost_tools = dict()
         learning_rates = dict()
         gradients = dict()
-        learning_rates_iterations_tool = dict()
         approx_gd_tools = dict()
         actual_gd_tools = dict()
         uniform_weight = 1. / len( self.sources )
@@ -123,7 +122,6 @@ class GradientDescentOptimizer:
             approx_gd = list()
             actual_gd = list()
             lr_iteration = list()
-            lr_rates = list()
             ideal_tool_score = np.repeat( self.best_similarity_score, num_all_tools )
             prev_weights_updates = { self.sources[ 0 ]: 0.0, self.sources[ 1 ]: 0.0, self.sources[ 2 ]: 0.0 }
             eta = 0.5e-1
@@ -154,7 +152,7 @@ class GradientDescentOptimizer:
                 derivative_sources = self.verify_gradients( ideal_tool_score, weights, tool_index, sources_gradient, similarity_matrix )
                 approx_gd.append( derivative_sources )
                 actual_gd.append( sources_gradient )
-                #weights, prev_weights_updates, learning_rate = self.update_weights( weights, sources_gradient, prev_weights_updates, iteration, eta )
+                # weights, prev_weights_updates, learning_rate = self.update_weights( weights, sources_gradient, prev_weights_updates, iteration, eta )
                 weights, prev_weights_updates, learning_rate = self.update_weights_nag( weights, sources_gradient, prev_weights_updates, iteration, eta, tool_index, similarity_matrix, num_all_tools )
                 lr_iteration.append( learning_rate )
                 # gather cost for each iteration
