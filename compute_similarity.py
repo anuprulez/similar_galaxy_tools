@@ -23,7 +23,7 @@ class ComputeToolSimilarity:
         self.data_source = [ 'input_output', 'name_desc_edam', 'help_text' ]
         self.tools_data_path = tools_data_path
         self.tools_show = 20
-        self.rank_reduction = 1.0
+        self.rank_reduction = 0.05
 
     @classmethod
     def find_io_similarity( self, input_output_tokens_matrix, tools_list ):

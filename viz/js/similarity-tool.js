@@ -1,10 +1,10 @@
 $(document).ready(function() {
     var similarityData = null,
         list_tool_names = null,
-        pathLocal = "data/1.0/similarity_matrix.json",
+        //pathLocal = "data/1.0/similarity_matrix.json",
         //pathLocal = "data/similarity_matrix.json",
-        pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json",
-        path = pathLocal,
+        pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/lsi_005/viz/data/similarity_matrix.json",
+        path = pathOnline,
         $elLoader = $( ".loader-place" );
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
