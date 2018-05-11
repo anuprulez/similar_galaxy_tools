@@ -1,9 +1,9 @@
 $(document).ready(function() {
     var similarityData = null,
         list_tool_names = null,
-        pathLocal = "data/similarity_matrix.json",
+        //pathLocal = "data/similarity_matrix.json",
         pathOnline = "https://raw.githubusercontent.com/anuprulez/similar_galaxy_tools/doc2vec/viz/data/similarity_matrix.json",
-        path = pathLocal,
+        path = pathOnline,
         $elLoader = $( ".loader-place" );
     if ( path === "" ) {
         console.error( "Error in loading JSON file" );
@@ -11,6 +11,7 @@ $(document).ready(function() {
     }
     $elLoader.show();
     $.getJSON( path, function( data ) {
+        console.log(data);
         var toolIdsTemplate = "";
         $elLoader.hide();
         list_tool_names = data[ data.length - 1 ];
@@ -69,7 +70,7 @@ $(document).ready(function() {
                 $el_tools.append( "<div id='learning-rate-iterations'></div>" );
                 plotLearningRatesVsIterations( toolResults, "learning-rate-iterations", selectedToolId );
 
-                $el_tools.append( "<div id='mutual-similarity-io-nd'></div>" );
+                /*$el_tools.append( "<div id='mutual-similarity-io-nd'></div>" );
                 $el_tools.append( "<div id='mutual-similarity-nd-ht'></div>" );
                 $el_tools.append( "<div id='mutual-similarity-io-ht'></div>" );
                 plotMutualSimilarity( toolScores, "mutual-similarity-io-nd", "mutual-similarity-nd-ht", "mutual-similarity-io-ht" );
@@ -77,7 +78,7 @@ $(document).ready(function() {
                 $el_tools.append( "<div id='io-nd-scores'></div>" );
                 $el_tools.append( "<div id='nd-ht-scores'></div>" );
                 $el_tools.append( "<div id='io-ht-scores'></div>" );
-                getMutualScores( toolResults, "io-nd-scores", "nd-ht-scores", "io-ht-scores", selectedToolId );
+                getMutualScores( toolResults, "io-nd-scores", "nd-ht-scores", "io-ht-scores", selectedToolId );*/
                 availableSimilarTool = true;
                 break;
             }
@@ -118,8 +119,8 @@ $(document).ready(function() {
         template += "<th>S.No.</th>";
         template += "<th>Id</th>";
         if ( !isHeader ) {
-            template += "<th> Input and Output </th>";
-            template += "<th> Name, Desc. and EDAM  </th>";
+            template += "<th> Input and output </th>";
+            template += "<th> Name and description  </th>";
             template += "<th> Help text  </th>";
             template += "<th> " + scoreHeaderText + "</th>";
             template += "<th> Rank </th>";

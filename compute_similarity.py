@@ -52,7 +52,6 @@ class ComputeToolSimilarity:
         """
         Find similarity distance between vectors for input/output tokens
         """
-        own_similarity_score = 1.0
         mat_size = len( tools_list )
         sim_scores = np.zeros( [ mat_size, mat_size ] )
         sim_mat = input_output_tokens_matrix
@@ -60,7 +59,7 @@ class ComputeToolSimilarity:
             tool_scores = sim_scores[ index_x ]
             for index_y, item_y in enumerate( sim_mat ):
                 # compute similarity scores between two vectors
-                tool_scores[ index_y ] = own_similarity_score if index_x == index_y else utils._jaccard_score( item_x, item_y )
+                tool_scores[ index_y ] = 1.0 if index_x == index_y else utils._jaccard_score( item_x, item_y )
         return sim_scores
 
     @classmethod
@@ -74,7 +73,7 @@ class ComputeToolSimilarity:
             similarity_matrix_dist = np.zeros( [ all_tools_len, all_tools_len] )
             similarity_matrix_src = similarity_matrix_sources[ source ]
             for index in range( all_tools_len ):
-                similarity_matrix_dist[ index ][ : ] = similarity_matrix_src[ index ]
+                similarity_matrix_dist[ index ] = similarity_matrix_src[ index ]
             similarity_matrix_similarity_sources[ source ] = similarity_matrix_dist
         return similarity_matrix_similarity_sources
 
@@ -88,7 +87,7 @@ class ComputeToolSimilarity:
         similarity_tools = dict()
         similarity_scores_path = "data/similarity_scores_sources_optimal.json"
         for tool_index, tool in enumerate( tools_list ):
-            tool_name = tools_list[ tool_index ] 
+            tool_name = tools_list[ tool_index ]
             similarity_tools[ tools_list[ tool_index ] ] = dict()
             sim_mat_tool_learned = np.zeros( all_tools )
             for source in similarity_matrix_sources:
@@ -208,30 +207,41 @@ if __name__ == "__main__":
     tokens = extract_tokens.ExtractTokens( sys.argv[ 1 ] )
     dataframe, refined_tokens = tokens.get_tokens( tool_similarity.data_source )
     nd_similarity = learn_doc2vec.Learn_Doc2Vec_Similarity( refined_tokens[ tool_similarity.data_source[ 1 ] ] )
-    nd_similarity_matrix, tools_list = nd_similarity.learn_doc_similarity()
+    nd_similarity_matrix, tools_list = nd_similarity.learn_doc_similarity( "nd", 5, 100 )
     ht_similarity = learn_doc2vec.Learn_Doc2Vec_Similarity( refined_tokens[ tool_similarity.data_source[ 2 ] ] )
-    ht_similarity_matrix, tools_list = ht_similarity.learn_doc_similarity()
+    ht_similarity_matrix, tools_list = ht_similarity.learn_doc_similarity( "ht", 15, 200 )
 
     io_doc_tokens = tool_similarity.create_io_tokens_matrix( refined_tokens[ tool_similarity.data_source[ 0 ] ] )
     io_similarity_matrix = tool_similarity.find_io_similarity( io_doc_tokens, tools_list )
+
+    io_src = list()
+    for rs in io_doc_tokens:
+       io_src.append( rs.tolist() )
+
+    with open( "data/doc_vecs_io.json", "w" ) as io_doc_vec:
+        io_doc_vec.write( json.dumps( io_src ) )
+
     print( "Computed similarity matrices for all the sources" )
 
-    distance_dict = dict()
-    distance_dict[ tool_similarity.data_source[ 1 ] ] = nd_similarity_matrix
-    distance_dict[ tool_similarity.data_source[ 2 ] ] = ht_similarity_matrix
-    distance_dict[ tool_similarity.data_source[ 0 ] ] = io_similarity_matrix
+    similarity_by_sources = dict()
+    similarity_by_sources[ tool_similarity.data_source[ 1 ] ] = nd_similarity_matrix
+    similarity_by_sources[ tool_similarity.data_source[ 2 ] ] = ht_similarity_matrix
+    similarity_by_sources[ tool_similarity.data_source[ 0 ] ] = io_similarity_matrix
 
     print( "Converting similarity as similarity distributions..." )
-    similarity_as_list = tool_similarity.convert_similarity_as_list( distance_dict, tools_list )
+    similarity_as_list = tool_similarity.convert_similarity_as_list( similarity_by_sources, tools_list )
 
     print( "Learning optimal weights..." )
     gd = gradientdescent.GradientDescentOptimizer( int( sys.argv[ 2 ] ), tool_similarity.data_source )
-    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_as_list, tools_list )
+    optimal_weights, cost_tools, learning_rates, uniform_cost_tools, gradients = gd.gradient_descent( similarity_as_list.copy(), tools_list )
+
+    with open( "data/optimal_weights.json", "w" ) as opt_wt:
+        opt_wt.write( json.dumps( optimal_weights ) )
 
     print( "Assign importance to tools similarity matrix..." )
-    similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_as_list, tools_list, optimal_weights )
+    similarity_matrix_learned = tool_similarity.assign_similarity_importance( similarity_as_list.copy(), tools_list, optimal_weights )
 
     print( "Writing results to a JSON file..." )
-    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, tools_list, optimal_weights, cost_tools, similarity_as_list, learning_rates, uniform_cost_tools, gradients )
+    tool_similarity.associate_similarity( similarity_matrix_learned, dataframe, tools_list, optimal_weights, cost_tools, similarity_as_list.copy(), learning_rates, uniform_cost_tools, gradients )
     end_time = time.time()
     print( "Program finished in %d seconds" % int( end_time - start_time ) )
