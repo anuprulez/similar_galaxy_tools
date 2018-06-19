@@ -3,6 +3,7 @@ import numpy as np
 from pylab import *
 from matplotlib_venn import venn2
 import json
+import random
 
 # Font close to Times New Roman
 # https://mondaybynoon.com/linux-font-equivalents-to-popular-web-typefaces/
@@ -36,6 +37,13 @@ def plot_doc_tokens_mat( file_path_io, file_path_nd, file_path_ht ):
             a.append( float( x ) )
         io_tokens.append( a )
 
+    for i in range( len( io_tokens ) ):
+        for j in range( len( io_tokens[ i ] ) ):
+            if io_tokens[ i ][ j ] <= 0:
+                io_tokens[ i ][ j ] = np.nan
+            else:
+                io_tokens[ i ][ j ] = io_tokens[ i ][ j ]
+
     nd_tokens = list()
     for item in nd_tools_tokens:
         a = list()
@@ -43,16 +51,31 @@ def plot_doc_tokens_mat( file_path_io, file_path_nd, file_path_ht ):
             a.append( float( x1 ) )
         nd_tokens.append( a )
 
+    for i in range( len( nd_tokens ) ):
+        for j in range( len( nd_tokens[ i ] ) ):
+            if nd_tokens[ i ][ j ] <= 0:
+                nd_tokens[ i ][ j ] = np.nan
+            else:
+                nd_tokens[ i ][ j ] = nd_tokens[ i ][ j ]
+
     ht_tokens = list()
     for item in ht_tools_tokens:
         a = list()
         for x2 in item:
             a.append( float( x2 ) )
         ht_tokens.append( a )
+
+    for i in range( len( ht_tokens ) ):
+        for j in range( len( ht_tokens[ i ] ) ):
+            if ht_tokens[ i ][ j ] <= 0:
+                ht_tokens[ i ][ j ] = np.nan
+            else:
+                ht_tokens[ i ][ j ] = ht_tokens[ i ][ j ]
+    random.shuffle( io_tokens )
     for col, axis in enumerate( axes ):
-        heatmap1 = axes[ 0 ].imshow( io_tokens, cmap=plt.cm.Reds )
-        heatmap2 = axes[ 1 ].imshow( nd_tokens, cmap=plt.cm.Reds )
-        heatmap3 = axes[ 2 ].imshow( ht_tokens, cmap=plt.cm.Reds )
+        heatmap1 = axes[ 0 ].imshow( io_tokens, cmap=plt.cm.coolwarm )
+        heatmap2 = axes[ 1 ].imshow( nd_tokens, cmap=plt.cm.coolwarm )
+        heatmap3 = axes[ 2 ].imshow( ht_tokens, cmap=plt.cm.coolwarm )
 
         axes[ 0 ].set_title( sub_titles[ 0 ], fontsize = NEW_FONT_SIZE )
         axes[ 1 ].set_title( sub_titles[ 1 ], fontsize = NEW_FONT_SIZE )
@@ -79,7 +102,7 @@ def plot_doc_tokens_mat( file_path_io, file_path_nd, file_path_ht ):
         axes[ 0 ].set_ylabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
         axes[ 1 ].set_ylabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
         axes[ 2 ].set_ylabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
-    plt.suptitle( "Documents-tokens multi-dimensional matrices" )
+    plt.suptitle( "Document-token and paragraph matrices" )
     fig.subplots_adjust( right = 0.75 )
     cbar_ax = fig.add_axes( [ 0.8, 0.15, 0.02, 0.7 ] )
     fig.colorbar( heatmap3, cax=cbar_ax )
@@ -111,6 +134,20 @@ def plot_correlation( similarity_matrices, title ):
     for row, axis in enumerate( axes ):
         mat1 = similarity_matrices[ row_lst[ row ][ 0 ] ]
         mat2 = similarity_matrices[ row_lst[ row ][ 1 ] ]
+        for i in range( len( mat2 ) ):
+            for j in range( len( mat2[ i ] ) ):
+                if mat2[ i ][ j ] <= 0:
+                    mat2[ i ][ j ] = np.nan
+                else:
+                    mat2[ i ][ j ] = mat2[ i ][ j ]
+
+        for i in range( len( mat1 ) ):
+            for j in range( len( mat1[ i ] ) ):
+                if mat1[ i ][ j ] <= 0:
+                    mat1[ i ][ j ] = np.nan
+                else:
+                    mat1[ i ][ j ] = mat1[ i ][ j ]
+
         heatmap = axis[ 0 ].imshow( mat1, cmap=plt.cm.Reds ) 
         heatmap = axis[ 1 ].imshow( mat2, cmap=plt.cm.Reds ) 
         axis[ 0 ].set_title( titles_fullrank[ row_lst[ row ][ 0 ] ], fontsize = NEW_FONT_SIZE )
@@ -270,20 +307,24 @@ def plot_average_optimal_scores():
             opt_scores[ index ] = tool[ "optimal_similar_scores" ]
     plt.plot( np.mean( opt_scores, axis = 0 ) )
     plt.plot( np.mean( ave_scores, axis = 0 ) )
-    plt.ylabel( 'Weighted average similarity scores' )
+    plt.ylabel( 'Weighted similarity scores' )
     plt.xlabel( 'Tools' )
-    plt.title( 'Weighted similarity scores using uniform and optimal weights using paragraph vectors', fontsize=26 )
-    plt.legend( [ "Weights learnt using optimization", "Uniform weights" ], loc=4 )
+    plt.title( 'Weighted similarity using uniform and optimal weights using paragraph vectors approach', fontsize=26 )
+    plt.legend( [ "Weights learned using optimisation", "Uniform weights" ], loc=4 )
     plt.grid( True )
     plt.show()
     
 
+#plot_gradient_drop( "data/actual_gd_tools.json" ) 
+#plot_weights_distribution( "data/optimal_weights.json", "Distribution of weights using paragraph vectors approach" )
+#plot_doc_tokens_mat( "data/doc_vecs_io.json", "data/doc_vecs_nd.json", "data/doc_vecs_ht.json" )
+#extract_correlation( "data/similarity_scores_sources_optimal.json", "Similarity matrices using paragraph vectors approach" )
 plot_average_cost()
 plot_average_optimal_scores()
 '''plot_average_cost()
 plot_gradient_drop( "data/actual_gd_tools.json" ) 
        
-plot_weights_distribution( "data/optimal_weights.json", "Distribution of weights for paragraph vectors approach" )
+plot_weights_distribution( "data/optimal_weights.json", "Distribution of weights using paragraph vectors approach" )
 plot_doc_tokens_mat( "data/doc_vecs_io.json", "data/doc_vecs_nd.json", "data/doc_vecs_ht.json" )
-extract_correlation( "data/similarity_scores_sources_optimal.json", "Similarity matrices for paragraph vectors approach" )
+extract_correlation( "data/similarity_scores_sources_optimal.json", "Similarity matrices using paragraph vectors approach" )
 plot_lr_drop( "data/learning_rates.json" )'''
