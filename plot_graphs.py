@@ -4,6 +4,7 @@ from pylab import *
 from matplotlib_venn import venn2
 import json
 import string
+import random
 
 
 # Font close to Times New Roman
@@ -33,7 +34,14 @@ def plot_doc_tokens_mat( file_path ):
     for row, axis in enumerate( axes ):
         doc_token_mat = read_files( file_path )
         doc_token_mat = doc_token_mat[ sources[ row ] ]
-        heatmap = axis.imshow( doc_token_mat, cmap=plt.cm.Reds ) 
+        random.shuffle( doc_token_mat )
+        for i in range( len( doc_token_mat ) ):
+            for j in range( len( doc_token_mat[ i ] ) ):
+                if doc_token_mat[ i ][ j ] <= 0:
+                    doc_token_mat[ i ][ j ] = np.nan
+                else:
+                    doc_token_mat[ i ][ j ] = doc_token_mat[ i ][ j ]
+        heatmap = axis.imshow( doc_token_mat, cmap=plt.cm.coolwarm ) 
         axis.set_title( titles_fullrank[ row ], fontsize = new_fs )
         for tick in axis.xaxis.get_major_ticks():
             tick.label.set_fontsize( new_fs )
@@ -46,7 +54,7 @@ def plot_doc_tokens_mat( file_path ):
     fig.subplots_adjust(right=0.75)
     cbar_ax = fig.add_axes([0.8, 0.15, 0.02, 0.7])
     fig.colorbar(heatmap, cax=cbar_ax)
-    plt.suptitle("Documents-tokens matrices for tools attributes")
+    plt.suptitle("Document-token matrices")
     plt.show()
 
 
@@ -59,8 +67,14 @@ def plot_doc_tokens_mat_low_rank( file_path ):
     for row, axis in enumerate( axes ):
         doc_token_mat_low = read_files( file_path )
         doc_token_mat_low = doc_token_mat_low[ sources[ row ] ]
-        doc_token_mat_low = doc_token_mat_low
-        heatmap = axis.imshow( doc_token_mat_low, cmap=plt.cm.Reds )
+        random.shuffle( doc_token_mat_low )
+        for i in range( len( doc_token_mat_low ) ):
+            for j in range( len( doc_token_mat_low[ i ] ) ):
+                if doc_token_mat_low[ i ][ j ] <= 0:
+                    doc_token_mat_low[ i ][ j ] = np.nan
+                else:
+                    doc_token_mat_low[ i ][ j ] = doc_token_mat_low[ i ][ j ]
+        heatmap = axis.imshow( doc_token_mat_low, cmap=plt.cm.coolwarm )
         axis.set_title( titles_fullrank[ row ], fontsize = new_fs )
         for tick in axis.xaxis.get_major_ticks():
             tick.label.set_fontsize( new_fs )
@@ -73,7 +87,7 @@ def plot_doc_tokens_mat_low_rank( file_path ):
     fig.subplots_adjust(right=0.75)
     cbar_ax = fig.add_axes([0.8, 0.15, 0.02, 0.7])
     fig.colorbar(heatmap, cax=cbar_ax)
-    plt.suptitle("Low-rank representation of documents-tokens matrices")
+    plt.suptitle("Low-rank representation of document-token matrices")
     plt.show()
 
 
@@ -83,7 +97,7 @@ def plot_tokens_size():
     nd_tokens = list()
     ht_tokens = list()
     NEW_FONT_SIZE = FONT_SIZE
-    fig, axes = plt.subplots( nrows=1, ncols=3 )
+    #fig, axes = plt.subplots( nrows=1, ncols=3 )
     sub_titles = [ "Input \& output", "Name \& description", "Help text" ]
     io_tools_tokens = read_files( "data/tokens_input_output.txt" )
     nd_tools_tokens = read_files( "data/tokens_name_desc_edam.txt" )
@@ -93,7 +107,7 @@ def plot_tokens_size():
         nd_tokens.append( len( nd_tools_tokens[ item ] ) )
         ht_tokens.append( len( ht_tools_tokens[ item ] ) )
 
-    for row, axis in enumerate( axes ):
+    '''for row, axis in enumerate( axes ):
         axes[ 0 ].plot( io_tokens, color = colors_dict[ "input_output" ] )
         axes[ 1 ].plot( nd_tokens, color = colors_dict[ "name_desc_edam" ] )
         axes[ 2 ].plot( ht_tokens, color = colors_dict[ "help_text" ] )
@@ -119,8 +133,15 @@ def plot_tokens_size():
         axes[ 0 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
         axes[ 1 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )
         axes[ 2 ].set_xlabel( "Tools (documents)", fontsize = NEW_FONT_SIZE )   
-        axes[ 0 ].set_ylabel( "Number of tokens", fontsize = NEW_FONT_SIZE )
-    plt.suptitle( "Distribution of tokens for multiple attributes of tools" )
+        axes[ 0 ].set_ylabel( "Number of tokens", fontsize = NEW_FONT_SIZE )'''
+    plt.plot( io_tokens )
+    plt.plot( nd_tokens )
+    plt.plot( ht_tokens )
+    plt.legend( [ "Input \& output", "Name \& description", "Help text" ], loc=1 ) 
+    plt.ylabel( "Number of tokens" )
+    plt.xlabel( "Tools" )
+    plt.grid( True )
+    plt.title( "Distribution of tokens" )
     plt.show()
 
 
@@ -133,9 +154,9 @@ def plot_rank_eigen_variation_fraction():
     plt.plot( name_rank[ 0 ], name_rank[ 1 ], color = colors_dict[ "name_desc_edam" ] )
     plt.plot( help_rank[ 0 ], help_rank[ 1 ], color = colors_dict[ "help_text" ] )
     plt.ylabel( 'Fraction of the sum of singular values' )
-    plt.xlabel( 'Fraction of the full-rank of a matrix' )
-    plt.title( 'Variation of sum of singular values with ranks of document-tokens matrices', fontsize=FONT_SIZE - 2 )
-    plt.legend( [ "Input \& output", "Name \& description", "Help text" ] )
+    plt.xlabel( 'Fraction of the ranks of document-token matrices' )
+    plt.title( 'Variation of sum of singular values with ranks of document-token matrices', fontsize=FONT_SIZE )
+    plt.legend( [ "Input \& output", "Name \& description", "Help text" ], loc=4, fontsize=FONT_SIZE )
     plt.grid( True )
     plt.show()
   
@@ -226,21 +247,21 @@ def plot_singular_values():
     fig, axes = plt.subplots( nrows=1, ncols=3 )
     axes[0].plot( singular_values[ "input_output" ], color=colors_dict[ "input_output" ] )
     axes[0].set_title( "Input \& output (a)" )
-    axes[0].set_xlabel( "Count of singular values" )
+    axes[0].set_xlabel( "Singular values" )
     axes[0].set_ylabel( "Magnitude of singular values" )
-    axes[0].grid(True)
+    axes[0].grid( True )
     
     axes[1].plot( singular_values[ "name_desc_edam" ], color=colors_dict[ "name_desc_edam" ] )
     axes[1].set_title( "Name \& description (b)" )
-    axes[1].set_xlabel( "Count of singular values" )
-    axes[1].grid(True)
+    axes[1].set_xlabel( "Singular values" )
+    axes[1].grid( True )
     
     axes[2].plot( singular_values[ "help_text" ], color=colors_dict[ "help_text" ] )
     axes[2].set_title( "Help text (c)" )
-    axes[2].set_xlabel( "Count of singular values" )
-    axes[2].grid(True)
+    axes[2].set_xlabel( "Singular values" )
+    axes[2].grid( True )
         
-    plt.suptitle("Singular values for documents-tokens matrices")
+    plt.suptitle("Singular values for document-token matrices")
     plt.show()
       
 
@@ -269,15 +290,15 @@ def plot_average_cost_low_rank():
     #cost_0_1 = compute_cost( data_0_1, max_iter )
     cost_0_0_5 = compute_cost( data_0_0_5, max_iter )
     
-    plt.plot( cost_1_0, marker='o' )
-    plt.plot( cost_0_7, marker='8' )
+    plt.plot( cost_1_0 )
+    plt.plot( cost_0_7 )
     #plt.plot( cost_0_5, marker='s' )
-    plt.plot( cost_0_3, marker='+')
+    plt.plot( cost_0_3 )
     #plt.plot( cost_0_1,marker='x' )
-    plt.plot( cost_0_0_5,marker='<' )
+    plt.plot( cost_0_0_5 )
     plt.ylabel( 'Mean squared error' )
     plt.xlabel( 'Iterations' )
-    plt.title( 'Mean squared error for multiple low-rank matrix estimations' )
+    plt.title( 'Mean squared error for various low-rank document-token matrix estimations' )
     plt.legend( [ "Full-rank", "70\% of full-rank", "30\% of full-rank", "5\% of full-rank" ], loc=1 )
     plt.grid( True )
     plt.show()
@@ -322,8 +343,22 @@ def plot_correlation( similarity_matrices, title ):
     for row, axis in enumerate( axes ):
         mat1 = similarity_matrices[ row_lst[ row ][ 0 ] ]
         mat2 = similarity_matrices[ row_lst[ row ][ 1 ] ]
-        heatmap = axis[ 0 ].imshow( mat1, cmap=plt.cm.Reds ) 
-        heatmap = axis[ 1 ].imshow( mat2, cmap=plt.cm.Reds ) 
+        for i in range( len( mat2 ) ):
+            for j in range( len( mat2[ i ] ) ):
+                if mat2[ i ][ j ] <= 0:
+                    mat2[ i ][ j ] = np.nan
+                else:
+                    mat2[ i ][ j ] = mat2[ i ][ j ]
+
+        for i in range( len( mat1 ) ):
+            for j in range( len( mat1[ i ] ) ):
+                if mat1[ i ][ j ] <= 0:
+                    mat1[ i ][ j ] = np.nan
+                else:
+                    mat1[ i ][ j ] = mat1[ i ][ j ]
+
+        heatmap = axis[ 0 ].imshow( mat1, cmap=plt.cm.Reds )
+        heatmap = axis[ 1 ].imshow( mat2, cmap=plt.cm.Reds )
         axis[ 0 ].set_title( titles_fullrank[ row_lst[ row ][ 0 ] ], fontsize = NEW_FONT_SIZE )
         axis[ 1 ].set_title( titles_fullrank[ row_lst[ row ][ 1 ] ], fontsize = NEW_FONT_SIZE )
         
@@ -497,34 +532,49 @@ def plot_average_optimal_scores( file_path, title ):
             opt_scores[ index ] = tool[ "optimal_similar_scores" ]
     plt.plot( np.mean( opt_scores, axis = 0 ) )
     plt.plot( np.mean( ave_scores, axis = 0 ) )
-    plt.ylabel( 'Weighted average similarity scores' )
+    plt.ylabel( 'Weighted similarity scores' )
     plt.xlabel( 'Tools' )
     plt.title( title, fontsize = 26 )
-    plt.legend( [ "Weights learnt using optimization", "Uniform weights" ], loc=4 )
+    plt.legend( [ "Weights learned using optimisation", "Uniform weights" ], loc=4 )
     plt.grid( True )
     plt.show()
 
-plot_average_optimal_scores( "data/0.05/similarity_matrix.json", 'Weighted similarity scores using uniform and optimal weights (5\% of full-rank)' )
-plot_average_optimal_scores( "data/1.0/similarity_matrix.json", 'Weighted similarity scores using uniform and optimal weights (full-rank)' )
+
+plot_average_optimal_scores( "data/0.05/similarity_matrix.json", 'Weighted similarity using uniform and optimal weights (5\% of full-rank document-token matrices)' )
+plot_average_optimal_scores( "data/1.0/similarity_matrix.json", 'Weighted similarity using uniform and optimal weights (full-rank document-token matrices)' )
+
+'''extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices with 5\% of full-rank of document-token matrices" )
+extract_correlation( "data/0.3/similarity_scores_sources_optimal.json", "Similarity matrices with 30\% of full-rank of document-token matrices" )
+extract_correlation( "data/0.7/similarity_scores_sources_optimal.json", "Similarity matrices with 70\% of full-rank of document-token matrices" )
+extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices with 100\% of full-rank of document-token matrices" )'''
+
+#plot_rank_singular_variation()
+#plot_rank_eigen_variation_fraction()
+#plot_tokens_size()
+#plot_singular_values()
+'''plot_doc_tokens_mat( "data/0.05/similarity_source_orig.json" )
+plot_doc_tokens_mat_low_rank( "data/0.05/similarity_source_low_rank.json" )
+plot_average_optimal_scores( "data/0.05/similarity_matrix.json", 'Weighted similarity scores using uniform and optimal weights (5\% of full-rank document-token matrices)' )
+plot_average_optimal_scores( "data/1.0/similarity_matrix.json", 'Weighted similarity scores using uniform and optimal weights (full-rank document-token matrices)' )
 plot_rank_eigen_variation_fraction()
-plot_rank_eigen_variation()
+plot_rank_eigen_variation()'''
 '''plot_singular_values()
 plot_average_cost_low_rank()
 #plot_gradient_drop( "data/0.05/learning_rates.json" ) 
 verify_gradient( "data/0.05/actual_gd_tools.json", "data/0.05/approx_gd_tools.json" )
-plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights (5\% of full-rank)" )
-#plot_weights_distribution( "data/0.1/optimal_weights.json", "Distribution of weights (10\% of full-rank)" )
-plot_weights_distribution( "data/0.3/optimal_weights.json", "Distribution of weights (30\% of full-rank)" )
-#plot_weights_distribution( "data/0.5/optimal_weights.json", "Distribution of weights (50\% of full-rank)" )
-plot_weights_distribution( "data/0.7/optimal_weights.json", "Distribution of weights (70\% of full-rank)" )
-plot_weights_distribution( "data/1.0/optimal_weights.json", "Distribution of weights (100\% of full-rank)" )
+plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights (5\% of full-rank document-token matrices)" )
+#plot_weights_distribution( "data/0.1/optimal_weights.json", "Distribution of weights (10\% of full-rank document-token matrices)" )
+plot_weights_distribution( "data/0.3/optimal_weights.json", "Distribution of weights (30\% of full-rank document-token matrices)" )
+#plot_weights_distribution( "data/0.5/optimal_weights.json", "Distribution of weights (50\% of full-rank document-token matrices)" )
+plot_weights_distribution( "data/0.7/optimal_weights.json", "Distribution of weights (70\% of full-rank document-token matrices)" )
+plot_weights_distribution( "data/1.0/optimal_weights.json", "Distribution of weights (100\% of full-rank document-token matrices)" )
 
-extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices computed with 5\% of full-rank" )
-#extract_correlation( "data/0.1/similarity_scores_sources_optimal.json", "Similarity matrices computed with 10\% of full-rank" )
-extract_correlation( "data/0.3/similarity_scores_sources_optimal.json", "Similarity matrices computed with 30\% of full-rank" )
-#extract_correlation( "data/0.5/similarity_scores_sources_optimal.json", "Similarity matrices computed with 50\% of full-rank" )
-extract_correlation( "data/0.7/similarity_scores_sources_optimal.json", "Similarity matrices computed with 70\% of full-rank" )
-extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices computed with 100\% of full-rank" )
+extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices computed with 5\% of full-rank document-token matrices" )
+#extract_correlation( "data/0.1/similarity_scores_sources_optimal.json", "Similarity matrices computed with 10\% of full-rank document-token matrices" )
+extract_correlation( "data/0.3/similarity_scores_sources_optimal.json", "Similarity matrices computed with 30\% of full-rank document-token matrices" )
+#extract_correlation( "data/0.5/similarity_scores_sources_optimal.json", "Similarity matrices computed with 50\% of full-rank document-token matrices" )
+extract_correlation( "data/0.7/similarity_scores_sources_optimal.json", "Similarity matrices computed with 70\% of full-rank document-token matrices" )
+extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices computed with 100\% of full-rank document-token matrices" )
 
 #plot_gradient_drop( "data/0.05/learning_rates.json" )
 plot_average_cost_low_rank()
