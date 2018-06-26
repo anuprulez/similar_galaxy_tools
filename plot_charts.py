@@ -307,20 +307,21 @@ def plot_average_optimal_scores():
             opt_scores[ index ] = tool[ "optimal_similar_scores" ]
     plt.plot( np.mean( opt_scores, axis = 0 ) )
     plt.plot( np.mean( ave_scores, axis = 0 ) )
-    plt.ylabel( 'Weighted similarity scores' )
+    plt.ylabel( 'Average of weighted similarity' )
     plt.xlabel( 'Tools' )
-    plt.title( 'Weighted similarity using uniform and optimal weights using paragraph vectors approach', fontsize=26 )
+    plt.title( 'Average of weighted similarity for tools', fontsize=26 )
     plt.legend( [ "Weights learned using optimisation", "Uniform weights" ], loc=4 )
     plt.grid( True )
     plt.show()
-    
 
-#plot_gradient_drop( "data/actual_gd_tools.json" ) 
-#plot_weights_distribution( "data/optimal_weights.json", "Distribution of weights using paragraph vectors approach" )
-#plot_doc_tokens_mat( "data/doc_vecs_io.json", "data/doc_vecs_nd.json", "data/doc_vecs_ht.json" )
-#extract_correlation( "data/similarity_scores_sources_optimal.json", "Similarity matrices using paragraph vectors approach" )
-plot_average_cost()
+
+#plot_gradient_drop( "data/actual_gd_tools.json" )
+extract_correlation( "data/similarity_scores_sources_optimal.json", "Similarity matrices" )
+plot_weights_distribution( "data/optimal_weights.json", "Distribution of weights" )
 plot_average_optimal_scores()
+#plot_doc_tokens_mat( "data/doc_vecs_io.json", "data/doc_vecs_nd.json", "data/doc_vecs_ht.json" )
+#plot_average_cost()
+
 '''plot_average_cost()
 plot_gradient_drop( "data/actual_gd_tools.json" ) 
        
