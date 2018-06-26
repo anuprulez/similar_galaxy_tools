@@ -153,10 +153,10 @@ def plot_rank_eigen_variation_fraction():
     plt.plot( io_rank[ 0 ], io_rank[ 1 ], color = colors_dict[ "input_output" ] )
     plt.plot( name_rank[ 0 ], name_rank[ 1 ], color = colors_dict[ "name_desc_edam" ] )
     plt.plot( help_rank[ 0 ], help_rank[ 1 ], color = colors_dict[ "help_text" ] )
-    plt.ylabel( 'Fraction of the sum of singular values' )
-    plt.xlabel( 'Fraction of the ranks of document-token matrices' )
-    plt.title( 'Variation of sum of singular values with ranks of document-token matrices', fontsize=FONT_SIZE )
-    plt.legend( [ "Input \& output", "Name \& description", "Help text" ], loc=4, fontsize=FONT_SIZE )
+    plt.ylabel( 'Fraction of sum of singular values' )
+    plt.xlabel( 'Fraction of ranks' )
+    plt.title( 'Variation of singular values with ranks', fontsize=FONT_SIZE )
+    plt.legend( [ "Input \& output", "Name \& description", "Help text" ], loc=4, fontsize=FONT_SIZE - 2 )
     plt.grid( True )
     plt.show()
   
@@ -242,26 +242,25 @@ def plot_rank_singular_variation():
 
 
 def plot_singular_values():
-    plt.rcParams[ "font.size" ] = FONT_SIZE
     singular_values = read_files( "data/0.3/singular_values_input_output.json" )
     fig, axes = plt.subplots( nrows=1, ncols=3 )
     axes[0].plot( singular_values[ "input_output" ], color=colors_dict[ "input_output" ] )
     axes[0].set_title( "Input \& output (a)" )
-    axes[0].set_xlabel( "Singular values" )
+    axes[0].set_xlabel( "Count of singular values" )
     axes[0].set_ylabel( "Magnitude of singular values" )
     axes[0].grid( True )
     
     axes[1].plot( singular_values[ "name_desc_edam" ], color=colors_dict[ "name_desc_edam" ] )
     axes[1].set_title( "Name \& description (b)" )
-    axes[1].set_xlabel( "Singular values" )
+    axes[1].set_xlabel( "Count of singular values" )
     axes[1].grid( True )
     
     axes[2].plot( singular_values[ "help_text" ], color=colors_dict[ "help_text" ] )
     axes[2].set_title( "Help text (c)" )
-    axes[2].set_xlabel( "Singular values" )
+    axes[2].set_xlabel( "Count of singular values" )
     axes[2].grid( True )
         
-    plt.suptitle("Singular values for document-token matrices")
+    plt.suptitle("Singular values")
     plt.show()
       
 
@@ -532,7 +531,7 @@ def plot_average_optimal_scores( file_path, title ):
             opt_scores[ index ] = tool[ "optimal_similar_scores" ]
     plt.plot( np.mean( opt_scores, axis = 0 ) )
     plt.plot( np.mean( ave_scores, axis = 0 ) )
-    plt.ylabel( 'Weighted similarity scores' )
+    plt.ylabel( 'Average of weighted similarity' )
     plt.xlabel( 'Tools' )
     plt.title( title, fontsize = 26 )
     plt.legend( [ "Weights learned using optimisation", "Uniform weights" ], loc=4 )
@@ -540,8 +539,33 @@ def plot_average_optimal_scores( file_path, title ):
     plt.show()
 
 
-plot_average_optimal_scores( "data/0.05/similarity_matrix.json", 'Weighted similarity using uniform and optimal weights (5\% of full-rank document-token matrices)' )
-plot_average_optimal_scores( "data/1.0/similarity_matrix.json", 'Weighted similarity using uniform and optimal weights (full-rank document-token matrices)' )
+def plot_lr_drop( file_path ):
+    tools_lr = read_files( file_path )
+    max_len = 0
+    lr_drop = list()
+    for item in tools_lr:
+        lr_drop = tools_lr[ item ]
+        break
+    plt.plot( lr_drop, color='r' )
+    plt.ylabel( 'Learning rate' )
+    plt.xlabel( 'Iterations' )
+    plt.title( 'Decay of learning rate' )
+    plt.grid( True )
+    plt.show()
+
+
+
+#plot_singular_values()
+#plot_rank_eigen_variation_fraction()
+#plot_lr_drop( "data/learning_rates.json" )
+#extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices" )
+#plot_weights_distribution( "data/1.0/optimal_weights.json", "Distribution of weights" )
+plot_average_optimal_scores( "data/1.0/similarity_matrix.json", 'Average of weighted similarity for tools' )
+
+extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices" )
+plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights" )
+plot_average_optimal_scores( "data/0.05/similarity_matrix.json", 'Average of weighted similarity for tools' )
+
 
 '''extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices with 5\% of full-rank of document-token matrices" )
 extract_correlation( "data/0.3/similarity_scores_sources_optimal.json", "Similarity matrices with 30\% of full-rank of document-token matrices" )
