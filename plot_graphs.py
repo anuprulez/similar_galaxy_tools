@@ -155,7 +155,7 @@ def plot_rank_eigen_variation_fraction():
     plt.plot( help_rank[ 0 ], help_rank[ 1 ], color = colors_dict[ "help_text" ] )
     plt.ylabel( 'Fraction of sum of singular values' )
     plt.xlabel( 'Fraction of ranks' )
-    plt.title( 'Variation of singular values with ranks', fontsize=FONT_SIZE )
+    plt.title( 'Variation of singular values with ranks', fontsize=26 )
     plt.legend( [ "Input \& output", "Name \& description", "Help text" ], loc=4, fontsize=FONT_SIZE - 2 )
     plt.grid( True )
     plt.show()
@@ -553,18 +553,16 @@ def plot_lr_drop( file_path ):
     plt.grid( True )
     plt.show()
 
-
-
+plot_rank_eigen_variation_fraction()
 #plot_singular_values()
 #plot_rank_eigen_variation_fraction()
 #plot_lr_drop( "data/learning_rates.json" )
 #extract_correlation( "data/1.0/similarity_scores_sources_optimal.json", "Similarity matrices" )
 #plot_weights_distribution( "data/1.0/optimal_weights.json", "Distribution of weights" )
-plot_average_optimal_scores( "data/1.0/similarity_matrix.json", 'Average of weighted similarity for tools' )
-
-extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices" )
-plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights" )
-plot_average_optimal_scores( "data/0.05/similarity_matrix.json", 'Average of weighted similarity for tools' )
+#plot_average_optimal_scores( "data/1.0/similarity_matrix.json", 'Average of weighted similarity for tools' )
+#extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices" )
+#plot_weights_distribution( "data/0.05/optimal_weights.json", "Distribution of weights" )
+#plot_average_optimal_scores( "data/0.05/similarity_matrix.json", 'Average of weighted similarity for tools' )
 
 
 '''extract_correlation( "data/0.05/similarity_scores_sources_optimal.json", "Similarity matrices with 5\% of full-rank of document-token matrices" )
