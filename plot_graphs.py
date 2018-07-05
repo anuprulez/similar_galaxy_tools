@@ -155,7 +155,7 @@ def plot_rank_eigen_variation_fraction():
     plt.plot( help_rank[ 0 ], help_rank[ 1 ], color = colors_dict[ "help_text" ] )
     plt.ylabel( 'Fraction of sum of singular values' )
     plt.xlabel( 'Fraction of ranks' )
-    plt.title( 'Variation of singular values with ranks', fontsize=26 )
+    plt.title( 'Variation of singular values with ranks' )
     plt.legend( [ "Input \& output", "Name \& description", "Help text" ], loc=4, fontsize=FONT_SIZE - 2 )
     plt.grid( True )
     plt.show()
@@ -244,20 +244,21 @@ def plot_rank_singular_variation():
 def plot_singular_values():
     singular_values = read_files( "data/0.3/singular_values_input_output.json" )
     fig, axes = plt.subplots( nrows=1, ncols=3 )
+
     axes[0].plot( singular_values[ "input_output" ], color=colors_dict[ "input_output" ] )
-    axes[0].set_title( "Input \& output (a)" )
-    axes[0].set_xlabel( "Count of singular values" )
-    axes[0].set_ylabel( "Magnitude of singular values" )
+    axes[0].set_title( "Input \& output (a)", fontsize = FONT_SIZE )
+    axes[0].set_xlabel( "Count of singular values", fontsize = FONT_SIZE )
+    axes[0].set_ylabel( "Magnitude of singular values", fontsize = FONT_SIZE )
     axes[0].grid( True )
     
     axes[1].plot( singular_values[ "name_desc_edam" ], color=colors_dict[ "name_desc_edam" ] )
-    axes[1].set_title( "Name \& description (b)" )
-    axes[1].set_xlabel( "Count of singular values" )
+    axes[1].set_title( "Name \& description (b)", fontsize = FONT_SIZE )
+    axes[1].set_xlabel( "Count of singular values", fontsize = FONT_SIZE )
     axes[1].grid( True )
     
     axes[2].plot( singular_values[ "help_text" ], color=colors_dict[ "help_text" ] )
-    axes[2].set_title( "Help text (c)" )
-    axes[2].set_xlabel( "Count of singular values" )
+    axes[2].set_title( "Help text (c)", fontsize = FONT_SIZE )
+    axes[2].set_xlabel( "Count of singular values", fontsize = FONT_SIZE )
     axes[2].grid( True )
         
     plt.suptitle("Singular values")
@@ -488,7 +489,7 @@ def verify_gradient( approx_gd_file_path, actual_gd_file_path ):
     plt.ylabel( 'Difference of gradients' )
     plt.xlabel( 'Iterations' )
     plt.title( 'Difference of actual and approximate gradients' )
-    plt.legend( [ "Input \& output", "Name \& description", "Help text" ], loc=1 )
+    plt.legend( [ "Input \& output", "Name \& description", "Help text" ], loc=4, fontsize = FONT_SIZE - 2 )
     plt.grid( True )
     plt.show()
 
@@ -533,8 +534,8 @@ def plot_average_optimal_scores( file_path, title ):
     plt.plot( np.mean( ave_scores, axis = 0 ) )
     plt.ylabel( 'Average of weighted similarity' )
     plt.xlabel( 'Tools' )
-    plt.title( title, fontsize = 26 )
-    plt.legend( [ "Weights learned using optimisation", "Uniform weights" ], loc=4 )
+    plt.title( title )
+    plt.legend( [ "Weights learned using optimisation", "Uniform weights" ], loc=4, fontsize = FONT_SIZE - 2 )
     plt.grid( True )
     plt.show()
 
@@ -553,7 +554,11 @@ def plot_lr_drop( file_path ):
     plt.grid( True )
     plt.show()
 
-plot_rank_eigen_variation_fraction()
+
+plot_singular_values()
+#verify_gradient( "data/0.05/actual_gd_tools.json", "data/0.05/approx_gd_tools.json" )
+#plot_rank_eigen_variation_fraction()
+
 #plot_singular_values()
 #plot_rank_eigen_variation_fraction()
 #plot_lr_drop( "data/learning_rates.json" )
