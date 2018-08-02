@@ -10,10 +10,10 @@ import random
 # Font close to Times New Roman
 # https://mondaybynoon.com/linux-font-equivalents-to-popular-web-typefaces/
 
-FONT_SIZE = 26
+FONT_SIZE = 40
 plt.rcParams["font.family"] = "FreeSerif"
 plt.rc('text', usetex=True)
-plt.rcParams[ 'text.latex.preamble' ]=[r"\usepackage{amsmath}"]
+#plt.rcParams[ 'text.latex.preamble' ]=[r"\usepackage{amsmath}"]
 plt.rcParams[ "font.size" ] = FONT_SIZE
 colors_dict = dict()
 colors_dict[ "help_text" ] = 'C2'
@@ -555,7 +555,8 @@ def plot_lr_drop( file_path ):
     plt.show()
 
 
-plot_singular_values()
+plot_tokens_size()
+#plot_singular_values()
 #verify_gradient( "data/0.05/actual_gd_tools.json", "data/0.05/approx_gd_tools.json" )
 #plot_rank_eigen_variation_fraction()
 

@@ -34,7 +34,7 @@ class LatentSemanticIndexing:
         """
         Find the rank which captures most of the information from the original full rank matrix
         """
-        '''rank_list = list()
+        rank_list = list()
         rank_list_fraction = list()
         sum_singular_values_fraction = list()
         sum_singular_values = list()
@@ -47,11 +47,11 @@ class LatentSemanticIndexing:
             sum_singular_values.append( compute_result[ 2 ] )
         vary_rank_eigen.append( rank_list_fraction )
         vary_rank_eigen.append( sum_singular_values_fraction )
-        vary_rank_eigen.append( rank_list )
-        vary_rank_eigen.append( sum_singular_values )
+        #vary_rank_eigen.append( rank_list )
+        #vary_rank_eigen.append( sum_singular_values )
         with open( "data/" + source + "_vary_eigen_rank.json", "w" ) as vary_rank:
             vary_rank.write( json.dumps( vary_rank_eigen ) )
-        #utils._plot_singular_values_rank( rank_list, sum_singular_values, source )'''
+        #utils._plot_singular_values_rank( rank_list, sum_singular_values, source )
         return self._compute_low_rank_matrix( u, s, v, int( self.rank_reduction * orig_rank ) )
 
     @classmethod
